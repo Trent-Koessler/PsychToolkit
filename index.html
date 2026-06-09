@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PsychToolkit</title>
+    <script>
+        // Apply theme immediately before rendering to prevent flashing
+        (function() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+    <link rel="manifest" href="manifest.json">
+    <meta name="description" content="A clinical decision support PWA for mental health professionals, featuring diagnostic screening scales, psychiatric dose converters, and interactive monitoring checklists.">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <meta name="theme-color" content="#4f46e5"/>
+</head>
+<body>
+
+    <div id="app-container">
+        <!-- Main Header -->
+        <header class="app-header">
+            <h1 id="page-title">Psychiatry Toolkit (PsychToolkit)</h1>
+            <button class="hamburger" id="hamburger-menu" aria-label="Toggle menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="header-controls" id="header-controls">
+                <button id="home-button">Home</button>
+                <button id="about-button">About</button>
+                <button id="feedback-button">Feedback</button>
+                <button id="theme-toggle">🌙 Dark Mode</button>
+            </div>
+        </header>
+
+        <!-- Main Body Content -->
+        <main id="main-content">
+
+            <!-- Home Dashboard Page -->
+            <div id="home-page" class="page active-page">
+                <nav class="button-container">
+                    <button class="big-button" data-page="scales-page">Psychiatric Screening Scales</button>
+                    <button class="big-button" data-page="equivalents-page">Dose Equivalents Converters</button>
+                    <button class="big-button" data-page="monitoring-page">Interactive Monitoring Checklists</button>
+                    <button class="big-button" data-page="otp-page">Opioid Treatment (OTP) Calculators</button>
+                    <button class="big-button" data-page="withdrawal-page">Withdrawal & NRT Tools</button>
+                    <button class="big-button" data-page="qtc-page">QTc Prolongation Guide</button>
+                    <button class="big-button" data-page="generators-page">Assessment Note Generators</button>
+                    <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
+                    <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
+                </nav>
+            </div>
+
+            <!-- Clinical Scales Page (Option A Navigation) -->
+            <div id="scales-page" class="page" data-title="Psychiatric Screening Scales">
+                <div class="scale-nav-container">
+                    <button id="prev-scale-btn" class="scale-nav-btn">← Prev Scale</button>
+                    <div class="scale-selector-wrapper">
+                        <select id="scale-selector" aria-label="Select psychiatric scale">
+                            <!-- Populated dynamically and mapped to sections -->
+                            <option value="phq9">PHQ-9 (Depression Screen)</option>
+                            <option value="gad7">GAD-7 (Anxiety Screen)</option>
+                            <option value="epds">EPDS (Perinatal Depression)</option>
+                            <option value="pcl5">PCL-5 (PTSD Screen)</option>
+                            <option value="ymrs">YMRS (Mania Rating)</option>
+                            <option value="mdq">MDQ (Bipolar Screen)</option>
+                            <option value="asrs">ASRS v1.1 (ADHD Screen)</option>
+                            <option value="hamd">HAM-D (Hamilton Depression)</option>
+                            <option value="hama">HAM-A (Hamilton Anxiety)</option>
+                            <option value="panic">Panic & Agoraphobia Scale</option>
+                            <option value="bpi">Brief Pain Inventory (BPI)</option>
+                            <option value="bfcrs">BFCRS (Catatonia Rating)</option>
+                            <option value="bprs">BPRS (Brief Psychiatric)</option>
+                            <option value="panss">PANSS (Schizophrenia Rating)</option>
+                            <option value="aims">AIMS (Involuntary Movements)</option>
+                            <option value="audit">AUDIT (Alcohol Screening)</option>
+                            <option value="dast10">DAST-10 (Drug Screening)</option>
+                            <option value="cuditr">CUDIT-R (Cannabis Screen)</option>
+                            <option value="pgsi">PGSI (Gambling Screen)</option>
+                            <option value="moca">MoCA (Cognitive Screening)</option>
+                            <option value="mmse">MMSE (Cognitive Mini)</option>
+                            <option value="fab">FAB (Frontal Assessment)</option>
+                            <option value="bpd">BPD Screening Tool</option>
+                            <option value="pclr">PCL-R (Psychopathy Screen)</option>
+                            <option value="aq10">AQ-10 (Autism Screen)</option>
+                            <option value="sapas">SAPAS (Personality Screen)</option>
+                            <option value="cssrs">C-SSRS (Suicide Assessment)</option>
+                            <option value="psqi">PSQI (Sleep Quality Index)</option>
+                            <option value="bis11">BIS-11 (Impulsiveness Scale)</option>
+                        </select>
+                    </div>
+                    <button id="next-scale-btn" class="scale-nav-btn">Next Scale →</button>
+                </div>
+
+                <!-- Hidden Template for Dynamically Generated Scales -->
+                <div id="calculator-template" style="display: none;">
+                    <h3 class="calculator-title"></h3>
+                    <p class="calculator-note" style="display: none;"></p>
+                    <div class="calculator-items">
+                        <!-- Injected by script.js -->
+                    </div>
+                    <div class="results-grid">
+                        <label>Total Score:</label><span class="total-score">0</span>
+                        <label>Severity/Result:</label><span class="severity"></span>
+                    </div>
+                    <textarea class="emr-summary" readonly></textarea>
+                    <div class="button-group">
+                        <button class="copy-btn">Copy EMR Summary</button>
+                        <button class="reset-btn">Reset</button>
+                    </div>
+                    <div class="calculator-reference"></div>
+                </div>
+
+                <!-- Scale Content Containers -->
+                <div class="tab-container" style="border:none; box-shadow:none; background:transparent;">
+                    <section id="phq9" class="tab-content active calculator-container"></section>
+                    <section id="gad7" class="tab-content calculator-container"></section>
+                    <section id="epds" class="tab-content calculator-container"></section>
+                    <section id="pcl5" class="tab-content calculator-container"></section>
+                    <section id="ymrs" class="tab-content calculator-container"></section>
+                    <section id="mdq" class="tab-content calculator-container"></section>
+                    <section id="asrs" class="tab-content calculator-container"></section>
+                    <section id="hamd" class="tab-content calculator-container"></section>
+                    <section id="hama" class="tab-content calculator-container"></section>
+                    <section id="panic" class="tab-content calculator-container"></section>
+                    <section id="bpi" class="tab-content calculator-container"></section>
+                    <section id="bfcrs" class="tab-content calculator-container"></section>
+                    <section id="bprs" class="tab-content calculator-container"></section>
+                    <section id="panss" class="tab-content calculator-container"></section>
+                    <section id="aims" class="tab-content calculator-container"></section>
+                    <section id="audit" class="tab-content calculator-container"></section>
+                    <section id="dast10" class="tab-content calculator-container"></section>
+                    <section id="cuditr" class="tab-content calculator-container"></section>
+                    <section id="pgsi" class="tab-content calculator-container"></section>
+                    <section id="moca" class="tab-content calculator-container"></section>
+                    <section id="mmse" class="tab-content calculator-container"></section>
+                    <section id="fab" class="tab-content calculator-container"></section>
+                    <section id="bpd" class="tab-content calculator-container"></section>
+                    <section id="pclr" class="tab-content calculator-container"></section>
+                    <section id="aq10" class="tab-content calculator-container"></section>
+                    <section id="sapas" class="tab-content calculator-container"></section>
+                    <section id="cssrs" class="tab-content calculator-container"></section>
+                    <section id="psqi" class="tab-content calculator-container"></section>
+                    <section id="bis11" class="tab-content calculator-container"></section>
+                </div>
+            </div>
+
+            <!-- Dose Equivalents Converter Page -->
+            <div id="equivalents-page" class="page" data-title="Dose Equivalents Converters">
+                <div class="converter-container">
+                    
+                    <!-- Antipsychotic Equivalents Card -->
+                    <div class="converter-card">
+                        <h3>Antipsychotic Dose Converter</h3>
+                        <div class="converter-inputs">
+                            <div class="converter-row">
+                                <label for="ap-from-drug">From Antipsychotic:</label>
+                                <select id="ap-from-drug">
+                                    <option value="aripiprazole">Aripiprazole</option>
+                                    <option value="clozapine">Clozapine</option>
+                                    <option value="haloperidol">Haloperidol</option>
+                                    <option value="olanzapine">Olanzapine</option>
+                                    <option value="paliperidone">Paliperidone</option>
+                                    <option value="quetiapine">Quetiapine</option>
+                                    <option value="risperidone">Risperidone</option>
+                                    <option value="ziprasidone">Ziprasidone</option>
+                                    <option value="chlorpromazine">Chlorpromazine</option>
+                                </select>
+                            </div>
+                            <div class="converter-row">
+                                <label for="ap-from-dose">From Dose (mg/day):</label>
+                                <input type="number" id="ap-from-dose" placeholder="e.g., 15" min="0">
+                            </div>
+                        </div>
+
+                        <div class="converter-output-grid">
+                            <div class="equivalent-row">
+                                <span>Chlorpromazine (CPZ) Equivalent:</span>
+                                <span id="ap-cpz-out">0.00 mg</span>
+                            </div>
+                            <div class="equivalent-row">
+                                <span>Olanzapine (OLZ) Equivalent:</span>
+                                <span id="ap-olz-out">0.00 mg</span>
+                            </div>
+                        </div>
+
+                        <div class="guideline-alert-box">
+                            <strong>Note:</strong> Equivalents are population estimates based on consensus guidelines (e.g., Taylor's Prescribing Guidelines). Individual pharmacokinetics vary significantly. High QTc risks require special monitoring.
+                        </div>
+                    </div>
+
+                    <!-- Benzodiazepine Equivalents Card -->
+                    <div class="converter-card">
+                        <h3>Benzodiazepine Dose Converter</h3>
+                        <div class="converter-inputs">
+                            <div class="converter-row">
+                                <label for="benzo-from-drug">From Benzodiazepine:</label>
+                                <select id="benzo-from-drug">
+                                    <option value="diazepam">Diazepam</option>
+                                    <option value="alprazolam">Alprazolam</option>
+                                    <option value="clonazepam">Clonazepam</option>
+                                    <option value="lorazepam">Lorazepam</option>
+                                    <option value="oxazepam">Oxazepam</option>
+                                    <option value="temazepam">Temazepam</option>
+                                    <option value="nitrazepam">Nitrazepam</option>
+                                </select>
+                            </div>
+                            <div class="converter-row">
+                                <label for="benzo-from-dose">From Dose (mg):</label>
+                                <input type="number" id="benzo-from-dose" placeholder="e.g., 2" min="0">
+                            </div>
+                            <div class="converter-row">
+                                <label for="benzo-to-drug">To Benzodiazepine:</label>
+                                <select id="benzo-to-drug">
+                                    <option value="diazepam">Diazepam</option>
+                                    <option value="alprazolam">Alprazolam</option>
+                                    <option value="clonazepam">Clonazepam</option>
+                                    <option value="lorazepam">Lorazepam</option>
+                                    <option value="oxazepam">Oxazepam</option>
+                                    <option value="temazepam">Temazepam</option>
+                                    <option value="nitrazepam">Nitrazepam</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="converter-output-grid">
+                            <div class="equivalent-row">
+                                <span>Diazepam Equivalent (DDE):</span>
+                                <span id="benzo-dde-out">0.00 mg</span>
+                            </div>
+                            <div class="equivalent-row">
+                                <span>Target Benzo Equivalent:</span>
+                                <span id="benzo-target-out">0.00 mg</span>
+                            </div>
+                        </div>
+
+                        <div class="guideline-alert-box">
+                            <strong>Note:</strong> Half-life vary significantly (e.g., Diazepam 20-100 hrs with active metabolites vs. Oxazepam 4-15 hrs). Cross-taper carefully due to incomplete cross-tolerance.
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Monitoring Guidelines Page -->
+            <div id="monitoring-page" class="page" data-title="Interactive Monitoring Checklists">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="lithium-mon">Lithium Monitoring</button>
+                        <button class="tab-button" data-tab="clozapine-mon">Clozapine Monitoring</button>
+                        <button class="tab-button" data-tab="metabolic-mon">Metabolic Syndrome Monitoring</button>
+                    </div>
+
+                    <!-- Lithium Monitoring Section -->
+                    <section id="lithium-mon" class="tab-content active">
+                        <h3>Lithium Monitoring Schedule & Checklist</h3>
+                        <div class="checklist-container">
+                            <div class="checklist-group">
+                                <h4>Baseline Assessments (Prior to initiation)</h4>
+                                <div class="checklist-item"><input type="checkbox" id="li-b1"><label for="li-b1">Renal function (EUC / eGFR)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-b2"><label for="li-b2">Thyroid function (TFTs / TSH)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-b3"><label for="li-b3">Serum Calcium (adjusted)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-b4"><label for="li-b4">Pregnancy test (for females of childbearing age)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-b5"><label for="li-b5">Baseline weight & ECG (if cardiovascular risks present)</label></div>
+                            </div>
+                            <div class="checklist-group">
+                                <h4>Ongoing Monitoring (Every 3-6 months)</h4>
+                                <div class="checklist-item"><input type="checkbox" id="li-o1"><label for="li-o1">Lithium serum level (Trough 12 hrs post-dose: target 0.4 - 0.8 mmol/L)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-o2"><label for="li-o2">Renal function (EUC / eGFR every 6 months)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-o3"><label for="li-o3">Thyroid function (TFTs / TSH every 6-12 months)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-o4"><label for="li-o4">Calcium level checked annually</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="li-o5"><label for="li-o5">Assess for side effects (fine tremor, polyuria, polydipsia, weight gain)</label></div>
+                            </div>
+                        </div>
+                        <textarea id="li-note-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="li-copy-btn" class="copy-btn">Copy EMR Note</button>
+                            <button id="li-reset-btn" class="reset-btn">Reset Checklist</button>
+                        </div>
+                    </section>
+
+                    <!-- Clozapine Monitoring Section -->
+                    <section id="clozapine-mon" class="tab-content">
+                        <h3>Clozapine Protocol & haematological Monitoring</h3>
+                        <div class="checklist-container">
+                            <div class="checklist-group">
+                                <h4>Baseline Assessments (Prior to commencement)</h4>
+                                <div class="checklist-item"><input type="checkbox" id="clz-b1"><label for="clz-b1">FBC (WBC &gt; 3.5 × 10⁹/L and Neutrophils (ANC) &gt; 2.0 × 10⁹/L)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-b2"><label for="clz-b2">Troponin, CRP, and Brain Natriuretic Peptide (BNP)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-b3"><label for="clz-b3">Echocardiogram and baseline ECG</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-b4"><label for="clz-b4">Metabolic baseline (Fasting Lipids, HbA1c, Weight, BP)</label></div>
+                            </div>
+                            <div class="checklist-group">
+                                <h4>Ongoing Haematological Checks</h4>
+                                <div class="checklist-item"><input type="checkbox" id="clz-o1"><label for="clz-o1">FBC weekly for the first 18 weeks of treatment</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-o2"><label for="clz-o2">FBC monthly thereafter if stable</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-o3"><label for="clz-o3">Agranulocytosis review (Check for fever, sore throat, or signs of infection)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-o4"><label for="clz-o4">Myocarditis review (Check for chest pain, tachycardia, dyspnoea, or flu-like symptoms during first 4 weeks)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="clz-o5"><label for="clz-o5">Constipation screen (Clozapine-induced gastrointestinal hypomotility risk is highly critical)</label></div>
+                            </div>
+                        </div>
+                        <textarea id="clz-note-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="clz-copy-btn" class="copy-btn">Copy EMR Note</button>
+                            <button id="clz-reset-btn" class="reset-btn">Reset Checklist</button>
+                        </div>
+                    </section>
+
+                    <!-- Metabolic Syndrome Monitoring Section -->
+                    <section id="metabolic-mon" class="tab-content">
+                        <h3>Metabolic Syndrome Monitoring Checklist</h3>
+                        <div class="checklist-container">
+                            <div class="checklist-group">
+                                <h4>Screening Checklist</h4>
+                                <div class="checklist-item"><input type="checkbox" id="met-1"><label for="met-1">Weight / BMI (Checked at baseline, 4 weeks, 8 weeks, 12 weeks, and 3-monthly thereafter)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="met-2"><label for="met-2">Waist Circumference (Checked at baseline and annually)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="met-3"><label for="met-3">Blood Pressure (Checked at baseline, 12 weeks, and annually thereafter)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="met-4"><label for="met-4">Fasting Blood Glucose / HbA1c (Checked at baseline, 12 weeks, and annually thereafter)</label></div>
+                                <div class="checklist-item"><input type="checkbox" id="met-5"><label for="met-5">Fasting Lipid Profile (Checked at baseline, 12 weeks, and annually thereafter)</label></div>
+                            </div>
+                        </div>
+                        <textarea id="met-note-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="met-copy-btn" class="copy-btn">Copy EMR Note</button>
+                            <button id="met-reset-btn" class="reset-btn">Reset Checklist</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Opioid Treatment (OTP) Calculators Page -->
+            <div id="otp-page" class="page" data-title="Opioid Treatment (OTP) Calculators">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="otp-methadone">Methadone Titration</button>
+                        <button class="tab-button" data-tab="otp-bup">Buprenorphine Titration</button>
+                        <button class="tab-button" data-tab="otp-lai">LAI (Buvidal & Sublocade) PK Window</button>
+                    </div>
+
+                    <!-- Methadone Titration tab -->
+                    <section id="otp-methadone" class="tab-content active">
+                        <h3>Methadone Titration Commencement Schedule</h3>
+                        <div class="form-grid">
+                            <label for="meth-start-date">Date of Commencement:</label>
+                            <input type="text" id="meth-start-date" placeholder="DD/MM/YYYY">
+                            <label for="meth-start-dose">Starting Daily Dose (mg):</label>
+                            <input type="number" id="meth-start-dose" value="20" min="0">
+                            <label for="meth-target-dose">Target Daily Dose (mg):</label>
+                            <input type="number" id="meth-target-dose" value="60" min="0">
+                            <label for="meth-dose-step">Change by (mg):</label>
+                            <input type="number" id="meth-dose-step" value="5" min="0">
+                            <label for="meth-dose-days">Interval of Change (days):</label>
+                            <input type="number" id="meth-dose-days" value="3" min="0">
+                        </div>
+                        <div class="button-group">
+                            <button id="meth-generate-btn">Generate Commencement Schedule</button>
+                        </div>
+                        <textarea id="meth-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="meth-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+
+                    <!-- Buprenorphine Titration tab -->
+                    <section id="otp-bup" class="tab-content">
+                        <h3>Buprenorphine / Suboxone Titration Schedule</h3>
+                        <div class="form-grid">
+                            <label for="bup-start-date">Date of Commencement:</label>
+                            <input type="text" id="bup-start-date" placeholder="DD/MM/YYYY">
+                            <label for="bup-start-dose">Starting Daily Dose (mg):</label>
+                            <input type="number" id="bup-start-dose" value="4" min="0">
+                            <label for="bup-target-dose">Target Daily Dose (mg):</label>
+                            <input type="number" id="bup-target-dose" value="16" min="0">
+                            <label for="bup-dose-step">Change by (mg):</label>
+                            <input type="number" id="bup-dose-step" value="4" min="0">
+                            <label for="bup-dose-days">Interval of Change (days):</label>
+                            <input type="number" id="bup-dose-days" value="2" min="0">
+                        </div>
+                        <div class="button-group">
+                            <button id="bup-generate-btn">Generate Commencement Schedule</button>
+                        </div>
+                        <textarea id="bup-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="bup-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+
+                    <!-- LAI (Buvidal & Sublocade) PK Window tab -->
+                    <section id="otp-lai" class="tab-content">
+                        <h3>Long-Acting Injectable (LAI) Next Dose Window</h3>
+                        <div class="form-grid">
+                            <label for="lai-type">Injection Type:</label>
+                            <select id="lai-type">
+                                <option value="buvidal-weekly">Buvidal Weekly</option>
+                                <option value="buvidal-monthly">Buvidal Monthly</option>
+                                <option value="sublocade-monthly">Sublocade Monthly</option>
+                            </select>
+                            <label for="lai-last-date">Date of Last Injection:</label>
+                            <input type="text" id="lai-last-date" placeholder="DD/MM/YYYY">
+                        </div>
+                        <div class="button-group">
+                            <button id="lai-calculate-btn">Calculate Next Dose Window</button>
+                        </div>
+                        <textarea id="lai-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="lai-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Withdrawal & NRT Tools Page -->
+            <div id="withdrawal-page" class="page" data-title="Withdrawal & NRT Tools">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="withdraw-diazepam">Diazepam Weaning</button>
+                        <button class="tab-button" data-tab="withdraw-nrt">Nicotine Replacement (NRT)</button>
+                        <button class="tab-button" data-tab="withdraw-alcohol">Alcohol Elimination (Widmark)</button>
+                    </div>
+
+                    <!-- Diazepam Weaning Section -->
+                    <section id="withdraw-diazepam" class="tab-content active">
+                        <h3>Diazepam Weaning Schedule Builder</h3>
+                        <div class="form-grid">
+                            <label for="diz-wean-date">Date of Commencement:</label>
+                            <input type="text" id="diz-wean-date" placeholder="DD/MM/YYYY">
+                            <label for="diz-wean-start">Starting Daily Dose (mg):</label>
+                            <input type="number" id="diz-wean-start" value="30" min="0">
+                            <label for="diz-wean-step">Reduce by (mg):</label>
+                            <input type="number" id="diz-wean-step" value="5" min="0">
+                            <label for="diz-wean-weeks">Interval of Reduction (weeks):</label>
+                            <input type="number" id="diz-wean-weeks" value="2" min="0">
+                        </div>
+                        <div class="button-group">
+                            <button id="diz-generate-btn">Generate Weaning Plan</button>
+                        </div>
+                        <textarea id="diz-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="diz-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+
+                    <!-- NRT Section -->
+                    <section id="withdraw-nrt" class="tab-content">
+                        <h3>Nicotine Replacement Therapy (NRT) Dosage Calculator</h3>
+                        <div class="form-grid">
+                            <label for="nrt-cpd">Cigarettes per Day:</label>
+                            <input type="number" id="nrt-cpd" value="20" min="0">
+                            <label for="nrt-time">Time to First Cigarette After Waking:</label>
+                            <select id="nrt-time">
+                                <option value="within-30">Within 30 minutes</option>
+                                <option value="after-30">More than 30 minutes</option>
+                            </select>
+                        </div>
+                        <div class="button-group">
+                            <button id="nrt-calculate-btn">Calculate NRT Requirements</button>
+                        </div>
+                        <textarea id="nrt-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="nrt-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+
+                    <!-- Alcohol Elimination (Widmark) Section -->
+                    <section id="withdraw-alcohol" class="tab-content">
+                        <h3>Alcohol Elimination Rate Calculator</h3>
+                        <div class="form-grid">
+                            <label for="wid-sex">Gender / Biological Sex:</label>
+                            <select id="wid-sex">
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                            </select>
+                            <label for="wid-weight">Body Weight (kg):</label>
+                            <input type="number" id="wid-weight" value="80" min="0">
+                            <label for="wid-drinks">Standard Drinks Consumed:</label>
+                            <input type="number" id="wid-drinks" value="6" min="0">
+                            <label for="wid-hours">Hours Since First Drink:</label>
+                            <input type="number" id="wid-hours" value="4" min="0">
+                        </div>
+                        <div class="button-group">
+                            <button id="wid-calculate-btn">Estimate BAC & Elimination</button>
+                        </div>
+                        <textarea id="wid-schedule-out" class="emr-summary" readonly></textarea>
+                        <div class="button-group">
+                            <button id="wid-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- QTc Guide Page -->
+            <div id="qtc-page" class="page" data-title="QTc Prolongation Guide">
+                <h3>Psychiatric Medication QTc Guide</h3>
+                <p style="margin-bottom: 20px; font-size: 14px; color: var(--text-muted);">
+                    Review the typical QT interval prolongation risks and precaution guidelines for major psychotropic agents.
+                </p>
+                <div class="tab-container" style="padding:20px;">
+                    <div style="margin-bottom:15px; display:flex; gap:10px;">
+                        <input type="text" id="qtc-search" placeholder="Search medication by name..." style="max-width:300px;">
+                    </div>
+                    <table class="qtc-table">
+                        <thead>
+                            <tr>
+                                <th>Medication</th>
+                                <th>Risk Level</th>
+                                <th>Est. prolongation (msec)</th>
+                                <th>Monitoring Recommendations</th>
+                            </tr>
+                        </thead>
+                        <tbody id="qtc-table-body">
+                            <!-- Populated dynamically by script.js -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Assessment Note Generators Page -->
+            <div id="generators-page" class="page" data-title="Assessment Note Generators">
+                <div class="tab-container">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="gen-mse">MSE Note Builder</button>
+                        <button class="tab-button" data-tab="gen-5ps">5Ps Formulation</button>
+                        <button class="tab-button" data-tab="gen-templates">Clinical Review Templates</button>
+                    </div>
+
+                    <!-- MSE note builder section -->
+                    <section id="gen-mse" class="tab-content active">
+                        <h3>Mental Status Examination (MSE) Generator</h3>
+                        <p style="margin-bottom: 20px; font-size: 13.5px; color: var(--text-muted);">
+                            Click the descriptors that match the patient's state to automatically build a structured EMR-ready MSE paragraph.
+                        </p>
+                        
+                        <div class="generator-layout-grid">
+                            <div class="mse-builder-left">
+                                <div class="mse-category-box" data-cat="Appearance">
+                                    <h4>Appearance</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="appears stated age">Appears Stated Age</span>
+                                        <span class="mse-option-btn" data-text="neatly dressed">Neatly Dressed</span>
+                                        <span class="mse-option-btn" data-text="casual clothes">Casual Clothes</span>
+                                        <span class="mse-option-btn" data-text="adequate hygiene">Adequate Hygiene</span>
+                                        <span class="mse-option-btn" data-text="disheveled">Disheveled</span>
+                                        <span class="mse-option-btn" data-text="poor grooming">Poorly Groomed</span>
+                                    </div>
+                                </div>
+                                <div class="mse-category-box" data-cat="Behavior">
+                                    <h4>Behavior & Engagement</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="cooperative">Cooperative</span>
+                                        <span class="mse-option-btn" data-text="engaged in conversation">Engaged</span>
+                                        <span class="mse-option-btn" data-text="good eye contact">Good Eye Contact</span>
+                                        <span class="mse-option-btn" data-text="avoidant eye contact">Avoidant Eye Contact</span>
+                                        <span class="mse-option-btn" data-text="psychomotor agitation">Agitated</span>
+                                        <span class="mse-option-btn" data-text="psychomotor retardation">Retarded</span>
+                                    </div>
+                                </div>
+                                <div class="mse-category-box" data-cat="Speech">
+                                    <h4>Speech</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="normal rate, volume, and tone">Normal R/T/V</span>
+                                        <span class="mse-option-btn" data-text="pressured speech">Pressured</span>
+                                        <span class="mse-option-btn" data-text="slow speech">Slowed</span>
+                                        <span class="mse-option-btn" data-text="paucity of speech">Paucity</span>
+                                        <span class="mse-option-btn" data-text="loud volume">Loud</span>
+                                    </div>
+                                </div>
+                                <div class="mse-category-box" data-cat="Mood">
+                                    <h4>Mood & Affect</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="subjectively reports mood is good">Subjective Euthymic</span>
+                                        <span class="mse-option-btn" data-text="reports feeling low/depressed">Subjective Depressed</span>
+                                        <span class="mse-option-btn" data-text="congruent affect">Congruent Affect</span>
+                                        <span class="mse-option-btn" data-text="incongruent affect">Incongruent Affect</span>
+                                        <span class="mse-option-btn" data-text="restricted range of affect">Restricted Affect</span>
+                                        <span class="mse-option-btn" data-text="labile affect">Labile Affect</span>
+                                    </div>
+                                </div>
+                                <div class="mse-category-box" data-cat="Thought">
+                                    <h4>Thought Form & Content</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="logical and goal-directed thought form">Logical Form</span>
+                                        <span class="mse-option-btn" data-text="circumstantial thought form">Circumstantial</span>
+                                        <span class="mse-option-btn" data-text="tangential thought form">Tangential</span>
+                                        <span class="mse-option-btn" data-text="flight of ideas">Flight of Ideas</span>
+                                        <span class="mse-option-btn" data-text="no active suicidal or homicidal thoughts">No suicidal/homicidal ideation</span>
+                                        <span class="mse-option-btn" data-text="active suicidal ideation without intent or plan">Active suicidal ideation</span>
+                                        <span class="mse-option-btn" data-text="denies delusions or paranoid ideas">No Delusions</span>
+                                    </div>
+                                </div>
+                                <div class="mse-category-box" data-cat="Perception">
+                                    <h4>Perception & Insight</h4>
+                                    <div class="mse-options-flex">
+                                        <span class="mse-option-btn" data-text="denies auditory or visual hallucinations">No Hallucinations</span>
+                                        <span class="mse-option-btn" data-text="describes auditory hallucinations">Auditory Hallucinations</span>
+                                        <span class="mse-option-btn" data-text="good insight into condition">Good Insight</span>
+                                        <span class="mse-option-btn" data-text="partial insight into condition">Partial Insight</span>
+                                        <span class="mse-option-btn" data-text="poor insight into condition">Poor Insight</span>
+                                        <span class="mse-option-btn" data-text="intact judgment">Intact Judgment</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mse-builder-right">
+                                <h4>Generated MSE Note</h4>
+                                <textarea id="mse-note-out" class="emr-summary" style="height: 350px; font-family: monospace; font-size:13.5px;" readonly></textarea>
+                                <div class="button-group">
+                                    <button id="mse-copy-btn" class="copy-btn" style="width:100%;">Copy EMR MSE Note</button>
+                                    <button id="mse-reset-btn" class="reset-btn" style="width:100%;">Reset Selectors</button>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- 5Ps section -->
+                    <section id="gen-5ps" class="tab-content">
+                        <h3>The 5Ps Formulation Compiler</h3>
+                        <div class="formulation-form-grid">
+                            <div class="formulation-row">
+                                <label for="form-presenting">Presenting Problem:</label>
+                                <textarea id="form-presenting" placeholder="What is the patient experiencing right now? Symptoms, onset..."></textarea>
+                            </div>
+                            <div class="formulation-row">
+                                <label for="form-predisposing">Predisposing Factors:</label>
+                                <textarea id="form-predisposing" placeholder="What has made the person vulnerable in the past? Genetics, childhood, trauma..."></textarea>
+                            </div>
+                            <div class="formulation-row">
+                                <label for="form-precipitating">Precipitating Factors:</label>
+                                <textarea id="form-precipitating" placeholder="Why now? Recent stressors, life changes, drug triggers..."></textarea>
+                            </div>
+                            <div class="formulation-row">
+                                <label for="form-perpetuating">Perpetuating Factors:</label>
+                                <textarea id="form-perpetuating" placeholder="What is keeping the problem going? Social isolation, compliance issues, drug habits..."></textarea>
+                            </div>
+                            <div class="formulation-row">
+                                <label for="form-protective">Protective Factors / Strengths:</label>
+                                <textarea id="form-protective" placeholder="What are the patient's strengths? Support networks, hobbies, insight, motivation..."></textarea>
+                            </div>
+                        </div>
+                        <div class="button-group">
+                            <button id="form-generate-btn">Compile 5Ps Formulation</button>
+                        </div>
+                        <textarea id="form-note-out" class="emr-summary" readonly style="height:250px;"></textarea>
+                        <div class="button-group">
+                            <button id="form-copy-btn" class="copy-btn">Copy EMR Note</button>
+                            <button id="form-reset-btn" class="reset-btn">Reset Grid</button>
+                        </div>
+                    </section>
+
+                    <!-- Clinical Review Templates section -->
+                    <section id="gen-templates" class="tab-content">
+                        <h3>Clinical Review Note Templates</h3>
+                        <div class="form-grid" style="grid-template-columns: 1fr;">
+                            <label for="template-select" style="font-weight: 700;">Select Template:</label>
+                            <select id="template-select">
+                                <option value="addiction">Addiction Medicine Consultation Template</option>
+                                <option value="otp">OTP Clinic Consultation Template</option>
+                                <option value="review">Psychiatry Initial review/Admissions Review Template</option>
+                            </select>
+                        </div>
+                        <textarea id="template-note-out" class="emr-summary" style="height: 400px; font-family: monospace; font-size:13px;"></textarea>
+                        <div class="button-group">
+                            <button id="template-copy-btn" class="copy-btn">Copy Template text</button>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Helpful Contacts & Helplines Page -->
+            <div id="contacts-page" class="page" data-title="Helpful Contacts">
+                <h3>Mental Health Support Lines</h3>
+                <ul class="contact-list">
+                    <li><strong>Mental Health Line (NSW):</strong> <a href="tel:1800011511">1800 011 511</a> (24/7 crisis support and clinical triage connection)</li>
+                    <li><strong>Lifeline Australia:</strong> <a href="tel:131114">13 11 14</a> (24/7 crisis support and suicide prevention counseling)</li>
+                    <li><strong>Beyond Blue:</strong> <a href="tel:1300224636">1300 22 4636</a> (Information and support services for anxiety and depression)</li>
+                    <li><strong>Kids Helpline:</strong> <a href="tel:1800551800">1800 55 1800</a> (24/7 free, private and confidential counseling for youth aged 5-25)</li>
+                    <li><strong>13YARN:</strong> <a href="tel:139276">13 92 76</a> (24/7 national crisis support line for Aboriginal and Torres Strait Islander people)</li>
+                </ul>
+
+                <h3>Statewide D&A / Specialty Services</h3>
+                <ul class="contact-list">
+                    <li><strong>ADIS (Alcohol and Drug Information Service):</strong> <a href="tel:1800422599">1800 422 599</a> (24/7 support, information and referral)</li>
+                    <li><strong>DASAS (Drug and Alcohol State Advisory Service):</strong> <a href="tel:1800023687">1800 023 687</a> (24/7 specialist advisory line for regional clinicians)</li>
+                    <li><strong>Suicide Call Back Service:</strong> <a href="tel:1300659467">1300 659 467</a> (National 24/7 support for people affected by suicide)</li>
+                </ul>
+            </div>
+
+            <!-- About Page -->
+            <div id="about-page" class="page" data-title="About PsychToolkit">
+                <h3>About PsychToolkit</h3>
+                <p style="margin-top: 10px; line-height: 1.6;">
+                    PsychToolkit is a Progressive Web App (PWA) designed for clinical decision support, providing mental health professionals with rapid access to screening scales, equivalents calculators, and interactive monitoring protocols.
+                </p>
+                
+                <h4 style="margin-top: 20px;">Copyright & Disclaimer</h4>
+                <p style="margin-top: 10px; line-height: 1.6; font-size: 13.5px; color: var(--text-muted);">
+                    <strong>Educational and Informational Purposes Only.</strong> PsychToolkit is not a medical device and is not a substitute for professional clinical judgment, diagnosis, or treatment. Independent verification of all calculated doses, thresholds, and recommendations is required before patient application.
+                </p>
+                <p style="margin-top: 10px; line-height: 1.6; font-size: 13.5px; color: var(--text-muted);">
+                    Copyright &copy; Trent Koessler 2026. All rights reserved.
+                </p>
+
+                <h4 style="margin-top: 20px;">Version</h4>
+                <p style="margin-top: 10px; line-height: 1.6;">
+                    Current Version: <span class="app-version">1.0.0</span>
+                </p>
+            </div>
+
+
+            <!-- ============================================================ -->
+            <!-- PHARMACOKINETICS VISUALISER PAGE                             -->
+            <!-- ============================================================ -->
+            <div id="pk-page" class="page" data-title="Pharmacokinetics Visualiser">
+
+                <div class="pk-page-header">
+                    <p class="pk-page-subtitle">Model plasma drug concentration over time using a one-compartment superposition model. Enter a dosing regimen, select a drug or enter a half-life manually, then generate the graph.</p>
+                    <div class="pk-disclaimer-banner">⚠️ <strong>Disclaimer:</strong> All concentration curves are in <em>arbitrary units</em> and are simplified models. Results are for educational and decision-support purposes only. LAI antipsychotic values are marked as approximate due to complex multi-compartment absorption-phase PK.</div>
+                </div>
+
+                <div class="pk-layout">
+
+                    <!-- ── Left Panel: Inputs ── -->
+                    <div class="pk-inputs-panel">
+
+                        <div class="pk-input-section">
+                            <h4>Drug Reference</h4>
+                            <p class="pk-input-hint">Select a preset drug to auto-fill its typical half-life, or enter manually below.</p>
+                            <select id="pk-drug-select">
+                                <option value="">-- Select a drug preset --</option>
+                                <optgroup label="Opioid Treatment">
+                                    <option value="30">Methadone (t½ ≈ 30 hrs)</option>
+                                    <option value="33">Buprenorphine SL (t½ ≈ 33 hrs)</option>
+                                    <option value="120">Buvidal Weekly LAI (t½ ≈ 120 hrs)</option>
+                                    <option value="360">Buvidal Monthly LAI (t½ ≈ 360 hrs)</option>
+                                    <option value="360">Sublocade Monthly LAI (t½ ≈ 360 hrs)</option>
+                                </optgroup>
+                                <optgroup label="Benzodiazepines">
+                                    <option value="68">Diazepam (t½ ≈ 68 hrs)</option>
+                                    <option value="12">Alprazolam (t½ ≈ 12 hrs)</option>
+                                    <option value="34">Clonazepam (t½ ≈ 34 hrs)</option>
+                                    <option value="14">Lorazepam (t½ ≈ 14 hrs)</option>
+                                    <option value="10">Oxazepam (t½ ≈ 10 hrs)</option>
+                                    <option value="13">Temazepam (t½ ≈ 13 hrs)</option>
+                                </optgroup>
+                                <optgroup label="Antipsychotics (oral)">
+                                    <option value="75">Aripiprazole oral (t½ ≈ 75 hrs)</option>
+                                    <option value="21">Quetiapine oral (t½ ≈ 21 hrs)</option>
+                                    <option value="20">Risperidone oral (t½ ≈ 20 hrs)</option>
+                                    <option value="23">Olanzapine oral (t½ ≈ 23 hrs)</option>
+                                    <option value="26">Haloperidol oral (t½ ≈ 26 hrs)</option>
+                                    <option value="23">Paliperidone oral (t½ ≈ 23 hrs)</option>
+                                </optgroup>
+                                <optgroup label="LAI Antipsychotics (⚠️ Approximate – complex PK)">
+                                    <option value="816">Paliperidone palmitate 1-monthly / Invega Sustenna (eff. t½ ≈ 34 days)</option>
+                                    <option value="2160">Paliperidone palmitate 3-monthly / Invega Trinza (eff. t½ ≈ 90 days)</option>
+                                    <option value="1440">Aripiprazole lauroxil / Aristada 1-monthly (eff. t½ ≈ 60 days)</option>
+                                    <option value="1776">Aripiprazole monohydrate / Abilify Maintena (eff. t½ ≈ 74 days)</option>
+                                    <option value="720">Risperidone LAI / Risperdal Consta (eff. t½ ≈ 30 days)</option>
+                                    <option value="720">Olanzapine pamoate / Zyprexa Relprevv (eff. t½ ≈ 30 days)</option>
+                                    <option value="168">Haloperidol decanoate 4-weekly (eff. t½ ≈ 7 days)</option>
+                                    <option value="528">Zuclopenthixol decanoate 4-weekly (eff. t½ ≈ 22 days)</option>
+                                    <option value="504">Fluphenazine decanoate 2-weekly (eff. t½ ≈ 21 days)</option>
+                                </optgroup>
+                                <optgroup label="Mood Stabilisers">
+                                    <option value="22">Lithium (t½ ≈ 22 hrs)</option>
+                                    <option value="15">Valproate (t½ ≈ 15 hrs)</option>
+                                    <option value="36">Lamotrigine (t½ ≈ 36 hrs)</option>
+                                </optgroup>
+                                <optgroup label="Antidepressants">
+                                    <option value="36">Sertraline (t½ ≈ 36 hrs)</option>
+                                    <option value="96">Fluoxetine + active metabolite (t½ ≈ 96 hrs)</option>
+                                    <option value="14">Escitalopram (t½ ≈ 14 hrs)</option>
+                                    <option value="12">Venlafaxine (t½ ≈ 12 hrs)</option>
+                                    <option value="21">Mirtazapine (t½ ≈ 21 hrs)</option>
+                                </optgroup>
+                            </select>
+                        </div>
+
+                        <div class="pk-input-section">
+                            <h4>Parameters</h4>
+                            <div class="pk-param-grid">
+                                <label for="pk-half-life">Half-life (hours):</label>
+                                <input type="number" id="pk-half-life" placeholder="e.g. 30" min="0.1" step="0.5" value="">
+
+                                <label for="pk-duration">Simulation Duration (days):</label>
+                                <input type="number" id="pk-duration" placeholder="e.g. 14" min="1" max="365" value="14">
+                            </div>
+                        </div>
+
+                        <div class="pk-input-section">
+                            <h4>Dosing Regimen</h4>
+                            <p class="pk-input-hint">One dose per line, format: <code>hour_from_start, dose_amount</code><br>Lines starting with <code>#</code> are ignored.</p>
+                            <textarea id="pk-regimen" class="pk-regimen-input" spellcheck="false"># Example: 30mg Methadone daily
+0, 30
+24, 30
+48, 30
+72, 30
+96, 30
+120, 30
+144, 30</textarea>
+                        </div>
+
+                        <div class="pk-actions">
+                            <button id="pk-generate-btn" class="pk-generate-btn">📈 Generate Graph</button>
+                            <button id="pk-clear-btn" class="pk-clear-btn">Clear</button>
+                        </div>
+
+                        <div id="pk-ss-panel" class="pk-ss-panel" style="display:none;">
+                            <h4>Steady-State Estimates</h4>
+                            <div class="pk-ss-grid">
+                                <span>Average Css:</span><span id="pk-ss-avg">--</span>
+                                <span>Peak Cmax-SS:</span><span id="pk-ss-max">--</span>
+                                <span>Trough Cmin-SS:</span><span id="pk-ss-min">--</span>
+                                <span>Time to ~SS (4-5 t½):</span><span id="pk-ss-time">--</span>
+                            </div>
+                        </div>
+
+                    </div>
+
+                    <!-- ── Right Panel: Graph ── -->
+                    <div class="pk-chart-panel">
+                        <div class="pk-chart-wrapper">
+                            <canvas id="pk-chart" aria-label="Pharmacokinetics concentration graph"></canvas>
+                        </div>
+                        <p id="pk-chart-placeholder" class="pk-chart-placeholder">Enter parameters and click <strong>Generate Graph</strong> to visualise drug concentration over time.</p>
+                        <div id="pk-error-msg" class="pk-error-msg" style="display:none;"></div>
+                    </div>
+
+                </div> <!-- end .pk-layout -->
+
+            </div> <!-- end #pk-page -->
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <div class="footer-content">
+                <span class="footer-version">Version <span class="app-version">1.0.0</span></span>
+                <span class="footer-disclaimer">
+                    Information contained herein is not a substitute for professional medical advice. Clinicians are advised to consult local hospital guidelines, psychiatric services, and specialist drug information resources. All tools assume adult patients.
+                </span>
+            </div>
+        </footer>
+
+    </div> <!-- End of #app-container -->
+
+    <!-- Medical Terms and Disclaimer Modal -->
+    <div id="disclaimer-modal" class="modal">
+        <div class="modal-content">
+            <h3>Disclaimer & Terms of Use</h3>
+            <p style="margin-top: 12px; line-height: 1.5; font-size: 14.5px;">
+                <strong>This application is intended for educational and clinical decision-support purposes only.</strong>
+            </p>
+            <p style="margin-top: 12px; line-height: 1.5; font-size: 13.5px; color: var(--text-muted);">
+                It is an informal quality improvement tool and is <strong>not a medical device</strong>. It is not a substitute for professional clinical judgment, diagnosis, or treatment. The author bears no responsibility for decisions made using this application. All information, calculations, and recommendations must be independently verified by a qualified clinician before patient application.
+            </p>
+            <div class="button-group" style="justify-content: center; margin-top: 24px;">
+                <button id="accept-disclaimer-btn">Accept and Continue</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
