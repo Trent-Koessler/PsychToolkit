@@ -1,0 +1,5 @@
+{
+            "factor1": ("Factor 1: Interpersonal/Affective", ["1. Glibness/Superficial Charm", "2. Grandiose Sense of Self-Worth", "4. Pathological Lying", "5. Conning/Manipulative", "6. Lack of Remorse or Guilt", "7. Shallow Affect", "8. Callous/Lack of Empathy", "16. Failure to Accept Responsibility"]),
+            "factor2": ("Factor 2: Social Deviance", ["3. Need for Stimulation", "9. Parasitic Lifestyle", "10. Poor Behavioral Controls", "12. Early Behavior Problems", "13. Lack of Realistic, Long-Term Goals", "14. Impulsivity", "15. Irresponsibility", "18. Juvenile Delinquency", "19. Revocation of Conditional Release", "20. Criminal Versatility"]),
+            "additional": ("Additional Items", ["11. Promiscuous Sexual Behavior", "17. Many Short-Term Marital Relationships"])
+        }

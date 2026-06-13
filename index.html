@@ -22,6 +22,18 @@
 </head>
 <body>
 
+    <!-- Password Lock Screen Overlay -->
+    <div id="lock-screen" class="lock-screen active">
+        <div class="lock-box">
+            <div class="lock-icon">🔒</div>
+            <h2>PsychToolkit</h2>
+            <p>Please enter the passphrase to access clinical tools.</p>
+            <input type="password" id="passphrase-input" placeholder="Enter passphrase...">
+            <button id="unlock-btn">Unlock</button>
+            <p id="lock-error" class="lock-error" style="display:none; color: var(--danger-color); margin-top: 1rem;">Incorrect passphrase.</p>
+        </div>
+    </div>
+
     <div id="app-container">
         <!-- Main Header -->
         <header class="app-header">
@@ -340,6 +352,7 @@
                         <button class="tab-button active" data-tab="otp-methadone">Methadone Titration</button>
                         <button class="tab-button" data-tab="otp-bup">Buprenorphine Titration</button>
                         <button class="tab-button" data-tab="otp-lai">LAI (Buvidal & Sublocade) PK Window</button>
+                        <button class="tab-button" data-tab="otp-script">📜 OTP Script Maker</button>
                     </div>
 
                     <!-- Methadone Titration tab -->
@@ -409,6 +422,87 @@
                         <textarea id="lai-schedule-out" class="emr-summary" readonly></textarea>
                         <div class="button-group">
                             <button id="lai-copy-btn" class="copy-btn">Copy EMR Note</button>
+                        </div>
+                    </section>
+
+                    <!-- OTP Script Maker tab -->
+                    <section id="otp-script" class="tab-content">
+                        <h3>OTP Script Maker & Visualiser</h3>
+                        <p style="margin-bottom: 15px; font-size: 14px; color: var(--text-muted);">Enter details below to generate a simulated standard NSW Authority script layout for Opioid Treatment.</p>
+                        <div class="form-grid">
+                            <label for="script-patient-name">Patient Name:</label>
+                            <input type="text" id="script-patient-name" placeholder="John Doe">
+                            <label for="script-dob">DOB:</label>
+                            <input type="text" id="script-dob" placeholder="DD/MM/YYYY">
+                            <label for="script-med">Medication & Form:</label>
+                            <select id="script-med">
+                                <option value="Methadone liquid 5mg/mL">Methadone liquid 5mg/mL</option>
+                                <option value="Buprenorphine Sublingual Tablet">Buprenorphine Sublingual Tablet</option>
+                                <option value="Buprenorphine-Naloxone Sublingual Film">Buprenorphine-Naloxone Sublingual Film</option>
+                            </select>
+                            <label for="script-dose">Dose (mg):</label>
+                            <input type="number" id="script-dose" placeholder="e.g. 50">
+                            <label for="script-freq">Frequency:</label>
+                            <select id="script-freq">
+                                <option value="Daily">Daily</option>
+                                <option value="Twice Daily">Twice Daily</option>
+                                <option value="Alternate Days">Alternate Days</option>
+                            </select>
+                            <label for="script-location">Dosing Location:</label>
+                            <input type="text" id="script-location" placeholder="e.g. Clinic, Pharmacy Name">
+                            <label for="script-repeat-interval">Minimum Repeat Interval:</label>
+                            <select id="script-repeat-interval">
+                                <option value="1 day">1 day</option>
+                                <option value="2 days">2 days</option>
+                                <option value="1 week">1 week</option>
+                                <option value="2 weeks">2 weeks</option>
+                                <option value="1 month">1 month</option>
+                            </select>
+                            <label for="script-start">Start Date:</label>
+                            <input type="text" id="script-start" placeholder="DD/MM/YYYY">
+                            <label for="script-end">End Date:</label>
+                            <input type="text" id="script-end" placeholder="DD/MM/YYYY">
+                        </div>
+                        <div class="button-group" style="margin-top: 15px;">
+                            <button id="generate-script-btn" class="copy-btn">Generate Script Simulation</button>
+                        </div>
+                        
+                        <!-- Script Visualiser Area -->
+                        <div id="script-visualiser" class="script-visualiser-container" style="display: none; margin-top: 20px;">
+                            <div class="nsw-script-mock">
+                                <div class="script-header">
+                                    <div class="script-header-left">
+                                        <strong>AUTHORITY PRESCRIPTION</strong><br>
+                                        <small>Form approx positioning</small>
+                                    </div>
+                                    <div class="script-header-right">
+                                        Date: <span id="out-script-date" class="script-val"></span>
+                                    </div>
+                                </div>
+                                <div class="script-body">
+                                    <div class="script-patient-info">
+                                        <div><strong>Name:</strong> <span id="out-script-name" class="script-val"></span></div>
+                                        <div><strong>DOB:</strong> <span id="out-script-dob" class="script-val"></span></div>
+                                    </div>
+                                    <div class="script-rx-symbol">Rx</div>
+                                    <div class="script-med-details">
+                                        <div id="out-script-med" class="script-val-large"></div>
+                                        <div><strong>Dose:</strong> <span id="out-script-dose" class="script-val"></span> mg</div>
+                                        <div><strong>Frequency:</strong> <span id="out-script-freq" class="script-val"></span></div>
+                                    </div>
+                                    <div class="script-instructions">
+                                        <p>Please supply above medication at <strong><span id="out-script-loc" class="script-val"></span></strong>.</p>
+                                        <p>Valid from: <span id="out-script-start" class="script-val"></span> to <span id="out-script-end" class="script-val"></span></p>
+                                        <p>Minimum repeat interval: <strong><span id="out-script-interval" class="script-val"></span></strong></p>
+                                    </div>
+                                </div>
+                                <div class="script-footer">
+                                    <div class="script-prescriber">
+                                        <strong>Prescriber Signature</strong><br>
+                                        <div style="border-bottom: 1px solid #333; width: 150px; margin-top: 20px;"></div>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </section>
                 </div>
@@ -863,6 +957,7 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="script.js"></script>
 </body>
 </html>

@@ -1,0 +1,1 @@
+{ 'a': "Cannot get to sleep within 30 minutes", 'b': "Wake up in the middle of the night", 'c': "Have to get up to use the bathroom", 'd': "Cannot breathe comfortably", 'e': "Cough or snore loudly", 'f': "Feel too cold", 'g': "Feel too hot", 'h': "Have bad dreams", 'i': "Have pain" }

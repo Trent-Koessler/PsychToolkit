@@ -1,0 +1,9 @@
+
+            ("1. Muscles of Facial Expression", "e.g., movements of forehead, eyebrows, periorbital area, cheeks."),
+            ("2. Lips and Perioral Area", "e.g., puckering, pouting, smacking."),
+            ("3. Jaw", "e.g., biting, clenching, chewing, mouth opening, lateral movements."),
+            ("4. Tongue", "Rate only protrusion and movements at rest."),
+            ("5. Upper Extremities", "e.g., choreic or athetoid movements of arms, wrists, hands, fingers."),
+            ("6. Lower Extremities", "e.g., lateral knee movement, foot tapping, inversion/eversion of foot."),
+            ("7. Trunk", "e.g., rocking, twisting, squirming, pelvic thrusts.")
+        

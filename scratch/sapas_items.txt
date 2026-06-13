@@ -1,0 +1,10 @@
+[
+            ("1. In general, do you have difficulty making and keeping friends?", False),
+            ("2. Would you normally describe yourself as a loner?", False),
+            ("3. In general, do you trust other people?", True),
+            ("4. Do you normally get into arguments or fights?", False),
+            ("5. Do you often feel that you have to be the life of the party?", False),
+            ("6. Do you generally do things on the spur of the moment?", False),
+            ("7. Do you often worry about things that other people may be thinking of you?", False),
+            ("8. Is it your practice to keep on good terms with everyone?", True)
+        ]

@@ -1,0 +1,7 @@
+[
+            ("1. Wish to be Dead", "Have you wished you were dead or wished you could go to sleep and not wake up?"),
+            ("2. Non-specific Active Suicidal Thoughts", "Have you actually had any thoughts of killing yourself?"),
+            ("3. Active Suicidal Ideation with Any Method", "Have you been thinking about how you might kill yourself?"),
+            ("4. Active Suicidal Ideation with Some Intent to Act", "Have you had these thoughts and had some intention of acting on them?"),
+            ("5. Active Suicidal Ideation with Specific Plan and Intent", "Have you started to work out the details of how to kill yourself and do you intend to carry out this plan?")
+        ]

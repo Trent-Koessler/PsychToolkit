@@ -1,0 +1,12 @@
+[
+            ("1. I often notice small sounds when others do not.", True),
+            ("2. I usually concentrate more on the whole picture, rather than the small details.", False),
+            ("3. I find it easy to do more than one thing at once.", False),
+            ("4. If there is an interruption, I can switch back to what I was doing very quickly.", False),
+            ("5. I find it easy to 'read between the lines' when someone is talking to me.", False),
+            ("6. I know how to tell if someone listening to me is getting bored.", False),
+            ("7. When I'm reading a story, I find it difficult to work out the characters' intentions.", True),
+            ("8. I like to collect information about categories of things.", True),
+            ("9. I find it easy to work out what someone is thinking or feeling just by looking at their face.", False),
+            ("10. I find it difficult to work out people's intentions.", True)
+        ]
