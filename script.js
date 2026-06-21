@@ -1,6 +1,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const APP_VERSION = "1.0.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
+    setupEquivalentsConverters();
 
     // --- PASSWORD LOCK --- //
     const lockScreen = document.getElementById("lock-screen");
@@ -1438,63 +1439,399 @@ document.addEventListener("DOMContentLoaded", () => {
     // =================================================================
 
     // 1. MSE Note Generator
-    const mseBtnContainer = document.querySelector(".mse-builder-left");
+    const mseContainer = document.getElementById("gen-mse");
     const mseNoteOut = document.getElementById("mse-note-out");
     const mseResetBtn = document.getElementById("mse-reset-btn");
     const mseCopyBtn = document.getElementById("mse-copy-btn");
 
-    if (mseBtnContainer && mseNoteOut) {
-        const selectedMse = {
-            Appearance: [],
-            Behavior: [],
-            Speech: [],
-            Mood: [],
-            Thought: [],
-            Perception: []
+    if (mseContainer && mseNoteOut) {
+        // Form controls
+        const elements = {
+            consciousness: document.getElementById("mse-consciousness"),
+            ageAppearance: document.getElementById("mse-age-appearance"),
+            habitus: document.getElementById("mse-habitus"),
+            facialExpression: document.getElementById("mse-facial-expression"),
+            hygiene: document.getElementById("mse-hygiene"),
+            appearanceFree: document.getElementById("mse-appearance-free"),
+
+            attitude: document.getElementById("mse-attitude"),
+            eyeContact: document.getElementById("mse-eye-contact"),
+            posture: document.getElementById("mse-posture"),
+            activity: document.getElementById("mse-activity"),
+            behaviourFree: document.getElementById("mse-behaviour-free"),
+
+            speechRate: document.getElementById("mse-speech-rate"),
+            speechVolume: document.getElementById("mse-speech-volume"),
+            speechProsody: document.getElementById("mse-speech-prosody"),
+            speechArticulation: document.getElementById("mse-speech-articulation"),
+            speechFree: document.getElementById("mse-speech-free"),
+
+            mood: document.getElementById("mse-mood"),
+            affectType: document.getElementById("mse-affect-type"),
+            affectRange: document.getElementById("mse-affect-range"),
+            affectIntensity: document.getElementById("mse-affect-intensity"),
+            affectMobility: document.getElementById("mse-affect-mobility"),
+            affectCongruence: document.getElementById("mse-affect-congruence"),
+            affectFree: document.getElementById("mse-affect-free"),
+
+            perceptionFree: document.getElementById("mse-perception-free"),
+            hallucinationDesc: document.getElementById("mse-hallucination-desc"),
+
+            si: document.getElementById("mse-si"),
+            siDesc: document.getElementById("mse-si-desc"),
+            shi: document.getElementById("mse-shi"),
+            tho: document.getElementById("mse-tho"),
+            delusionDesc: document.getElementById("mse-delusion-desc"),
+
+            judgement: document.getElementById("mse-judgement"),
+            orientation: document.getElementById("mse-orientation"),
+            concentration: document.getElementById("mse-concentration"),
+            abstraction: document.getElementById("mse-abstraction"),
+            visuospatial: document.getElementById("mse-visuospatial")
         };
 
-        function compileMseNote() {
-            let parts = [];
-            if (selectedMse.Appearance.length > 0) parts.push(`Appearance: Client ${selectedMse.Appearance.join(", ")}.`);
-            if (selectedMse.Behavior.length > 0) parts.push(`Behavior: Patient is ${selectedMse.Behavior.join(", ")}.`);
-            if (selectedMse.Speech.length > 0) parts.push(`Speech: Evaluated as ${selectedMse.Speech.join(", ")}.`);
-            if (selectedMse.Mood.length > 0) parts.push(`Mood/Affect: Clinically assessed with ${selectedMse.Mood.join(", ")}.`);
-            if (selectedMse.Thought.length > 0) parts.push(`Thought Form/Content: Reveals ${selectedMse.Thought.join(", ")}.`);
-            if (selectedMse.Perception.length > 0) parts.push(`Perception & Insight: Client ${selectedMse.Perception.join(", ")}.`);
+        // Checkboxes & Radios lists
+        const motorChecks = ["mse-motor-tremor", "mse-motor-chorea", "mse-motor-athetosis", "mse-motor-dystonias", "mse-motor-tics", "mse-motor-catatonic"];
+        const mannerismChecks = ["mse-mannerism-stereotypies", "mse-mannerism-compulsions", "mse-mannerism-lip-smacking", "mse-mannerism-wringing-hands"];
+        const hallucinationChecks = ["mse-hallucination-denies", "mse-hallucination-auditory", "mse-hallucination-visual", "mse-hallucination-tactile", "mse-hallucination-olfactory"];
+        const thoughtFormChecks = ["mse-thought-form-coherent", "mse-thought-form-circumstantial", "mse-thought-form-tangential", "mse-thought-form-loosening", "mse-thought-form-salad"];
+        const otherThoughtChecks = ["mse-other-obsessions", "mse-other-ruminations", "mse-other-preoccupations"];
+        const delusionChecks = ["mse-delusion-none", "mse-delusion-persecutory", "mse-delusion-grandiose", "mse-delusion-referential", "mse-delusion-somatic", "mse-delusion-nihilistic", "mse-delusion-control", "mse-delusion-insertion"];
+        const insightRadios = ["mse-insight-good", "mse-insight-partial", "mse-insight-poor", "mse-insight-absent"];
 
-            let text = "--- Mental Status Examination (MSE) Summary ---\n";
-            if (parts.length > 0) {
-                text += parts.join("\n");
-            } else {
-                text += "[Select options on the left to compile]";
+        // Handle Mutually Exclusive Checkboxes
+        function setupMutexCheckboxes(group, noneId) {
+            group.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.addEventListener("change", () => {
+                        if (id === noneId && el.checked) {
+                            // Uncheck all other checkboxes in group
+                            group.forEach(otherId => {
+                                if (otherId !== noneId) {
+                                    const otherEl = document.getElementById(otherId);
+                                    if (otherEl) otherEl.checked = false;
+                                }
+                            });
+                        } else if (id !== noneId && el.checked) {
+                            // Uncheck the "none" option
+                            const noneEl = document.getElementById(noneId);
+                            if (noneEl) noneEl.checked = false;
+                        } else if (id !== noneId && !el.checked) {
+                            // If all unchecked, check the none/denies option
+                            const anyChecked = group.some(oid => oid !== noneId && document.getElementById(oid).checked);
+                            if (!anyChecked) {
+                                const noneEl = document.getElementById(noneId);
+                                if (noneEl) noneEl.checked = true;
+                            }
+                        }
+                        updateVisibility();
+                        compileMseNote();
+                        saveMseDraft();
+                    });
+                }
+            });
+        }
+
+        setupMutexCheckboxes(hallucinationChecks, "mse-hallucination-denies");
+        setupMutexCheckboxes(delusionChecks, "mse-delusion-none");
+        setupMutexCheckboxes(thoughtFormChecks, "mse-thought-form-coherent");
+
+        // Set up generic change triggers for regular fields
+        Object.keys(elements).forEach(key => {
+            const el = elements[key];
+            if (el) {
+                el.addEventListener("input", () => {
+                    compileMseNote();
+                    saveMseDraft();
+                });
+                el.addEventListener("change", () => {
+                    updateVisibility();
+                    compileMseNote();
+                    saveMseDraft();
+                });
             }
+        });
+
+        // Other checkboxes triggers
+        [...motorChecks, ...mannerismChecks, ...otherThoughtChecks, ...insightRadios].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("change", () => {
+                    compileMseNote();
+                    saveMseDraft();
+                });
+            }
+        });
+
+        function updateVisibility() {
+            // Hallucinations details visibility
+            const anyHallucinations = hallucinationChecks.some(id => id !== "mse-hallucination-denies" && document.getElementById(id).checked);
+            const halContainer = document.getElementById("mse-hallucination-desc-container");
+            if (halContainer) halContainer.style.display = anyHallucinations ? "block" : "none";
+
+            // SI details visibility
+            const siValue = elements.si.value;
+            const siContainer = document.getElementById("mse-si-desc-container");
+            if (siContainer) siContainer.style.display = (siValue !== "Denied") ? "block" : "none";
+
+            // Delusions details visibility
+            const anyDelusions = delusionChecks.some(id => id !== "mse-delusion-none" && document.getElementById(id).checked);
+            const delContainer = document.getElementById("mse-delusion-desc-container");
+            if (delContainer) delContainer.style.display = anyDelusions ? "block" : "none";
+        }
+
+        function getCheckedLabels(ids) {
+            const labels = [];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.checked) {
+                    labels.push(el.value);
+                }
+            });
+            return labels;
+        }
+
+        function getCheckedLabelsExclude(ids, excludeVal) {
+            const labels = [];
+            ids.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.checked && el.value !== excludeVal) {
+                    labels.push(el.value);
+                }
+            });
+            return labels;
+        }
+
+        function compileMseNote() {
+            const parts = [];
+
+            // 1. Appearance
+            const appParts = [];
+            appParts.push(`appears ${elements.ageAppearance.value.toLowerCase()}.`);
+            if (elements.habitus.value !== "(Select...)") {
+                appParts.push(`Build is ${elements.habitus.value.toLowerCase()}.`);
+            }
+            if (elements.facialExpression.value !== "(Select...)") {
+                appParts.push(`Facial expression is ${elements.facialExpression.value.toLowerCase()}.`);
+            }
+            appParts.push(`Hygiene is ${elements.hygiene.value.toLowerCase()}.`);
+            const appFree = elements.appearanceFree.value.trim();
+            if (appFree) appParts.push(appFree);
+            parts.push(`Appearance: Level of consciousness is ${elements.consciousness.value.toLowerCase()}. ` + appParts.join(" "));
+
+            // 2. Behavior
+            const behParts = [];
+            behParts.push(`Attitude is ${elements.attitude.value.toLowerCase()}.`);
+            behParts.push(`Eye contact is ${elements.eyeContact.value.toLowerCase()}.`);
+            behParts.push(`Posture is ${elements.posture.value.toLowerCase()}.`);
+            behParts.push(`Psychomotor activity is ${elements.activity.value.toLowerCase()}.`);
+            
+            const motors = getCheckedLabels(motorChecks);
+            if (motors.length > 0) {
+                behParts.push(`Abnormal movements noted: ${motors.join(", ").toLowerCase()}.`);
+            }
+            const mannerisms = getCheckedLabels(mannerismChecks);
+            if (mannerisms.length > 0) {
+                behParts.push(`Mannerisms noted: ${mannerisms.join(", ").toLowerCase()}.`);
+            }
+            const behFree = elements.behaviourFree.value.trim();
+            if (behFree) behParts.push(behFree);
+            parts.push(`Behaviour: ` + behParts.join(" "));
+
+            // 3. Speech
+            const speechParts = [];
+            speechParts.push(`Rate is ${elements.speechRate.value.toLowerCase()}, volume is ${elements.speechVolume.value.toLowerCase()}, with ${elements.speechArticulation.value.toLowerCase()} articulation and ${elements.speechProsody.value.toLowerCase()} tone.`);
+            const speechFree = elements.speechFree.value.trim();
+            if (speechFree) speechParts.push(speechFree);
+            parts.push(`Speech: ` + speechParts.join(" "));
+
+            // 4. Emotions
+            const emoParts = [];
+            const moodVal = elements.mood.value.trim();
+            if (moodVal) {
+                emoParts.push(`Mood is subjectively '${moodVal}'.`);
+            } else {
+                emoParts.push(`Mood is euthymic.`);
+            }
+            emoParts.push(`Affect is ${elements.affectType.value.toLowerCase()} with a ${elements.affectRange.value.toLowerCase()} range and ${elements.affectIntensity.value.toLowerCase()} intensity. Mobility is ${elements.affectMobility.value.toLowerCase()}. It is ${elements.affectCongruence.value.toLowerCase()}.`);
+            const affectFree = elements.affectFree.value.trim();
+            if (affectFree) emoParts.push(affectFree);
+            parts.push(`Emotions: ` + emoParts.join(" "));
+
+            // 5. Perceptions
+            const percParts = [];
+            const hallucinations = getCheckedLabelsExclude(hallucinationChecks, "Denies hallucinations");
+            if (hallucinations.length > 0) {
+                const desc = elements.hallucinationDesc.value.trim();
+                const descStr = desc ? ` (describes: ${desc})` : "";
+                percParts.push(`Reports ${hallucinations.join(", ").toLowerCase()} hallucinations${descStr}.`);
+            } else {
+                percParts.push(`Denies hallucinations.`);
+            }
+            const percFree = elements.perceptionFree.value.trim();
+            if (percFree) percParts.push(percFree);
+            parts.push(`Perceptions: ` + percParts.join(" "));
+
+            // 6. Thought
+            const tForm = getCheckedLabelsExclude(thoughtFormChecks, "Coherent and logical");
+            const formStr = "Form: " + (tForm.length > 0 ? tForm.join(", ").toLowerCase() : "coherent and logical.");
+
+            const contentParts = [];
+            const siVal = elements.si.value;
+            if (siVal !== "Denied") {
+                const desc = elements.siDesc.value.trim();
+                const descStr = desc ? ` (details: ${desc})` : "";
+                contentParts.push(`suicidal ideation is present (${siVal.toLowerCase()})${descStr}`);
+            } else {
+                contentParts.push(`denies suicidal ideation`);
+            }
+
+            const shiVal = elements.shi.value.trim();
+            contentParts.push(shiVal ? `self-harm ideation: ${shiVal}` : `denies self-harm ideation`);
+
+            const thoVal = elements.tho.value.trim();
+            contentParts.push(thoVal ? `homicidal/violent ideation: ${thoVal}` : `denies homicidal/violent ideation`);
+
+            const otherThoughts = getCheckedLabels(otherThoughtChecks);
+            if (otherThoughts.length > 0) {
+                contentParts.push(`other phenomena include ${otherThoughts.join(", ").toLowerCase()}`);
+            }
+
+            const delusions = getCheckedLabelsExclude(delusionChecks, "No delusions present");
+            if (delusions.length > 0) {
+                const desc = elements.delusionDesc.value.trim();
+                const descStr = desc ? ` (details: ${desc})` : "";
+                contentParts.push(`expresses delusions of a ${delusions.join(", ").toLowerCase()} nature${descStr}`);
+            } else {
+                contentParts.push(`denies delusions`);
+            }
+
+            const contentStr = "Content: " + contentParts.join("; ") + ".";
+            parts.push(`Thought:\n  - ${formStr}\n  - ${contentStr}`);
+
+            // 7. Insight & Judgement
+            let insightChecked = "Good";
+            insightRadios.forEach(id => {
+                const r = document.getElementById(id);
+                if (r && r.checked) insightChecked = r.value;
+            });
+            parts.push(`Insight/Judgement: Insight is ${insightChecked.toLowerCase()}. Judgement appears ${elements.judgement.value.toLowerCase()}.`);
+
+            // 8. Cognition
+            const cogParts = [];
+            cogParts.push(`Is ${elements.orientation.value.toLowerCase()}.`);
+            cogParts.push(`Attention and concentration appear ${elements.concentration.value.toLowerCase()}.`);
+            const absVal = elements.abstraction.value.trim();
+            if (absVal) cogParts.push(`Abstraction is ${absVal}.`);
+            const visVal = elements.visuospatial.value.trim();
+            if (visVal) cogParts.push(`Visuoconstructional ability is ${visVal}.`);
+            parts.push(`Cognition: ` + cogParts.join(" "));
+
+            const text = "--- Mental Status Examination (MSE) Summary ---\n" + parts.join("\n");
             mseNoteOut.value = text;
         }
 
-        mseBtnContainer.addEventListener("click", (e) => {
-            const btn = e.target.closest(".mse-option-btn");
-            if (!btn) return;
+        // Draft Saving and Loading
+        function saveMseDraft() {
+            const draft = {};
+            // Selects and Inputs
+            Object.keys(elements).forEach(key => {
+                const el = elements[key];
+                if (el) draft[el.id] = el.value;
+            });
+            // Checkboxes
+            const allCheckboxes = [...motorChecks, ...mannerismChecks, ...hallucinationChecks, ...thoughtFormChecks, ...otherThoughtChecks, ...delusionChecks];
+            allCheckboxes.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) draft[id] = el.checked;
+            });
+            // Radios
+            insightRadios.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) draft[id] = el.checked;
+            });
 
-            const categoryBox = btn.closest(".mse-category-box");
-            const catName = categoryBox.dataset.cat;
-            const textVal = btn.dataset.text;
+            localStorage.setItem("psych_mse_draft", JSON.stringify(draft));
+        }
 
-            btn.classList.toggle("selected");
+        function loadMseDraft() {
+            try {
+                const saved = localStorage.getItem("psych_mse_draft");
+                if (!saved) return;
+                const draft = JSON.parse(saved);
 
-            if (btn.classList.contains("selected")) {
-                selectedMse[catName].push(textVal);
-            } else {
-                selectedMse[catName] = selectedMse[catName].filter(v => v !== textVal);
+                // Selects and Inputs
+                Object.keys(elements).forEach(key => {
+                    const el = elements[key];
+                    if (el && draft[el.id] !== undefined) {
+                        el.value = draft[el.id];
+                    }
+                });
+
+                // Checkboxes
+                const allCheckboxes = [...motorChecks, ...mannerismChecks, ...hallucinationChecks, ...thoughtFormChecks, ...otherThoughtChecks, ...delusionChecks];
+                allCheckboxes.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && draft[id] !== undefined) {
+                        el.checked = draft[id];
+                    }
+                });
+
+                // Radios
+                insightRadios.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el && draft[id] !== undefined) {
+                        el.checked = draft[id];
+                    }
+                });
+
+                updateVisibility();
+                compileMseNote();
+            } catch (e) {
+                console.error("Error loading MSE draft", e);
             }
+        }
 
-            compileMseNote();
-        });
-
+        // Reset Fields
         if (mseResetBtn) {
             mseResetBtn.addEventListener("click", () => {
-                mseBtnContainer.querySelectorAll(".mse-option-btn").forEach(btn => btn.classList.remove("selected"));
-                Object.keys(selectedMse).forEach(k => selectedMse[k] = []);
-                compileMseNote();
+                if (confirm("Are you sure you want to reset all MSE fields to defaults?")) {
+                    // Reset Selects to first option
+                    Object.keys(elements).forEach(key => {
+                        const el = elements[key];
+                        if (el) {
+                            if (el.tagName === "SELECT") {
+                                el.selectedIndex = 0;
+                            } else {
+                                el.value = "";
+                            }
+                        }
+                    });
+
+                    // Reset Checkboxes
+                    const allCheckboxes = [...motorChecks, ...mannerismChecks, ...hallucinationChecks, ...thoughtFormChecks, ...otherThoughtChecks, ...delusionChecks];
+                    allCheckboxes.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = false;
+                    });
+
+                    // Set standard default checked boxes
+                    document.getElementById("mse-hallucination-denies").checked = true;
+                    document.getElementById("mse-thought-form-coherent").checked = true;
+                    document.getElementById("mse-delusion-none").checked = true;
+
+                    // Reset Radios
+                    insightRadios.forEach(id => {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = false;
+                    });
+                    document.getElementById("mse-insight-good").checked = true;
+
+                    localStorage.removeItem("psych_mse_draft");
+                    updateVisibility();
+                    compileMseNote();
+                }
             });
         }
 
@@ -1504,8 +1841,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 navigator.clipboard.writeText(mseNoteOut.value);
             });
         }
-        
-        compileMseNote(); // Initial
+
+        // Initialize
+        loadMseDraft();
+        if (!localStorage.getItem("psych_mse_draft")) {
+            compileMseNote();
+        }
     }
 
     // 2. Definitive 4P Formulation Maker
@@ -2588,6 +2929,103 @@ document.addEventListener("DOMContentLoaded", () => {
                 scriptVisualiser.style.display = "block";
             }
         });
+    }
+
+    // =================================================================
+    // DOSE EQUIVALENTS CONVERTERS
+    // =================================================================
+    function setupEquivalentsConverters() {
+        const apFromDrug = document.getElementById("ap-from-drug");
+        const apFromDose = document.getElementById("ap-from-dose");
+        const apCpzOut = document.getElementById("ap-cpz-out");
+        const apOlzOut = document.getElementById("ap-olz-out");
+
+        const apMedians = {
+            aripiprazole: 30,
+            clozapine: 400,
+            haloperidol: 10,
+            olanzapine: 20,
+            paliperidone: 9,
+            quetiapine: 750,
+            risperidone: 6,
+            ziprasidone: 160,
+            chlorpromazine: 600
+        };
+
+        function calculateApEquivalents() {
+            const drug = apFromDrug.value;
+            const dose = parseFloat(apFromDose.value);
+
+            if (isNaN(dose) || dose <= 0) {
+                apCpzOut.textContent = "0.00 mg";
+                apOlzOut.textContent = "0.00 mg";
+                return;
+            }
+
+            const median = apMedians[drug];
+            if (!median) return;
+
+            // CPZ median is 600 mg
+            const cpzEquivalent = (dose / median) * 600;
+            // OLZ median is 20 mg
+            const olzEquivalent = (dose / median) * 20;
+
+            apCpzOut.textContent = `${cpzEquivalent.toFixed(2)} mg`;
+            apOlzOut.textContent = `${olzEquivalent.toFixed(2)} mg`;
+        }
+
+        if (apFromDrug && apFromDose) {
+            apFromDrug.addEventListener("change", calculateApEquivalents);
+            apFromDose.addEventListener("input", calculateApEquivalents);
+        }
+
+        // Benzodiazepine equivalents
+        const benzoFromDrug = document.getElementById("benzo-from-drug");
+        const benzoFromDose = document.getElementById("benzo-from-dose");
+        const benzoToDrug = document.getElementById("benzo-to-drug");
+        const benzoDdeOut = document.getElementById("benzo-dde-out");
+        const benzoTargetOut = document.getElementById("benzo-target-out");
+
+        const benzoFactors = {
+            diazepam: 10,
+            alprazolam: 0.5,
+            clonazepam: 0.5,
+            lorazepam: 1,
+            oxazepam: 30,
+            temazepam: 20,
+            nitrazepam: 5
+        };
+
+        function calculateBenzoEquivalents() {
+            const fromDrug = benzoFromDrug.value;
+            const toDrug = benzoToDrug.value;
+            const dose = parseFloat(benzoFromDose.value);
+
+            if (isNaN(dose) || dose <= 0) {
+                benzoDdeOut.textContent = "0.00 mg";
+                benzoTargetOut.textContent = "0.00 mg";
+                return;
+            }
+
+            const fromFactor = benzoFactors[fromDrug];
+            const toFactor = benzoFactors[toDrug];
+
+            if (!fromFactor || !toFactor) return;
+
+            // Calculate Diazepam Dose Equivalent (DDE)
+            const dde = (dose / fromFactor) * 10;
+            // Calculate target drug equivalent from DDE
+            const targetEquivalent = (dde / 10) * toFactor;
+
+            benzoDdeOut.textContent = `${dde.toFixed(2)} mg`;
+            benzoTargetOut.textContent = `${targetEquivalent.toFixed(2)} mg`;
+        }
+
+        if (benzoFromDrug && benzoFromDose && benzoToDrug) {
+            benzoFromDrug.addEventListener("change", calculateBenzoEquivalents);
+            benzoFromDose.addEventListener("input", calculateBenzoEquivalents);
+            benzoToDrug.addEventListener("change", calculateBenzoEquivalents);
+        }
     }
 
 });

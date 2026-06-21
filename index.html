@@ -203,7 +203,14 @@
                         </div>
 
                         <div class="guideline-alert-box">
-                            <strong>Note:</strong> Equivalents are population estimates based on consensus guidelines (e.g., Taylor's Prescribing Guidelines). Individual pharmacokinetics vary significantly. High QTc risks require special monitoring.
+                            <strong>Note:</strong> Equivalents are population estimates based on consensus guidelines. Individual pharmacokinetics vary significantly. High QTc risks require special monitoring.
+                            <div class="scientific-references" style="margin-top: 10px; font-size: 11px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 5px; color: var(--text-muted);">
+                                <strong>Scientific References:</strong>
+                                <ul style="margin: 3px 0 0 15px; padding: 0; list-style-type: disc;">
+                                    <li>Gardner DM, Murphy AL, O'Donnell H, et al. <em>International Consensus Study of Antipsychotic Dosing</em>. Am J Psychiatry. 2010;167(6):686-693. <a href="https://doi.org/10.1176/appi.ajp.2009.09060802" target="_blank" rel="noopener" style="color: var(--primary-color);">DOI: 10.1176/appi.ajp.2009.09060802</a></li>
+                                    <li>Taylor D, Barnes T, Young A. <em>The Maudsley Prescribing Guidelines in Psychiatry</em>. 15th Ed. Wiley-Blackwell; 2023.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
 
@@ -253,7 +260,14 @@
                         </div>
 
                         <div class="guideline-alert-box">
-                            <strong>Note:</strong> Half-life vary significantly (e.g., Diazepam 20-100 hrs with active metabolites vs. Oxazepam 4-15 hrs). Cross-taper carefully due to incomplete cross-tolerance.
+                            <strong>Note:</strong> Half-lives vary significantly (e.g., Diazepam 20-100 hrs with active metabolites vs. Oxazepam 4-15 hrs). Cross-taper carefully due to incomplete cross-tolerance.
+                            <div class="scientific-references" style="margin-top: 10px; font-size: 11px; border-top: 1px solid rgba(0,0,0,0.1); padding-top: 5px; color: var(--text-muted);">
+                                <strong>Scientific References:</strong>
+                                <ul style="margin: 3px 0 0 15px; padding: 0; list-style-type: disc;">
+                                    <li>Ashton H. <em>Benzodiazepines: How They Work and How to Withdraw (The Ashton Manual)</em>. 2002.</li>
+                                    <li>Taylor D, Barnes T, Young A. <em>The Maudsley Prescribing Guidelines in Psychiatry</em>. 15th Ed. Wiley-Blackwell; 2023.</li>
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -626,84 +640,398 @@
                     <section id="gen-mse" class="tab-content active">
                         <h3>Mental Status Examination (MSE) Generator</h3>
                         <p style="margin-bottom: 20px; font-size: 13.5px; color: var(--text-muted);">
-                            Click the descriptors that match the patient's state to automatically build a structured EMR-ready MSE paragraph.
+                            Record the patient's presentation across standard clinical domains to generate a structured, EMR-ready mental status note.
                         </p>
                         
                         <div class="generator-layout-grid">
-                            <div class="mse-builder-left">
-                                <div class="mse-category-box" data-cat="Appearance">
+                            <div class="mse-builder-left" style="max-height: 700px; overflow-y: auto; padding-right: 10px;">
+                                
+                                <!-- 1. Appearance -->
+                                <div class="formulation-card">
                                     <h4>Appearance</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="appears stated age">Appears Stated Age</span>
-                                        <span class="mse-option-btn" data-text="neatly dressed">Neatly Dressed</span>
-                                        <span class="mse-option-btn" data-text="casual clothes">Casual Clothes</span>
-                                        <span class="mse-option-btn" data-text="adequate hygiene">Adequate Hygiene</span>
-                                        <span class="mse-option-btn" data-text="disheveled">Disheveled</span>
-                                        <span class="mse-option-btn" data-text="poor grooming">Poorly Groomed</span>
+                                    <div class="form-grid">
+                                        <label for="mse-consciousness">Level of consciousness:</label>
+                                        <select id="mse-consciousness">
+                                            <option value="Alert">Alert</option>
+                                            <option value="Drowsy">Drowsy</option>
+                                            <option value="Lethargic">Lethargic</option>
+                                            <option value="Obtunded">Obtunded</option>
+                                            <option value="Stuporous">Stuporous</option>
+                                        </select>
+
+                                        <label for="mse-age-appearance">Apparent Age:</label>
+                                        <select id="mse-age-appearance">
+                                            <option value="Stated age">Stated age</option>
+                                            <option value="Older than stated age">Older than stated age</option>
+                                            <option value="Younger than stated age">Younger than stated age</option>
+                                        </select>
+
+                                        <label for="mse-habitus">Build/Stature:</label>
+                                        <select id="mse-habitus">
+                                            <option value="(Select...)">(Select...)</option>
+                                            <option value="Well-nourished">Well-nourished</option>
+                                            <option value="Thin">Thin</option>
+                                            <option value="Frail">Frail</option>
+                                            <option value="Emaciated">Emaciated</option>
+                                            <option value="Stocky">Stocky</option>
+                                            <option value="Overweight">Overweight</option>
+                                            <option value="Obese">Obese</option>
+                                        </select>
+
+                                        <label for="mse-facial-expression">Facial Expression:</label>
+                                        <select id="mse-facial-expression">
+                                            <option value="(Select...)">(Select...)</option>
+                                            <option value="Animated">Animated</option>
+                                            <option value="Tense">Tense</option>
+                                            <option value="Worried">Worried</option>
+                                            <option value="Sad">Sad</option>
+                                            <option value="Apathetic">Apathetic</option>
+                                            <option value="Expressionless/Mask-like">Expressionless/Mask-like</option>
+                                        </select>
+
+                                        <label for="mse-hygiene">Hygiene:</label>
+                                        <select id="mse-hygiene">
+                                            <option value="Reasonable">Reasonable</option>
+                                            <option value="Meticulous">Meticulous</option>
+                                            <option value="Good">Good</option>
+                                            <option value="Poor">Poor</option>
+                                            <option value="Neglected">Neglected</option>
+                                        </select>
+                                    </div>
+                                    <div style="margin-top: 15px;">
+                                        <label for="mse-appearance-free">Appearance (free text):</label>
+                                        <div style="display: flex; gap: 8px; margin-top: 5px;">
+                                            <input type="text" id="mse-appearance-free" placeholder="e.g., Unshaven, clothing, tattoos..." style="flex: 1;">
+                                            <button type="button" class="starter-tag" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('mse-appearance-free').value += (document.getElementById('mse-appearance-free').value ? ', ' : '') + 'well-kempt'; document.getElementById('mse-appearance-free').dispatchEvent(new Event('input', {bubbles: true}));">Well-kempt</button>
+                                            <button type="button" class="starter-tag" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('mse-appearance-free').value += (document.getElementById('mse-appearance-free').value ? ', ' : '') + 'disheveled'; document.getElementById('mse-appearance-free').dispatchEvent(new Event('input', {bubbles: true}));">Disheveled</button>
+                                            <button type="button" class="starter-tag" style="padding: 6px 12px; font-size: 12px;" onclick="document.getElementById('mse-appearance-free').value += (document.getElementById('mse-appearance-free').value ? ', ' : '') + 'visible tattoos'; document.getElementById('mse-appearance-free').dispatchEvent(new Event('input', {bubbles: true}));">Tattoos</button>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="mse-category-box" data-cat="Behavior">
-                                    <h4>Behavior & Engagement</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="cooperative">Cooperative</span>
-                                        <span class="mse-option-btn" data-text="engaged in conversation">Engaged</span>
-                                        <span class="mse-option-btn" data-text="good eye contact">Good Eye Contact</span>
-                                        <span class="mse-option-btn" data-text="avoidant eye contact">Avoidant Eye Contact</span>
-                                        <span class="mse-option-btn" data-text="psychomotor agitation">Agitated</span>
-                                        <span class="mse-option-btn" data-text="psychomotor retardation">Retarded</span>
+
+                                <!-- 2. Attitude & Behaviour -->
+                                <div class="formulation-card">
+                                    <h4>Attitude & Behaviour</h4>
+                                    <div class="form-grid">
+                                        <label for="mse-attitude">Attitude:</label>
+                                        <select id="mse-attitude">
+                                            <option value="Cooperative">Cooperative</option>
+                                            <option value="Uncooperative">Uncooperative</option>
+                                            <option value="Guarded">Guarded</option>
+                                            <option value="Suspicious">Suspicious</option>
+                                            <option value="Hostile">Hostile</option>
+                                            <option value="Apathetic">Apathetic</option>
+                                        </select>
+
+                                        <label for="mse-eye-contact">Eye contact:</label>
+                                        <select id="mse-eye-contact">
+                                            <option value="Appropriate">Appropriate</option>
+                                            <option value="Good">Good</option>
+                                            <option value="Intense/Staring">Intense/Staring</option>
+                                            <option value="Fleeting">Fleeting</option>
+                                            <option value="Poor">Poor</option>
+                                            <option value="Avoidant">Avoidant</option>
+                                        </select>
+
+                                        <label for="mse-posture">Posture:</label>
+                                        <select id="mse-posture">
+                                            <option value="Normal/Relaxed">Normal/Relaxed</option>
+                                            <option value="Stiff/Tense">Stiff/Tense</option>
+                                            <option value="Guarded">Guarded</option>
+                                            <option value="Slumped/Stooped">Slumped/Stooped</option>
+                                            <option value="Bizarre">Bizarre</option>
+                                        </select>
+
+                                        <label for="mse-activity">Psychomotor activity:</label>
+                                        <select id="mse-activity">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Restless/Fidgety">Restless/Fidgety</option>
+                                            <option value="Slowed/Bradykinetic">Slowed/Bradykinetic</option>
+                                            <option value="Agitated">Agitated</option>
+                                            <option value="Akathisia">Akathisia</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <strong>Symptomatic Movements:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 5px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-tremor" value="Tremor"> Tremor</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-chorea" value="Chorea"> Chorea</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-athetosis" value="Athetosis"> Athetosis</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-dystonias" value="Dystonias"> Dystonias</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-tics" value="Tics"> Tics</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-motor-catatonic" value="Catatonic phenomena"> Catatonia</label>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <strong>Mannerisms / Oddities:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; margin-top: 5px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-mannerism-stereotypies" value="Stereotypies"> Stereotypies</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-mannerism-compulsions" value="Compulsions"> Compulsions</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-mannerism-lip-smacking" value="Lip smacking"> Lip smacking</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="mse-mannerism-wringing-hands" value="Wringing hands"> Wringing hands</label>
+                                        </div>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <label for="mse-behaviour-free">Behaviour (free text):</label>
+                                        <input type="text" id="mse-behaviour-free" placeholder="e.g., Fidgety, wringing hands, posturing..." style="width: 100%; margin-top: 5px;">
                                     </div>
                                 </div>
-                                <div class="mse-category-box" data-cat="Speech">
-                                    <h4>Speech</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="normal rate, volume, and tone">Normal R/T/V</span>
-                                        <span class="mse-option-btn" data-text="pressured speech">Pressured</span>
-                                        <span class="mse-option-btn" data-text="slow speech">Slowed</span>
-                                        <span class="mse-option-btn" data-text="paucity of speech">Paucity</span>
-                                        <span class="mse-option-btn" data-text="loud volume">Loud</span>
+
+                                <!-- 3. Speech and Language -->
+                                <div class="formulation-card">
+                                    <h4>Speech and Language</h4>
+                                    <div class="form-grid">
+                                        <label for="mse-speech-rate">Rate:</label>
+                                        <select id="mse-speech-rate">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Slow">Slow</option>
+                                            <option value="Rapid">Rapid</option>
+                                            <option value="Pressured">Pressured</option>
+                                        </select>
+
+                                        <label for="mse-speech-volume">Volume:</label>
+                                        <select id="mse-speech-volume">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Soft / Whispered">Soft / Whispered</option>
+                                            <option value="Loud / Shouting">Loud / Shouting</option>
+                                        </select>
+
+                                        <label for="mse-speech-prosody">Tone / Prosody:</label>
+                                        <select id="mse-speech-prosody">
+                                            <option value="Normal / Modulated">Normal / Modulated</option>
+                                            <option value="Monotonous / Flat">Monotonous / Flat</option>
+                                        </select>
+
+                                        <label for="mse-speech-articulation">Articulation:</label>
+                                        <select id="mse-speech-articulation">
+                                            <option value="Clear and intelligible">Clear and intelligible</option>
+                                            <option value="Slurred / Dysarthric">Slurred / Dysarthric</option>
+                                            <option value="Mumbled">Mumbled</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <label for="mse-speech-free">Speech (free text):</label>
+                                        <input type="text" id="mse-speech-free" placeholder="e.g., Slurred, staccato, tremulous..." style="width: 100%; margin-top: 5px;">
                                     </div>
                                 </div>
-                                <div class="mse-category-box" data-cat="Mood">
-                                    <h4>Mood & Affect</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="subjectively reports mood is good">Subjective Euthymic</span>
-                                        <span class="mse-option-btn" data-text="reports feeling low/depressed">Subjective Depressed</span>
-                                        <span class="mse-option-btn" data-text="congruent affect">Congruent Affect</span>
-                                        <span class="mse-option-btn" data-text="incongruent affect">Incongruent Affect</span>
-                                        <span class="mse-option-btn" data-text="restricted range of affect">Restricted Affect</span>
-                                        <span class="mse-option-btn" data-text="labile affect">Labile Affect</span>
+
+                                <!-- 4. Emotions -->
+                                <div class="formulation-card">
+                                    <h4>Emotions</h4>
+                                    <div style="margin-bottom: 15px;">
+                                        <label for="mse-mood">Mood (Subjective):</label>
+                                        <input type="text" id="mse-mood" placeholder="e.g., Happy, anxious, low, or leave blank for euthymic" style="width: 100%; margin-top: 5px;">
+                                    </div>
+
+                                    <strong>Affect (Objective):</strong>
+                                    <div class="form-grid" style="margin-top: 5px;">
+                                        <label for="mse-affect-type">Type:</label>
+                                        <select id="mse-affect-type">
+                                            <option value="Euthymic">Euthymic</option>
+                                            <option value="Dysphoric">Dysphoric</option>
+                                            <option value="Euphoric">Euphoric</option>
+                                            <option value="Anxious">Anxious</option>
+                                            <option value="Angry/Irritable">Angry/Irritable</option>
+                                        </select>
+
+                                        <label for="mse-affect-range">Range:</label>
+                                        <select id="mse-affect-range">
+                                            <option value="Full">Full</option>
+                                            <option value="Restricted">Restricted</option>
+                                        </select>
+
+                                        <label for="mse-affect-intensity">Intensity:</label>
+                                        <select id="mse-affect-intensity">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Heightened/Exaggerated">Heightened/Exaggerated</option>
+                                            <option value="Blunted">Blunted</option>
+                                            <option value="Flat">Flat</option>
+                                        </select>
+
+                                        <label for="mse-affect-mobility">Mobility:</label>
+                                        <select id="mse-affect-mobility">
+                                            <option value="Mobile">Mobile</option>
+                                            <option value="Constricted">Constricted</option>
+                                            <option value="Fixed/Immobile">Fixed/Immobile</option>
+                                            <option value="Labile/Volatile">Labile/Volatile</option>
+                                        </select>
+
+                                        <label for="mse-affect-congruence">Congruence:</label>
+                                        <select id="mse-affect-congruence">
+                                            <option value="Congruent with mood">Congruent with mood</option>
+                                            <option value="Incongruent with mood">Incongruent with mood</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="margin-top: 15px;">
+                                        <label for="mse-affect-free">Affect (free text):</label>
+                                        <input type="text" id="mse-affect-free" placeholder="e.g., Labile, restricted, blunted..." style="width: 100%; margin-top: 5px;">
                                     </div>
                                 </div>
-                                <div class="mse-category-box" data-cat="Thought">
+
+                                <!-- 5. Perceptions -->
+                                <div class="formulation-card">
+                                    <h4>Perceptions</h4>
+                                    <strong>Hallucinations:</strong>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 5px; margin-bottom: 10px;">
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-hallucination-denies" value="Denies hallucinations" checked> Denies</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-hallucination-auditory" value="Auditory"> Auditory</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-hallucination-visual" value="Visual"> Visual</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-hallucination-tactile" value="Tactile"> Tactile</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-hallucination-olfactory" value="Olfactory"> Olfactory</label>
+                                    </div>
+
+                                    <div id="mse-hallucination-desc-container" style="display: none; margin-bottom: 10px;">
+                                        <label for="mse-hallucination-desc">Hallucination Details:</label>
+                                        <textarea id="mse-hallucination-desc" placeholder="Describe hallucinations here (e.g., nature of voices, content of visions)..." rows="3" style="width:100%; margin-top:5px; font-family:inherit;"></textarea>
+                                    </div>
+
+                                    <div>
+                                        <label for="mse-perception-free">Perceptions (free text):</label>
+                                        <input type="text" id="mse-perception-free" placeholder="e.g., Reports illusions, derealization..." style="width: 100%; margin-top: 5px;">
+                                    </div>
+                                </div>
+
+                                <!-- 6. Thought -->
+                                <div class="formulation-card">
                                     <h4>Thought Form & Content</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="logical and goal-directed thought form">Logical Form</span>
-                                        <span class="mse-option-btn" data-text="circumstantial thought form">Circumstantial</span>
-                                        <span class="mse-option-btn" data-text="tangential thought form">Tangential</span>
-                                        <span class="mse-option-btn" data-text="flight of ideas">Flight of Ideas</span>
-                                        <span class="mse-option-btn" data-text="no active suicidal or homicidal thoughts">No suicidal/homicidal ideation</span>
-                                        <span class="mse-option-btn" data-text="active suicidal ideation without intent or plan">Active suicidal ideation</span>
-                                        <span class="mse-option-btn" data-text="denies delusions or paranoid ideas">No Delusions</span>
+                                    <strong>Form of Thought:</strong>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 5px; margin-bottom: 15px;">
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-thought-form-coherent" value="Coherent and logical" checked> Coherent/Logical</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-thought-form-circumstantial" value="Circumstantial"> Circumstantial</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-thought-form-tangential" value="Tangential"> Tangential</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-thought-form-loosening" value="Loosening of associations"> Loose Associations</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-thought-form-salad" value="Word salad"> Word salad</label>
+                                    </div>
+
+                                    <strong>Content - Risk:</strong>
+                                    <div class="form-grid" style="margin-top: 5px; margin-bottom: 10px;">
+                                        <label for="mse-si">Suicidal Ideation (TOSH):</label>
+                                        <select id="mse-si">
+                                            <option value="Denied">Denied</option>
+                                            <option value="Fleeting thoughts, no intent/plan">Fleeting thoughts, no intent/plan</option>
+                                            <option value="Present with intent">Present with intent</option>
+                                            <option value="Present with plan">Present with plan</option>
+                                        </select>
+                                    </div>
+
+                                    <div id="mse-si-desc-container" style="display: none; margin-bottom: 10px;">
+                                        <label for="mse-si-desc">Suicidal Ideation Details:</label>
+                                        <textarea id="mse-si-desc" placeholder="Describe SI details (intent, plan, access to means)..." rows="3" style="width:100%; margin-top:5px; font-family:inherit;"></textarea>
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px;">
+                                        <div>
+                                            <label for="mse-shi">Self-Harm Ideation:</label>
+                                            <input type="text" id="mse-shi" placeholder="e.g., Denied, or specify nature/intent" style="width: 100%; margin-top: 5px;">
+                                        </div>
+                                        <div>
+                                            <label for="mse-tho">Homicidal/Violent Ideation:</label>
+                                            <input type="text" id="mse-tho" placeholder="e.g., Denied, or specify ideation, target, intent, plan" style="width: 100%; margin-top: 5px;">
+                                        </div>
+                                    </div>
+
+                                    <strong>Other Thought Phenomena:</strong>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 8px; margin-top: 5px; margin-bottom: 15px;">
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-other-obsessions" value="Obsessions"> Obsessions</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-other-ruminations" value="Ruminations"> Ruminations</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-other-preoccupations" value="Preoccupations"> Preoccupations</label>
+                                    </div>
+
+                                    <strong>Delusions:</strong>
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; margin-top: 5px; margin-bottom: 10px;">
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-none" value="No delusions present" checked> No delusions present</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-persecutory" value="Persecutory"> Persecutory</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-grandiose" value="Grandiose"> Grandiose</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-referential" value="Referential"> Referential</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-somatic" value="Somatic"> Somatic</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-nihilistic" value="Nihilistic"> Nihilistic</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-control" value="Control"> Control</label>
+                                        <label class="checkbox-label"><input type="checkbox" id="mse-delusion-insertion" value="Thought Insertion/Broadcast"> Thought Insertion</label>
+                                    </div>
+
+                                    <div id="mse-delusion-desc-container" style="display: none;">
+                                        <label for="mse-delusion-desc">Delusion Details:</label>
+                                        <textarea id="mse-delusion-desc" placeholder="Describe delusions here..." rows="3" style="width:100%; margin-top:5px; font-family:inherit;"></textarea>
                                     </div>
                                 </div>
-                                <div class="mse-category-box" data-cat="Perception">
-                                    <h4>Perception & Insight</h4>
-                                    <div class="mse-options-flex">
-                                        <span class="mse-option-btn" data-text="denies auditory or visual hallucinations">No Hallucinations</span>
-                                        <span class="mse-option-btn" data-text="describes auditory hallucinations">Auditory Hallucinations</span>
-                                        <span class="mse-option-btn" data-text="good insight into condition">Good Insight</span>
-                                        <span class="mse-option-btn" data-text="partial insight into condition">Partial Insight</span>
-                                        <span class="mse-option-btn" data-text="poor insight into condition">Poor Insight</span>
-                                        <span class="mse-option-btn" data-text="intact judgment">Intact Judgment</span>
+
+                                <!-- 7. Insight and Judgement -->
+                                <div class="formulation-card">
+                                    <h4>Insight and Judgement</h4>
+                                    <strong>Insight:</strong>
+                                    <div style="display: flex; flex-direction: column; gap: 8px; margin-top: 5px; margin-bottom: 15px;">
+                                        <label class="radio-label">
+                                            <input type="radio" name="mse-insight" id="mse-insight-good" value="Good" checked>
+                                            <strong>Good:</strong> <span style="font-size:12px; color:var(--text-muted);">Readily admit to having problems for which psychological treatments may be required.</span>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="mse-insight" id="mse-insight-partial" value="Partial">
+                                            <strong>Partial:</strong> <span style="font-size:12px; color:var(--text-muted);">May have a problem warranting treatment; however, this insight can pass.</span>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="mse-insight" id="mse-insight-poor" value="Poor">
+                                            <strong>Poor:</strong> <span style="font-size:12px; color:var(--text-muted);">May admit to having a minor problem but rely primarily on physical or situational explanations.</span>
+                                        </label>
+                                        <label class="radio-label">
+                                            <input type="radio" name="mse-insight" id="mse-insight-absent" value="Absent">
+                                            <strong>Absent:</strong> <span style="font-size:12px; color:var(--text-muted);">Will not admit to having any problems and may blame others.</span>
+                                        </label>
+                                    </div>
+
+                                    <div class="form-grid">
+                                        <label for="mse-judgement">Judgement:</label>
+                                        <select id="mse-judgement">
+                                            <option value="Good">Good</option>
+                                            <option value="Fair">Fair</option>
+                                            <option value="Impaired">Impaired</option>
+                                            <option value="Poor">Poor</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <!-- 8. Cognition -->
+                                <div class="formulation-card">
+                                    <h4>Cognition</h4>
+                                    <div class="form-grid">
+                                        <label for="mse-orientation">Orientation:</label>
+                                        <select id="mse-orientation">
+                                            <option value="Oriented to time, place, and person">Oriented to time, place, and person</option>
+                                            <option value="Disoriented to time">Disoriented to time</option>
+                                            <option value="Disoriented to place">Disoriented to place</option>
+                                        </select>
+
+                                        <label for="mse-concentration">Attention/Concentration:</label>
+                                        <select id="mse-concentration">
+                                            <option value="Intact">Intact</option>
+                                            <option value="Easily distracted">Easily distracted</option>
+                                            <option value="Impaired">Impaired</option>
+                                        </select>
+                                    </div>
+
+                                    <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                                        <div>
+                                            <label for="mse-abstraction">Abstraction (Similarities):</label>
+                                            <input type="text" id="mse-abstraction" placeholder="e.g., Watch/Ruler = measuring instruments" style="width: 100%; margin-top: 5px;">
+                                        </div>
+                                        <div>
+                                            <label for="mse-visuospatial">Visuoconstructional (Clock/Cube):</label>
+                                            <input type="text" id="mse-visuospatial" placeholder="e.g., Intact, distorted, numbers crowded" style="width: 100%; margin-top: 5px;">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+                            
                             <div class="mse-builder-right">
                                 <h4>Generated MSE Note</h4>
-                                <textarea id="mse-note-out" class="emr-summary" style="height: 350px; font-family: monospace; font-size:13.5px;" readonly></textarea>
+                                <textarea id="mse-note-out" class="emr-summary" style="height: 480px; font-family: monospace; font-size:13px; line-height:1.4;" readonly></textarea>
                                 <div class="button-group">
                                     <button id="mse-copy-btn" class="copy-btn" style="width:100%;">Copy EMR MSE Note</button>
-                                    <button id="mse-reset-btn" class="reset-btn" style="width:100%;">Reset Selectors</button>
+                                    <button id="mse-reset-btn" class="reset-btn" style="width:100%;">Reset Fields</button>
                                 </div>
                             </div>
                         </div>

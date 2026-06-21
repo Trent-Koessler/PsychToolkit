@@ -1722,4 +1722,61 @@ button.btn-primary:hover,
 
 .lock-box button:hover {
     background-color: var(--primary-hover);
-}
+}
+
+/* MSE Generator & Equivalents styling */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    user-select: none;
+    color: var(--text-color);
+}
+
+.checkbox-label input[type="checkbox"] {
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+    margin: 0;
+}
+
+.radio-label {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    font-size: 13.5px;
+    cursor: pointer;
+    user-select: none;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    transition: all 0.2s ease;
+    color: var(--text-color);
+}
+
+.radio-label:hover {
+    border-color: var(--primary-color);
+    background: var(--tab-bg);
+}
+
+.radio-label input[type="radio"] {
+    margin-top: 3px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    width: 16px;
+    height: 16px;
+    margin-right: 4px;
+}
+
+.scientific-references a {
+    text-decoration: none;
+}
+
+.scientific-references a:hover {
+    text-decoration: underline;
+}
+
