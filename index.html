@@ -618,7 +618,7 @@
                 <div class="tab-container">
                     <div class="tab-buttons">
                         <button class="tab-button active" data-tab="gen-mse">MSE Note Builder</button>
-                        <button class="tab-button" data-tab="gen-5ps">5Ps Formulation</button>
+                        <button class="tab-button" data-tab="gen-5ps">Formulation generator</button>
                         <button class="tab-button" data-tab="gen-templates">Clinical Review Templates</button>
                     </div>
 
@@ -711,36 +711,434 @@
 
                     <!-- 5Ps section -->
                     <section id="gen-5ps" class="tab-content">
-                        <h3>The 5Ps Formulation Compiler</h3>
-                        <div class="formulation-form-grid">
-                            <div class="formulation-row">
-                                <label for="form-presenting">Presenting Problem:</label>
-                                <textarea id="form-presenting" placeholder="What is the patient experiencing right now? Symptoms, onset..."></textarea>
+                        <h3>Definitive 4P Formulation Maker</h3>
+                        <p style="margin-bottom: 20px; font-size: 13.5px; color: var(--text-muted);">
+                            Enter patient details and biopsychosocial factors below to automatically compile a comprehensive clinical formulation.
+                        </p>
+                        
+                        <div class="generator-layout-grid">
+                             <div class="formulation-builder-left">
+                                <!-- Collapsible Formulation Reference Guide -->
+                                <div class="formulation-card reference-card">
+                                    <h4 class="reference-header">
+                                        <span>📖 Formulation Reference Guide</span>
+                                        <span class="toggle-icon">▼</span>
+                                    </h4>
+                                    <div class="reference-content">
+                                        <div class="reference-tabs">
+                                            <button class="ref-tab-btn active" data-ref-tab="ref-4ps" type="button">The 4 Ps</button>
+                                            <button class="ref-tab-btn" data-ref-tab="ref-frameworks" type="button">Theoretical Frameworks</button>
+                                        </div>
+                                        
+                                        <!-- The 4 Ps Content -->
+                                        <div id="ref-4ps" class="ref-tab-content active">
+                                            <div class="ref-grid">
+                                                <div><strong>Predisposing:</strong> Historical vulnerabilities (genetic family history, early childhood developmental trauma, personality structure).</div>
+                                                <div><strong>Precipitating:</strong> Triggers that initiated the current episode (recent losses, conflicts, life stressors, medical illness).</div>
+                                                <div><strong>Perpetuating:</strong> Maintaining factors (cognitive distortions, avoidant coping styles, ongoing substance use, chronic social stressors).</div>
+                                                <div><strong>Protective:</strong> Patient strengths and resources (good insight, strong support system, history of resilience, treatment adherence).</div>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Theoretical Frameworks Content -->
+                                        <div id="ref-frameworks" class="ref-tab-content">
+                                            <div class="ref-grid">
+                                                <div><strong>CBT:</strong> Analyzes Core Schemas ("I am unlovable"), Intermediate Rules/Assumptions ("If I please others, I will be safe"), and Automatic Thoughts.</div>
+                                                <div><strong>Psychodynamic:</strong> Explores defense mechanisms (splitting, projection, intellectualization), central conflicts (autonomy vs dependency), and Ego Strengths.</div>
+                                                <div><strong>Self Psychology:</strong> Focuses on unmet selfobject needs (mirroring, idealization, twinship) and dynamics of self cohesion vs fragmentation.</div>
+                                                <div><strong>Erikson's Stages:</strong> Maps current crisis to psychosocial stages (e.g., Intimacy vs Isolation) and unresolved past stages.</div>
+                                                <div><strong>Attachment Theory:</strong> Evaluates attachment styles (Secure, Anxious, Avoidant, Disorganized) and threat/separation triggers.</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Presenting Problem Card -->
+                                <div class="formulation-card">
+                                    <h4>Presenting Problem</h4>
+                                    <div class="formulation-inputs-row">
+                                        <div class="formulation-field-group col-4">
+                                            <label for="form-pp-name">Name</label>
+                                            <input type="text" id="form-pp-name" placeholder="e.g., Ms. Smith">
+                                        </div>
+                                        <div class="formulation-field-group col-4">
+                                            <label for="form-pp-age">Age</label>
+                                            <input type="text" id="form-pp-age" placeholder="e.g., 34">
+                                        </div>
+                                        <div class="formulation-field-group col-4">
+                                            <label for="form-pp-gender">Gender</label>
+                                            <input type="text" id="form-pp-gender" placeholder="e.g., female">
+                                        </div>
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-pp-duration">Symptom duration and course:
+                                            <span class="starter-tag" data-target="form-pp-duration" data-text="a chronic history of ">"chronic history..."</span>
+                                            <span class="starter-tag" data-target="form-pp-duration" data-text="an acute onset over the past ">"acute onset..."</span>
+                                        </label>
+                                        <input type="text" id="form-pp-duration" placeholder="e.g., a two-month">
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-pp-symptoms">Primary Symptoms:
+                                            <span class="starter-tag" data-target="form-pp-symptoms" data-text="a clinical picture of ">"clinical picture..."</span>
+                                            <span class="starter-tag" data-target="form-pp-symptoms" data-text="prominent symptoms including ">"prominent symptoms..."</span>
+                                        </label>
+                                        <input type="text" id="form-pp-symptoms" placeholder="e.g., debilitating anxiety and social withdrawal">
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-pp-context">Context/Background:
+                                            <span class="starter-tag" data-target="form-pp-context" data-text="precipitated by recent stressors including ">"precipitated by..."</span>
+                                            <span class="starter-tag" data-target="form-pp-context" data-text="occurring alongside significant life events such as ">"life events..."</span>
+                                        </label>
+                                        <input type="text" id="form-pp-context" placeholder="e.g., a recent job loss">
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-pp-coping">Explanation reported by patient for symptoms (e.g. coping / impairment):
+                                            <span class="starter-tag" data-target="form-pp-coping" data-text="attempting to cope by using ">"attempting to cope..."</span>
+                                            <span class="starter-tag" data-target="form-pp-coping" data-text="resulting in functional impairment including ">"impairment..."</span>
+                                        </label>
+                                        <input type="text" id="form-pp-coping" placeholder="e.g., is using alcohol to cope">
+                                    </div>
+                                </div>
+
+                                <!-- Diagnostic Impression Card -->
+                                <div class="formulation-card">
+                                    <h4>Diagnostic Impression</h4>
+                                    <div class="formulation-field-group">
+                                        <label for="form-diag-primary">Primary Diagnosis (DSM-5/ICD-10):
+                                            <span class="starter-tag" data-target="form-diag-primary" data-text="DSM-5 criteria met for ">"criteria met..."</span>
+                                            <span class="starter-tag" data-target="form-diag-primary" data-text="Clinical presentation highly suggestive of ">"suggestive..."</span>
+                                        </label>
+                                        <input type="text" id="form-diag-primary" placeholder="e.g., Panic Disorder, Alcohol Use Disorder">
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-diag-diff">Differential Diagnoses:
+                                            <span class="starter-tag" data-target="form-diag-diff" data-text="To be differentiated from ">"differentiated..."</span>
+                                            <span class="starter-tag" data-target="form-diag-diff" data-text="Must rule out ">"rule out..."</span>
+                                        </label>
+                                        <input type="text" id="form-diag-diff" placeholder="e.g., Major Depressive Disorder, Social Anxiety">
+                                    </div>
+                                    <div class="formulation-field-group">
+                                        <label for="form-diag-contrib">Contributing Medical/Substance Issues:
+                                            <span class="starter-tag" data-target="form-diag-contrib" data-text="Complicated by concurrent ">"complicated..."</span>
+                                            <span class="starter-tag" data-target="form-diag-contrib" data-text="In the context of physical medical issues including ">"medical issues..."</span>
+                                        </label>
+                                        <input type="text" id="form-diag-contrib" placeholder="e.g., Hypothyroidism (controlled), Nicotine Dependence">
+                                    </div>
+                                </div>
+
+                                <!-- 4 Ps Grid Cards (Option B: Compact grid columns) -->
+                                <!-- Predisposing -->
+                                <div class="formulation-card">
+                                    <h4>Predisposing Factors</h4>
+                                    <p class="card-subtitle">What has made the person vulnerable in the past?</p>
+                                    <div class="bps-grid">
+                                        <div class="bps-col">
+                                            <h5>Biological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Biological_Family_history">Family history</label>
+                                                <input type="text" id="Predisposing_Biological_Family_history" placeholder="e.g., Family history">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Biological_Medical_illness">Medical illness</label>
+                                                <input type="text" id="Predisposing_Biological_Medical_illness" placeholder="e.g., Medical illness">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Psychological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Psychological_Development_history">Development history</label>
+                                                <input type="text" id="Predisposing_Psychological_Development_history" placeholder="e.g., Development history">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Psychological_Trauma_history">Trauma history</label>
+                                                <input type="text" id="Predisposing_Psychological_Trauma_history" placeholder="e.g., Trauma history">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Psychological_Personality_traits_structure">Personality traits/structure</label>
+                                                <input type="text" id="Predisposing_Psychological_Personality_traits_structure" placeholder="e.g., Personality traits/structure">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Social</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Social_Accommodation">Accommodation</label>
+                                                <input type="text" id="Predisposing_Social_Accommodation" placeholder="e.g., Accommodation">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Social_Finance_vocation">Finance/vocation</label>
+                                                <input type="text" id="Predisposing_Social_Finance_vocation" placeholder="e.g., Finance/vocation">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Predisposing_Social_Migration_Cultural_factors">Migration/Cultural factors</label>
+                                                <input type="text" id="Predisposing_Social_Migration_Cultural_factors" placeholder="e.g., Migration/Cultural factors">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Precipitating -->
+                                <div class="formulation-card">
+                                    <h4>Precipitating Factors</h4>
+                                    <p class="card-subtitle">Why now? What triggered the episode?</p>
+                                    <div class="bps-grid">
+                                        <div class="bps-col">
+                                            <h5>Biological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Biological_Medication_change">Medication change</label>
+                                                <input type="text" id="Precipitating_Biological_Medication_change" placeholder="e.g., Medication change">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Biological_New_medical_illness">New medical illness</label>
+                                                <input type="text" id="Precipitating_Biological_New_medical_illness" placeholder="e.g., New medical illness">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Psychological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Psychological_Interpersonal_conflict">Interpersonal conflict</label>
+                                                <input type="text" id="Precipitating_Psychological_Interpersonal_conflict" placeholder="e.g., Interpersonal conflict">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Psychological_Loss_or_grief">Loss or grief</label>
+                                                <input type="text" id="Precipitating_Psychological_Loss_or_grief" placeholder="e.g., Loss or grief">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Social</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Social_Changes_to_social_supports">Changes to social supports</label>
+                                                <input type="text" id="Precipitating_Social_Changes_to_social_supports" placeholder="e.g., Changes to social supports">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Precipitating_Social_Legal_issues">Legal issues</label>
+                                                <input type="text" id="Precipitating_Social_Legal_issues" placeholder="e.g., Legal issues">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Perpetuating -->
+                                <div class="formulation-card">
+                                    <h4>Perpetuating Factors</h4>
+                                    <p class="card-subtitle">What is keeping the problem going?</p>
+                                    <div class="bps-grid">
+                                        <div class="bps-col">
+                                            <h5>Biological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Biological_Ongoing_substance_use">Ongoing substance use</label>
+                                                <input type="text" id="Perpetuating_Biological_Ongoing_substance_use" placeholder="e.g., Ongoing substance use">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Biological_Poor_sleep_nutrition">Poor sleep/nutrition</label>
+                                                <input type="text" id="Perpetuating_Biological_Poor_sleep_nutrition" placeholder="e.g., Poor sleep/nutrition">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Psychological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Psychological_Cognitive_distortions">Cognitive distortions</label>
+                                                <input type="text" id="Perpetuating_Psychological_Cognitive_distortions" placeholder="e.g., Cognitive distortions">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Psychological_Poor_insight">Poor insight</label>
+                                                <input type="text" id="Perpetuating_Psychological_Poor_insight" placeholder="e.g., Poor insight">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Psychological_Avoidant_coping">Avoidant coping</label>
+                                                <input type="text" id="Perpetuating_Psychological_Avoidant_coping" placeholder="e.g., Avoidant coping">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Social</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Social_Stigma">Stigma</label>
+                                                <input type="text" id="Perpetuating_Social_Stigma" placeholder="e.g., Stigma">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Perpetuating_Social_Lack_of_access_to_services">Lack of access to services</label>
+                                                <input type="text" id="Perpetuating_Social_Lack_of_access_to_services" placeholder="e.g., Lack of access to services">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Protective -->
+                                <div class="formulation-card">
+                                    <h4>Protective Factors</h4>
+                                    <p class="card-subtitle">What are the patient's strengths and support networks?</p>
+                                    <div class="bps-grid">
+                                        <div class="bps-col">
+                                            <h5>Biological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Biological_Good_physical_health">Good physical health</label>
+                                                <input type="text" id="Protective_Biological_Good_physical_health" placeholder="e.g., Good physical health">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Biological_Medication_adherence">Medication adherence</label>
+                                                <input type="text" id="Protective_Biological_Medication_adherence" placeholder="e.g., Medication adherence">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Psychological</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Psychological_Good_insight">Good insight</label>
+                                                <input type="text" id="Protective_Psychological_Good_insight" placeholder="e.g., Good insight">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Psychological_History_of_resilience">History of resilience</label>
+                                                <input type="text" id="Protective_Psychological_History_of_resilience" placeholder="e.g., History of resilience">
+                                            </div>
+                                        </div>
+                                        <div class="bps-col">
+                                            <h5>Social</h5>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Social_Strong_support_networks">Strong support networks</label>
+                                                <input type="text" id="Protective_Social_Strong_support_networks" placeholder="e.g., Strong support networks">
+                                            </div>
+                                            <div class="formulation-field-group">
+                                                <label for="Protective_Social_Stable_accommodation">Stable accommodation</label>
+                                                <input type="text" id="Protective_Social_Stable_accommodation" placeholder="e.g., Stable accommodation">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Theoretical Framework Card -->
+                                <div class="formulation-card">
+                                    <h4>Theoretical & Transdiagnostic Add-ins (Optional)</h4>
+                                    <p class="card-subtitle">Select one or more theoretical frameworks to include in the formulation.</p>
+                                    
+                                    <div class="framework-checkboxes-row">
+                                        <div class="framework-checkbox-item">
+                                            <input type="checkbox" id="form-framework-cbt" data-framework="cbt">
+                                            <label for="form-framework-cbt">Cognitive Behavioral (CBT)</label>
+                                        </div>
+                                        <div class="framework-checkbox-item">
+                                            <input type="checkbox" id="form-framework-psychodynamic" data-framework="psychodynamic">
+                                            <label for="form-framework-psychodynamic">Psychodynamic & Defenses</label>
+                                        </div>
+                                        <div class="framework-checkbox-item">
+                                            <input type="checkbox" id="form-framework-selfpsych" data-framework="selfpsych">
+                                            <label for="form-framework-selfpsych">Self Psychology</label>
+                                        </div>
+                                        <div class="framework-checkbox-item">
+                                            <input type="checkbox" id="form-framework-erikson" data-framework="erikson">
+                                            <label for="form-framework-erikson">Erikson's Stages</label>
+                                        </div>
+                                        <div class="framework-checkbox-item">
+                                            <input type="checkbox" id="form-framework-attachment" data-framework="attachment">
+                                            <label for="form-framework-attachment">Attachment Theory</label>
+                                        </div>
+                                    </div>
+
+                                    <!-- CBT Fields -->
+                                    <div id="framework-fields-cbt" class="framework-fields-group">
+                                        <h5>Cognitive Behavioral (CBT)</h5>
+                                        <div class="formulation-field-group">
+                                            <label for="form-cbt-core">Core Beliefs / Schemas:</label>
+                                            <input type="text" id="form-cbt-core" placeholder="e.g., I am incompetent, others are untrustworthy">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-cbt-intermediate">Rules & Assumptions (Intermediate Beliefs):</label>
+                                            <input type="text" id="form-cbt-intermediate" placeholder="e.g., If I show vulnerability, I will be rejected">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-cbt-thoughts">Automatic Thoughts / Common Distortions:</label>
+                                            <input type="text" id="form-cbt-thoughts" placeholder="e.g., Catastrophizing, emotional reasoning">
+                                        </div>
+                                    </div>
+
+                                    <!-- Psychodynamic Fields -->
+                                    <div id="framework-fields-psychodynamic" class="framework-fields-group">
+                                        <h5>Psychodynamic & Defenses</h5>
+                                        <div class="formulation-field-group">
+                                            <label for="form-dyn-defenses">Dominant Defense Mechanisms:</label>
+                                            <input type="text" id="form-dyn-defenses" placeholder="e.g., Splitting, projection, intellectualization">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-dyn-conflict">Central Conflict (Internal/Interpersonal):</label>
+                                            <input type="text" id="form-dyn-conflict" placeholder="e.g., Autonomy vs. dependency, anger vs. guilt">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-dyn-ego">Ego Functioning / Strengths:</label>
+                                            <input type="text" id="form-dyn-ego" placeholder="e.g., Good reality testing, poor impulse control">
+                                        </div>
+                                    </div>
+
+                                    <!-- Self Psychology Fields -->
+                                    <div id="framework-fields-selfpsych" class="framework-fields-group">
+                                        <h5>Self Psychology</h5>
+                                        <div class="formulation-field-group">
+                                            <label for="form-self-needs">Unmet Selfobject Needs:</label>
+                                            <input type="text" id="form-self-needs" placeholder="e.g., Mirroring, idealizing, twinship/alter-ego">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-self-cohesion">Self Cohesion vs. Fragmentation Dynamics:</label>
+                                            <input type="text" id="form-self-cohesion" placeholder="e.g., Fragmentation under rejection, chronic emptiness">
+                                        </div>
+                                    </div>
+
+                                    <!-- Erikson Fields -->
+                                    <div id="framework-fields-erikson" class="framework-fields-group">
+                                        <h5>Erikson's Developmental Stages</h5>
+                                        <div class="formulation-field-group">
+                                            <label for="form-erikson-current">Current Developmental Conflict Stage:</label>
+                                            <input type="text" id="form-erikson-current" placeholder="e.g., Intimacy vs. Isolation, Generativity vs. Stagnation">
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-erikson-past">Unresolved Past Developmental Stage(s):</label>
+                                            <input type="text" id="form-erikson-past" placeholder="e.g., Trust vs. Mistrust, Identity vs. Role Confusion">
+                                        </div>
+                                    </div>
+
+                                    <!-- Attachment Theory Fields -->
+                                    <div id="framework-fields-attachment" class="framework-fields-group">
+                                        <h5>Attachment Theory</h5>
+                                        <div class="formulation-field-group">
+                                            <label for="form-attach-style">Dominant Attachment Style:</label>
+                                            <select id="form-attach-style">
+                                                <option value="">Select style...</option>
+                                                <option value="Secure">Secure</option>
+                                                <option value="Anxious-Preoccupied">Anxious-Preoccupied</option>
+                                                <option value="Dismissive-Avoidant">Dismissive-Avoidant</option>
+                                                <option value="Fearful-Avoidant (Disorganized)">Fearful-Avoidant (Disorganized)</option>
+                                            </select>
+                                        </div>
+                                        <div class="formulation-field-group">
+                                            <label for="form-attach-dynamics">Attachment Figures & Separation/Threat Dynamics:</label>
+                                            <input type="text" id="form-attach-dynamics" placeholder="e.g., Fear of abandonment triggered by partner travelling">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Prognosis & Management implications -->
+                                <div class="formulation-card">
+                                    <h4>Prognosis & Management Implications
+                                        <span class="starter-tag" data-target="form-mgmt" data-text="The prognosis is considered guarded but favorable, contingent on ">"prognosis guarded..."</span>
+                                        <span class="starter-tag" data-target="form-mgmt" data-text="The immediate treatment plan will prioritize safety stabilization, followed by ">"priority safety..."</span>
+                                    </h4>
+                                    <div class="formulation-field-group">
+                                        <textarea id="form-mgmt" placeholder="Synthesize the 4 P's to explain the prognosis and outline how the formulation informs the treatment plan..." style="height: 120px;"></textarea>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="formulation-row">
-                                <label for="form-predisposing">Predisposing Factors:</label>
-                                <textarea id="form-predisposing" placeholder="What has made the person vulnerable in the past? Genetics, childhood, trauma..."></textarea>
+                            
+                            <!-- Compiled Output Column -->
+                            <div class="mse-builder-right">
+                                <h4>Compiled Formulation Note</h4>
+                                <div class="output-format-selector-row">
+                                    <label for="form-output-format">Output Format:</label>
+                                    <select id="form-output-format">
+                                        <option value="integrated">Integrated Narrative (Cohesive Prose)</option>
+                                        <option value="sectioned">Sectioned Report (Separate Headings)</option>
+                                    </select>
+                                </div>
+                                <textarea id="form-note-out" class="emr-summary" style="height: 480px; font-family: monospace; font-size:13.5px;" readonly></textarea>
+                                <div class="button-group">
+                                    <button id="form-copy-btn" class="copy-btn" style="width:100%;">Copy Formulation Note</button>
+                                    <button id="form-reset-btn" class="reset-btn" style="width:100%;">Reset Formulation</button>
+                                </div>
                             </div>
-                            <div class="formulation-row">
-                                <label for="form-precipitating">Precipitating Factors:</label>
-                                <textarea id="form-precipitating" placeholder="Why now? Recent stressors, life changes, drug triggers..."></textarea>
-                            </div>
-                            <div class="formulation-row">
-                                <label for="form-perpetuating">Perpetuating Factors:</label>
-                                <textarea id="form-perpetuating" placeholder="What is keeping the problem going? Social isolation, compliance issues, drug habits..."></textarea>
-                            </div>
-                            <div class="formulation-row">
-                                <label for="form-protective">Protective Factors / Strengths:</label>
-                                <textarea id="form-protective" placeholder="What are the patient's strengths? Support networks, hobbies, insight, motivation..."></textarea>
-                            </div>
-                        </div>
-                        <div class="button-group">
-                            <button id="form-generate-btn">Compile 5Ps Formulation</button>
-                        </div>
-                        <textarea id="form-note-out" class="emr-summary" readonly style="height:250px;"></textarea>
-                        <div class="button-group">
-                            <button id="form-copy-btn" class="copy-btn">Copy EMR Note</button>
-                            <button id="form-reset-btn" class="reset-btn">Reset Grid</button>
                         </div>
                     </section>
 

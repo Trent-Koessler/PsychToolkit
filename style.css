@@ -836,23 +836,290 @@ button.btn-primary:hover,
     font-weight: 600;
 }
 
-.formulation-form-grid {
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 16px;
+/* Formulation Builder Specific Styles */
+.formulation-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 20px;
     margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
 }
 
-.formulation-row {
+.formulation-card h4 {
+    margin-bottom: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+}
+
+.formulation-card .card-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-top: -8px;
+    margin-bottom: 16px;
+}
+
+.formulation-inputs-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 14px;
+}
+
+.formulation-field-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    margin-bottom: 14px;
 }
 
-.formulation-row label {
-    font-weight: 700;
-    font-size: 14px;
+.formulation-field-group label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+/* Sentence Starters & Checkboxes */
+.starter-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    font-size: 10.5px;
+    font-weight: normal;
+    color: var(--text-muted);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s ease;
+    line-height: 1.2;
+}
+
+.starter-tag:hover {
+    background-color: rgba(99, 102, 241, 0.1);
+    border-color: var(--primary-color);
     color: var(--primary-color);
+}
+
+.framework-checkboxes-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    margin-bottom: 18px;
+}
+
+.framework-checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background-color: var(--bg-color);
+    border: 1px solid var(--border-color);
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    transition: all 0.2s ease;
+}
+
+.framework-checkbox-item:hover {
+    border-color: var(--text-muted);
+}
+
+.framework-checkbox-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.framework-checkbox-item label {
+    display: inline-block;
+    font-weight: 500;
+    font-size: 13.5px;
+    cursor: pointer;
+    margin: 0;
+}
+
+.framework-fields-group {
+    display: none;
+    border-top: 1px solid var(--border-color);
+    padding-top: 14px;
+    margin-top: 14px;
+}
+
+.framework-fields-group h5 {
+    color: var(--accent-color);
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 12px;
+}
+
+
+.formulation-field-group input,
+.formulation-field-group textarea {
+    box-sizing: border-box;
+}
+
+.col-4 {
+    flex: 1;
+}
+
+.output-format-selector-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.output-format-selector-row label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+.output-format-selector-row select {
+    padding: 6px 10px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    font-size: 13px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    outline: none;
+    transition: border-color 0.15s ease;
+}
+
+.output-format-selector-row select:hover {
+    border-color: var(--text-muted);
+}
+
+/* Collapsible Reference Guide Card */
+.reference-card {
+    border-left: 4px solid var(--primary-color) !important;
+}
+
+.reference-header {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: none !important;
+    padding-bottom: 0 !important;
+    margin-bottom: 0 !important;
+    user-select: none;
+}
+
+.reference-header .toggle-icon {
+    font-size: 12px;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+}
+
+.reference-card.open .toggle-icon {
+    transform: rotate(180deg);
+}
+
+.reference-content {
+    display: none;
+    margin-top: 16px;
+    border-top: 1px solid var(--border-color);
+    padding-top: 14px;
+}
+
+.reference-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 8px;
+    flex-wrap: wrap;
+}
+
+.ref-tab-btn {
+    padding: 4px 8px;
+    font-size: 11.5px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s ease;
+}
+
+.ref-tab-btn:hover {
+    border-color: var(--text-muted);
+}
+
+.ref-tab-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.ref-tab-content {
+    display: none;
+}
+
+.ref-tab-content.active {
+    display: block;
+}
+
+.ref-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-color);
+}
+
+.ref-grid strong {
+    color: var(--accent-color);
+}
+
+
+/* Biopsychosocial Grid Layout */
+.bps-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+}
+
+.bps-col {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    background: rgba(99, 102, 241, 0.02);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+}
+
+.bps-col h5 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 6px;
+    border-bottom: 1px dashed var(--border-color);
+    padding-bottom: 4px;
+}
+
+/* Responsive Styles for Formulation Maker */
+@media (max-width: 768px) {
+    .bps-grid {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+    
+    .formulation-inputs-row {
+        flex-direction: column;
+        gap: 14px;
+    }
 }
 
 /* Footer layout */

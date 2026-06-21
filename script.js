@@ -1508,37 +1508,662 @@ document.addEventListener("DOMContentLoaded", () => {
         compileMseNote(); // Initial
     }
 
-    // 2. 5Ps Formulation Generator
-    const formGenBtn = document.getElementById("form-generate-btn");
-    if (formGenBtn) {
-        formGenBtn.addEventListener("click", () => {
-            const presenting = document.getElementById("form-presenting").value;
-            const predisposing = document.getElementById("form-predisposing").value;
-            const precipitating = document.getElementById("form-precipitating").value;
-            const perpetuating = document.getElementById("form-perpetuating").value;
-            const protective = document.getElementById("form-protective").value;
-            const outEl = document.getElementById("form-note-out");
+    // 2. Definitive 4P Formulation Maker
+    const factorsMap = {
+        "Predisposing": {
+            "Biological": ["Family history", "Medical illness"],
+            "Psychological": ["Development history", "Trauma history", "Personality traits/structure"],
+            "Social": ["Accommodation", "Finance/vocation", "Migration/Cultural factors"]
+        },
+        "Precipitating": {
+            "Biological": ["Medication change", "New medical illness"],
+            "Psychological": ["Interpersonal conflict", "Loss or grief"],
+            "Social": ["Changes to social supports", "Legal issues"]
+        },
+        "Perpetuating": {
+            "Biological": ["Ongoing substance use", "Poor sleep/nutrition"],
+            "Psychological": ["Cognitive distortions", "Poor insight", "Avoidant coping"],
+            "Social": ["Stigma", "Lack of access to services"]
+        },
+        "Protective": {
+            "Biological": ["Good physical health", "Medication adherence"],
+            "Psychological": ["Good insight", "History of resilience"],
+            "Social": ["Strong support networks", "Stable accommodation"]
+        }
+    };
 
-            let log = `--- Clinical 5Ps Formulation Notes ---\n\n`;
-            log += `1. Presenting Factors:\n   ${presenting || "N/A"}\n\n`;
-            log += `2. Predisposing Factors:\n   ${predisposing || "N/A"}\n\n`;
-            log += `3. Precipitating Factors:\n   ${precipitating || "N/A"}\n\n`;
-            log += `4. Perpetuating Factors:\n   ${perpetuating || "N/A"}\n\n`;
-            log += `5. Protective Factors:\n   ${protective || "N/A"}`;
-            outEl.value = log;
+    function compileFormulation() {
+        const outParts = [];
+
+        // 1. Synthesize Presenting Problem
+        const name = document.getElementById("form-pp-name").value.trim();
+        const age = document.getElementById("form-pp-age").value.trim();
+        const gender = document.getElementById("form-pp-gender").value.trim();
+        const duration = document.getElementById("form-pp-duration").value.trim();
+        const symptoms = document.getElementById("form-pp-symptoms").value.trim();
+        const context = document.getElementById("form-pp-context").value.trim();
+        const coping = document.getElementById("form-pp-coping").value.trim();
+
+        // Get pronouns based on entered gender
+        function getPronouns(genderStr) {
+            const g = (genderStr || "").toLowerCase().trim();
+            if (g === "female" || g === "woman" || g === "she" || g === "f" || g === "girl") {
+                return { subject: "she", object: "her", possessive: "her", possessivePronoun: "hers", verb: "reports", presents: "presents", copes: "copes", CopingCapitalized: "She reports" };
+            } else if (g === "male" || g === "man" || g === "he" || g === "m" || g === "boy") {
+                return { subject: "he", object: "him", possessive: "his", possessivePronoun: "his", verb: "reports", presents: "presents", copes: "copes", CopingCapitalized: "He reports" };
+            } else {
+                return { subject: "they", object: "them", possessive: "their", possessivePronoun: "theirs", verb: "report", presents: "present", copes: "cope", CopingCapitalized: "They report" };
+            }
+        }
+        
+        const pronouns = getPronouns(gender);
+
+        const ppTextParts = [];
+        if (name && age && gender) {
+            ppTextParts.push(`${name} is a ${age}-year-old ${gender}`);
+        }
+        if (symptoms) {
+            let durStr = duration || "a history";
+            const lowerDur = durStr.toLowerCase().trim();
+            let symptomsPhrase = "";
+            if (lowerDur.endsWith("of")) {
+                symptomsPhrase = `who ${pronouns.presents} with ${durStr} ${symptoms}`;
+            } else {
+                symptomsPhrase = `who ${pronouns.presents} with ${durStr} of ${symptoms}`;
+            }
+            
+            // Determine if the next clause (context) will start a new sentence
+            let nextStartsNewSentence = false;
+            if (context) {
+                const lowerContext = context.toLowerCase().trim();
+                if (lowerContext.startsWith("precipitated by") || lowerContext.startsWith("occurring")) {
+                    nextStartsNewSentence = true;
+                }
+            }
+            
+            // If there's no context, or the context starts a new sentence, end this sentence with a period
+            if (!context || nextStartsNewSentence) {
+                symptomsPhrase += ".";
+            }
+            ppTextParts.push(symptomsPhrase);
+        } else if (ppTextParts.length > 0 && !context) {
+            // Close the name/age/gender sentence if no symptoms and no context
+            ppTextParts[ppTextParts.length - 1] += ".";
+        }
+
+        if (context) {
+            let contextStr = context;
+            const lowerContext = contextStr.toLowerCase().trim();
+            if (lowerContext.startsWith("in the context of")) {
+                ppTextParts.push(`${contextStr}.`);
+            } else if (lowerContext.startsWith("precipitated by") || lowerContext.startsWith("occurring")) {
+                // Capitalize the first letter for a new sentence
+                const capitalizedContext = contextStr.charAt(0).toUpperCase() + contextStr.slice(1);
+                ppTextParts.push(`${capitalizedContext}.`);
+            } else {
+                ppTextParts.push(`in the context of ${contextStr}.`);
+            }
+        }
+
+        if (coping) {
+            let copingStr = coping;
+            const lowerCoping = copingStr.toLowerCase().trim();
+            if (lowerCoping.startsWith("they report") || 
+                lowerCoping.startsWith("he reports") || 
+                lowerCoping.startsWith("she reports") || 
+                lowerCoping.startsWith("patient reports")) {
+                let rest = copingStr;
+                if (lowerCoping.startsWith("they report")) rest = copingStr.slice(11).trim();
+                else if (lowerCoping.startsWith("he reports")) rest = copingStr.slice(10).trim();
+                else if (lowerCoping.startsWith("she reports")) rest = copingStr.slice(11).trim();
+                else if (lowerCoping.startsWith("patient reports")) rest = copingStr.slice(15).trim();
+
+                ppTextParts.push(`${pronouns.CopingCapitalized} ${rest}.`);
+            } else if (lowerCoping.startsWith("resulting in")) {
+                ppTextParts.push(`This is ${copingStr}.`);
+            } else {
+                ppTextParts.push(`${pronouns.CopingCapitalized} ${copingStr}.`);
+            }
+        }
+
+        if (ppTextParts.length > 0) {
+            outParts.push("PRESENTING PROBLEM\n" + ppTextParts.join(" "));
+        }
+
+        // 2. Add Diagnostic Impression
+        const primary = document.getElementById("form-diag-primary").value.trim();
+        const diff = document.getElementById("form-diag-diff").value.trim();
+        const contrib = document.getElementById("form-diag-contrib").value.trim();
+
+        const diagTextParts = [];
+        if (primary) diagTextParts.push(`* **Primary:** ${primary}`);
+        if (diff) diagTextParts.push(`* **Differentials:** ${diff}`);
+        if (contrib) diagTextParts.push(`* **Contributing:** ${contrib}`);
+
+        if (diagTextParts.length > 0) {
+            outParts.push("DIAGNOSTIC IMPRESSION\n" + diagTextParts.join("\n"));
+        }
+
+        // Helper to get factors text for a category and subcategory
+        function getFactorsText(pKeyFilter, subKeyFilter) {
+            const details = [];
+            const subCats = factorsMap[pKeyFilter];
+            if (!subCats) return details;
+            
+            if (subKeyFilter) {
+                const factorsList = subCats[subKeyFilter] || [];
+                factorsList.forEach(factor => {
+                    const id = `${pKeyFilter}_${subKeyFilter}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                    const el = document.getElementById(id);
+                    if (el && el.value.trim()) {
+                        details.push(el.value.trim());
+                    }
+                });
+            } else {
+                Object.keys(subCats).forEach(sk => {
+                    const factorsList = subCats[sk] || [];
+                    factorsList.forEach(factor => {
+                        const id = `${pKeyFilter}_${sk}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                        const el = document.getElementById(id);
+                        if (el && el.value.trim()) {
+                            details.push(el.value.trim());
+                        }
+                    });
+                });
+            }
+            return details;
+        }
+
+        // Get output format preference (integrated narrative vs sectioned report)
+        const formatSelect = document.getElementById("form-output-format");
+        const isIntegrated = formatSelect ? (formatSelect.value === "integrated") : true;
+
+        // 3. Generate Narrative Formulation
+        const narrativeParagraphs = [];
+        const narrativeParts = [];
+        const bioDiathesis = getFactorsText("Predisposing", "Biological");
+        if (bioDiathesis.length > 0) {
+            const subjectPronoun = pronouns.subject.charAt(0).toUpperCase() + pronouns.subject.slice(1);
+            const verbHave = pronouns.subject === "they" ? "have" : "has";
+            narrativeParts.push(`${subjectPronoun} ${verbHave} a biological diathesis of mental illness from ${bioDiathesis.join(", ")}.`);
+        }
+        const psychPredisposition = getFactorsText("Predisposing", "Psychological");
+        if (psychPredisposition.length > 0) {
+            const possessivePronoun = pronouns.possessive.charAt(0).toUpperCase() + pronouns.possessive.slice(1);
+            narrativeParts.push(`${possessivePronoun} psychological predisposition to illness includes ${psychPredisposition.join(", ")}.`);
+        }
+        const socialFactors = getFactorsText("Predisposing", "Social");
+        if (socialFactors.length > 0) {
+            narrativeParts.push(`This is further augmented by social factors of ${socialFactors.join(", ")}.`);
+        }
+
+        const precipitatingFactors = getFactorsText("Precipitating");
+        if (precipitatingFactors.length > 0) {
+            narrativeParts.push(`Precipitating this presentation was ${precipitatingFactors.join(", ")}.`);
+        }
+        const perpetuatingFactors = getFactorsText("Perpetuating");
+        if (perpetuatingFactors.length > 0) {
+            narrativeParts.push(`Perpetuating these problems, the patient faces a milieu of ${perpetuatingFactors.join(", ")}.`);
+        }
+        const protectiveFactors = getFactorsText("Protective");
+        if (protectiveFactors.length > 0) {
+            const subjectPronoun = pronouns.subject === "they" ? "they" : pronouns.subject;
+            const verbHave = pronouns.subject === "they" ? "have" : "has";
+            narrativeParts.push(`Protectively, ${subjectPronoun} ${verbHave} ${protectiveFactors.join(", ")}.`);
+        }
+
+        if (narrativeParts.length > 0) {
+            narrativeParagraphs.push(narrativeParts.join(" "));
+        }
+
+        // Compile transdiagnostic theoretical frameworks prose and markdown lists
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        const theoryProseParts = [];
+        const sectionedFrameworksData = [];
+
+        activeFrameworks.forEach(fw => {
+            const cb = document.getElementById(`form-framework-${fw}`);
+            if (cb && cb.checked) {
+                let frameworkTitle = "";
+                const tcParts = [];
+                let prose = "";
+
+                if (fw === "cbt") {
+                    frameworkTitle = "Cognitive Behavioral (CBT)";
+                    const core = document.getElementById("form-cbt-core").value.trim();
+                    const inter = document.getElementById("form-cbt-intermediate").value.trim();
+                    const thoughts = document.getElementById("form-cbt-thoughts").value.trim();
+                    if (core) tcParts.push(`* **Core Beliefs / Schemas:** ${core}`);
+                    if (inter) tcParts.push(`* **Rules & Assumptions (Intermediate Beliefs):** ${inter}`);
+                    if (thoughts) tcParts.push(`* **Automatic Thoughts / Cognitive Distortions:** ${thoughts}`);
+
+                    if (core || inter || thoughts) {
+                        const proseParts = [];
+                        if (core) proseParts.push(`core beliefs/schemas of "${core}"`);
+                        if (inter) proseParts.push(`rules/assumptions including "${inter}"`);
+                        if (thoughts) proseParts.push(`automatic thoughts/cognitive distortions of "${thoughts}"`);
+                        prose = `From a Cognitive Behavioral (CBT) perspective, this presentation is maintained by ${proseParts.join(", and ")}.`;
+                    }
+                } else if (fw === "psychodynamic") {
+                    frameworkTitle = "Psychodynamic & Defenses";
+                    const defenses = document.getElementById("form-dyn-defenses").value.trim();
+                    const conflict = document.getElementById("form-dyn-conflict").value.trim();
+                    const ego = document.getElementById("form-dyn-ego").value.trim();
+                    if (defenses) tcParts.push(`* **Dominant Defense Mechanisms:** ${defenses}`);
+                    if (conflict) tcParts.push(`* **Central Conflict:** ${conflict}`);
+                    if (ego) tcParts.push(`* **Ego Functioning & Strengths:** ${ego}`);
+
+                    if (defenses || conflict || ego) {
+                        const proseParts = [];
+                        if (defenses) proseParts.push(`defense mechanisms of ${defenses}`);
+                        if (conflict) proseParts.push(`a central conflict of ${conflict}`);
+                        if (ego) proseParts.push(`ego functioning described as ${ego}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbUtilize = pronouns.subject === "they" ? "utilize" : "utilizes";
+                        prose = `Psychodynamically, the presentation is understood through ${subjectPronoun} ${verbUtilize} of ${proseParts.join(", alongside ")}.`;
+                    }
+                } else if (fw === "selfpsych") {
+                    frameworkTitle = "Self Psychology";
+                    const needs = document.getElementById("form-self-needs").value.trim();
+                    const cohesion = document.getElementById("form-self-cohesion").value.trim();
+                    if (needs) tcParts.push(`* **Unmet Selfobject Needs:** ${needs}`);
+                    if (cohesion) tcParts.push(`* **Self Cohesion / Fragmentation Dynamics:** ${cohesion}`);
+
+                    if (needs || cohesion) {
+                        const proseParts = [];
+                        if (needs) proseParts.push(`unmet selfobject needs for ${needs}`);
+                        if (cohesion) proseParts.push(`self cohesion vs. fragmentation dynamics of ${cohesion}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbExperience = pronouns.subject === "they" ? "experience" : "experiences";
+                        prose = `Under a Self Psychology framework, ${subjectPronoun} ${verbExperience} ${proseParts.join(", with ")}.`;
+                    }
+                } else if (fw === "erikson") {
+                    frameworkTitle = "Erikson's Developmental Stages";
+                    const currentStage = document.getElementById("form-erikson-current").value.trim();
+                    const pastStage = document.getElementById("form-erikson-past").value.trim();
+                    if (currentStage) tcParts.push(`* **Current Developmental Stage Conflict:** ${currentStage}`);
+                    if (pastStage) tcParts.push(`* **Unresolved Past Stage(s):** ${pastStage}`);
+
+                    if (currentStage || pastStage) {
+                        const proseParts = [];
+                        if (currentStage) proseParts.push(`currently navigating the conflict of ${currentStage}`);
+                        if (pastStage) proseParts.push(`with unresolved developmental issues from the stage of ${pastStage}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbBe = pronouns.subject === "they" ? "are" : "is";
+                        prose = `Developmentally, Erikson's model suggests ${subjectPronoun} ${verbBe} ${proseParts.join(" ")}.`;
+                    }
+                } else if (fw === "attachment") {
+                    frameworkTitle = "Attachment Theory";
+                    const style = document.getElementById("form-attach-style").value;
+                    const dynamics = document.getElementById("form-attach-dynamics").value.trim();
+                    if (style) tcParts.push(`* **Dominant Attachment Style:** ${style}`);
+                    if (dynamics) tcParts.push(`* **Attachment Figure & Separation Dynamics:** ${dynamics}`);
+
+                    if (style || dynamics) {
+                        const proseParts = [];
+                        if (style) proseParts.push(`a dominant attachment style of ${style}`);
+                        if (dynamics) proseParts.push(`separation/threat dynamics involving ${dynamics}`);
+                        prose = `Attachment formulation indicates ${proseParts.join(", alongside ")}.`;
+                    }
+                }
+
+                if (tcParts.length > 0) {
+                    sectionedFrameworksData.push({ title: frameworkTitle, lines: tcParts });
+                }
+                if (prose) {
+                    theoryProseParts.push(prose);
+                }
+            }
         });
 
-        document.getElementById("form-copy-btn").addEventListener("click", () => {
-            const outEl = document.getElementById("form-note-out");
-            navigator.clipboard.writeText(outEl.value);
-        });
+        const mgmtText = document.getElementById("form-mgmt").value.trim();
 
-        document.getElementById("form-reset-btn").addEventListener("click", () => {
-            ["form-presenting", "form-predisposing", "form-precipitating", "form-perpetuating", "form-protective"].forEach(id => {
-                document.getElementById(id).value = "";
+        if (isIntegrated) {
+            if (theoryProseParts.length > 0) {
+                narrativeParagraphs.push(theoryProseParts.join(" "));
+            }
+            if (mgmtText) {
+                narrativeParagraphs.push(mgmtText);
+            }
+        }
+
+        if (narrativeParagraphs.length > 0) {
+            outParts.push("NARRATIVE FORMULATION\n" + narrativeParagraphs.join("\n\n"));
+        }
+
+        if (!isIntegrated) {
+            // Add separate sections for Sectioned format
+            sectionedFrameworksData.forEach(fwData => {
+                outParts.push(`THEORETICAL CONSIDERATIONS (${fwData.title.toUpperCase()})\n` + fwData.lines.join("\n"));
             });
-            document.getElementById("form-note-out").value = "";
+
+            if (mgmtText) {
+                outParts.push("PROGNOSIS & MANAGEMENT IMPLICATIONS\n" + mgmtText);
+            }
+        }
+
+        // 6. Generate Structured List
+        const structuredLines = [];
+        Object.keys(factorsMap).forEach(pKey => {
+            const pKeyLines = [];
+            Object.keys(factorsMap[pKey]).forEach(subKey => {
+                const subKeyLines = [];
+                factorsMap[pKey][subKey].forEach(factor => {
+                    const id = `${pKey}_${subKey}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                    const el = document.getElementById(id);
+                    if (el && el.value.trim()) {
+                        subKeyLines.push(`    - ${factor}: ${el.value.trim()}`);
+                    }
+                });
+                if (subKeyLines.length > 0) {
+                    pKeyLines.push(`  ${subKey}:`);
+                    pKeyLines.push(...subKeyLines);
+                }
+            });
+            if (pKeyLines.length > 0) {
+                structuredLines.push(`\n${pKey.toUpperCase()} FACTORS:`);
+                structuredLines.push(...pKeyLines);
+            }
         });
+
+        if (structuredLines.length > 0) {
+            outParts.push("STRUCTURED FORMULATION" + structuredLines.join("\n"));
+        }
+
+        const outEl = document.getElementById("form-note-out");
+        if (outEl) {
+            outEl.value = outParts.join("\n\n");
+        }
+    }
+
+    function saveFormulationDraft() {
+        const draftData = {};
+        const ppFields = ["form-pp-name", "form-pp-age", "form-pp-gender", "form-pp-duration", "form-pp-symptoms", "form-pp-context", "form-pp-coping"];
+        ppFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) draftData[id] = el.value;
+        });
+
+        const diagFields = ["form-diag-primary", "form-diag-diff", "form-diag-contrib"];
+        diagFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) draftData[id] = el.value;
+        });
+
+        const mgmtEl = document.getElementById("form-mgmt");
+        if (mgmtEl) draftData["form-mgmt"] = mgmtEl.value;
+
+        // Save output format preference
+        const formatSelect = document.getElementById("form-output-format");
+        if (formatSelect) draftData["form-output-format"] = formatSelect.value;
+
+        // Save factors
+        Object.keys(factorsMap).forEach(pKey => {
+            Object.keys(factorsMap[pKey]).forEach(subKey => {
+                factorsMap[pKey][subKey].forEach(factor => {
+                    const id = `${pKey}_${subKey}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                    const el = document.getElementById(id);
+                    if (el) draftData[id] = el.value;
+                });
+            });
+        });
+
+        // Save framework checkboxes
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        activeFrameworks.forEach(fw => {
+            const cb = document.getElementById(`form-framework-${fw}`);
+            if (cb) draftData[`form-framework-${fw}`] = cb.checked;
+        });
+
+        // Save framework text fields
+        const allFrameworkFields = [
+            "form-cbt-core", "form-cbt-intermediate", "form-cbt-thoughts",
+            "form-dyn-defenses", "form-dyn-conflict", "form-dyn-ego",
+            "form-self-needs", "form-self-cohesion",
+            "form-erikson-current", "form-erikson-past",
+            "form-attach-style", "form-attach-dynamics"
+        ];
+        allFrameworkFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) draftData[id] = el.value;
+        });
+
+        localStorage.setItem("psych_formulation_draft", JSON.stringify(draftData));
+    }
+
+    function loadFormulationDraft() {
+        const draftStr = localStorage.getItem("psych_formulation_draft");
+        if (!draftStr) return;
+        try {
+            const draftData = JSON.parse(draftStr);
+            
+            // Load PP and diagnostic text inputs
+            const basicFields = [
+                "form-pp-name", "form-pp-age", "form-pp-gender", "form-pp-duration", 
+                "form-pp-symptoms", "form-pp-context", "form-pp-coping",
+                "form-diag-primary", "form-diag-diff", "form-diag-contrib",
+                "form-mgmt"
+            ];
+            basicFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && draftData[id] !== undefined) {
+                    el.value = draftData[id];
+                }
+            });
+
+            // Load output format preference
+            const formatSelect = document.getElementById("form-output-format");
+            if (formatSelect && draftData["form-output-format"] !== undefined) {
+                formatSelect.value = draftData["form-output-format"];
+            }
+
+            // Load 4Ps factors
+            Object.keys(factorsMap).forEach(pKey => {
+                Object.keys(factorsMap[pKey]).forEach(subKey => {
+                    factorsMap[pKey][subKey].forEach(factor => {
+                        const id = `${pKey}_${subKey}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                        const el = document.getElementById(id);
+                        if (el && draftData[id] !== undefined) {
+                            el.value = draftData[id];
+                        }
+                    });
+                });
+            });
+
+            // Load checkboxes
+            const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+            activeFrameworks.forEach(fw => {
+                const cb = document.getElementById(`form-framework-${fw}`);
+                if (cb && draftData[`form-framework-${fw}`] !== undefined) {
+                    cb.checked = draftData[`form-framework-${fw}`];
+                    // Trigger changes to toggle visibility
+                    cb.dispatchEvent(new Event("change"));
+                }
+            });
+
+            // Load framework text fields
+            const allFrameworkFields = [
+                "form-cbt-core", "form-cbt-intermediate", "form-cbt-thoughts",
+                "form-dyn-defenses", "form-dyn-conflict", "form-dyn-ego",
+                "form-self-needs", "form-self-cohesion",
+                "form-erikson-current", "form-erikson-past",
+                "form-attach-style", "form-attach-dynamics"
+            ];
+            allFrameworkFields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && draftData[id] !== undefined) {
+                    el.value = draftData[id];
+                }
+            });
+
+            compileFormulation();
+        } catch (e) {
+            console.error("Error loading formulation draft", e);
+        }
+    }
+
+    function resetFormulation() {
+        const ppFields = ["form-pp-name", "form-pp-age", "form-pp-gender", "form-pp-duration", "form-pp-symptoms", "form-pp-context", "form-pp-coping"];
+        ppFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+
+        const diagFields = ["form-diag-primary", "form-diag-diff", "form-diag-contrib"];
+        diagFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+
+        const mgmtEl = document.getElementById("form-mgmt");
+        if (mgmtEl) mgmtEl.value = "";
+
+        // Reset format selector
+        const formatSelect = document.getElementById("form-output-format");
+        if (formatSelect) formatSelect.value = "integrated";
+
+        Object.keys(factorsMap).forEach(pKey => {
+            Object.keys(factorsMap[pKey]).forEach(subKey => {
+                factorsMap[pKey][subKey].forEach(factor => {
+                    const id = `${pKey}_${subKey}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                    const el = document.getElementById(id);
+                    if (el) el.value = "";
+                });
+            });
+        });
+
+        // Clear checkboxes
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        activeFrameworks.forEach(fw => {
+            const cb = document.getElementById(`form-framework-${fw}`);
+            if (cb) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event("change"));
+            }
+        });
+
+        // Clear framework text fields
+        const allFrameworkFields = [
+            "form-cbt-core", "form-cbt-intermediate", "form-cbt-thoughts",
+            "form-dyn-defenses", "form-dyn-conflict", "form-dyn-ego",
+            "form-self-needs", "form-self-cohesion",
+            "form-erikson-current", "form-erikson-past",
+            "form-attach-style", "form-attach-dynamics"
+        ];
+        allFrameworkFields.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.value = "";
+        });
+
+        const outEl = document.getElementById("form-note-out");
+        if (outEl) outEl.value = "";
+
+        localStorage.removeItem("psych_formulation_draft");
+    }
+
+    const formContainer = document.getElementById("gen-5ps");
+    if (formContainer) {
+        // Collapsible Reference Guide Toggle
+        const refHeader = formContainer.querySelector(".reference-header");
+        const refCard = formContainer.querySelector(".reference-card");
+        const refContent = formContainer.querySelector(".reference-content");
+        if (refHeader && refContent && refCard) {
+            refHeader.addEventListener("click", () => {
+                const isOpen = refCard.classList.toggle("open");
+                refContent.style.display = isOpen ? "block" : "none";
+            });
+        }
+
+        // Reference Guide Tabs Toggle
+        const refTabButtons = formContainer.querySelectorAll(".ref-tab-btn");
+        refTabButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const targetTabId = btn.dataset.refTab;
+                // Deactivate all buttons & contents
+                refTabButtons.forEach(b => b.classList.remove("active"));
+                formContainer.querySelectorAll(".ref-tab-content").forEach(c => {
+                    c.style.display = "none";
+                    c.classList.remove("active");
+                });
+                // Activate target
+                btn.classList.add("active");
+                const targetContent = document.getElementById(targetTabId);
+                if (targetContent) {
+                    targetContent.style.display = "block";
+                    targetContent.classList.add("active");
+                }
+            });
+        });
+
+        // Toggle checkboxes event listeners
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        activeFrameworks.forEach(fw => {
+            const cb = document.getElementById(`form-framework-${fw}`);
+            if (cb) {
+                cb.addEventListener("change", () => {
+                    const target = document.getElementById(`framework-fields-${fw}`);
+                    if (target) {
+                        target.style.display = cb.checked ? "block" : "none";
+                    }
+                    compileFormulation();
+                    saveFormulationDraft();
+                });
+            }
+        });
+
+        // Sentence starters click handler via event delegation
+        formContainer.addEventListener("click", (e) => {
+            if (e.target.classList.contains("starter-tag")) {
+                const targetId = e.target.dataset.target;
+                const text = e.target.dataset.text;
+                const targetEl = document.getElementById(targetId);
+                if (targetEl) {
+                    targetEl.focus();
+                    if (targetEl.value.trim() === "") {
+                        targetEl.value = text;
+                    } else {
+                        targetEl.value = targetEl.value.trim() + " " + text;
+                    }
+                    // Fire input event to trigger compilation & auto-save
+                    targetEl.dispatchEvent(new Event("input", { bubbles: true }));
+                }
+            }
+        });
+
+        // Real-time compiling and saving on any input or change event
+        const triggerCompileSave = (e) => {
+            if (e.target.id && (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA" || e.target.tagName === "SELECT")) {
+                compileFormulation();
+                saveFormulationDraft();
+            }
+        };
+        formContainer.addEventListener("input", triggerCompileSave);
+        formContainer.addEventListener("change", triggerCompileSave);
+
+        // Copy button
+        const copyBtn = document.getElementById("form-copy-btn");
+        if (copyBtn) {
+            copyBtn.addEventListener("click", () => {
+                const outEl = document.getElementById("form-note-out");
+                if (outEl) {
+                    outEl.select();
+                    navigator.clipboard.writeText(outEl.value);
+                }
+            });
+        }
+
+        // Reset button
+        const resetBtn = document.getElementById("form-reset-btn");
+        if (resetBtn) {
+            resetBtn.addEventListener("click", () => {
+                if (confirm("Are you sure you want to reset all fields in the formulation builder?")) {
+                    resetFormulation();
+                }
+            });
+        }
+
+        // Load saved draft on startup
+        loadFormulationDraft();
     }
 
     // 3. Clinical Templates Note Selector
