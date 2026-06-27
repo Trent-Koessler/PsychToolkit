@@ -1779,4 +1779,341 @@ button.btn-primary:hover,
 .scientific-references a:hover {
     text-decoration: underline;
 }
+
+/* Patient Review Workspace (OCA) Styling */
+.oca-header-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 12px 20px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-sm);
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.oca-header-left, .oca-header-right {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#oca-save-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="dark"] #oca-save-status {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.oca-save-status-idle .status-dot { background-color: var(--text-muted); }
+.oca-save-status-saving .status-dot {
+    background-color: var(--warning-color);
+    animation: pulse 1s infinite alternate;
+}
+.oca-save-status-success .status-dot { background-color: var(--success-color); }
+.oca-save-status-error .status-dot { background-color: var(--danger-color); }
+
+@keyframes pulse {
+    from { opacity: 0.4; transform: scale(0.9); }
+    to { opacity: 1; transform: scale(1.1); }
+}
+
+.oca-split-view {
+    display: grid;
+    grid-template-columns: 1.4fr 0.6fr;
+    gap: 20px;
+    height: calc(100vh - 160px);
+    min-height: 700px;
+}
+
+@media (max-width: 1024px) {
+    .oca-split-view {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+}
+
+.oca-left-panel, .oca-right-panel {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-md);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.oca-panel-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--tab-bg);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.oca-notepad {
+    flex-grow: 1;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 20px !important;
+    font-family: 'Courier New', Courier, monospace !important;
+    font-size: 14px !important;
+    line-height: 1.6 !important;
+    resize: none !important;
+    height: 100%;
+    outline: none !important;
+    background-color: var(--card-bg) !important;
+}
+
+.oca-right-tabs {
+    display: flex;
+    background-color: var(--tab-bg);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.oca-tab-btn {
+    flex-grow: 1;
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    border-bottom: 3px solid transparent;
+    padding: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.oca-tab-btn.active {
+    color: var(--primary-color);
+    border-bottom-color: var(--primary-color);
+    background: var(--tab-active-bg);
+}
+
+.oca-panel-content {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.oca-panel-content.active {
+    display: flex;
+}
+
+.oca-panel-subheader {
+    padding: 14px 20px 8px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.oca-drawer-scrollable {
+    padding: 16px 20px;
+    overflow-y: auto;
+    flex-grow: 1;
+}
+
+.oca-form-section {
+    background: rgba(0, 0, 0, 0.015);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+    margin-bottom: 16px;
+}
+
+[data-theme="dark"] .oca-form-section {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.oca-form-section h6 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+}
+
+.oca-form-section label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.oca-form-section select,
+.oca-form-section input[type="text"] {
+    margin-bottom: 8px;
+    padding: 8px 12px;
+}
+
+.formulation-sidebar-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.formulation-sb-card {
+    background: rgba(0, 0, 0, 0.015);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 14px;
+}
+
+[data-theme="dark"] .formulation-sb-card {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.formulation-sb-card h6 {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--accent-color);
+    margin-bottom: 10px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 4px;
+}
+
+.formulation-sb-card label {
+    display: block;
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 8px;
+    margin-bottom: 4px;
+}
+
+.formulation-sb-card textarea {
+    min-height: 50px;
+    padding: 8px 12px;
+    font-size: 13.5px;
+}
+
+/* Collapsible details sidebar styles */
+.oca-form-details {
+    background: rgba(0, 0, 0, 0.015);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    margin-bottom: 12px;
+    overflow: hidden;
+}
+
+[data-theme="dark"] .oca-form-details {
+    background: rgba(255, 255, 255, 0.015);
+}
+
+.oca-form-details summary {
+    padding: 12px 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--tab-bg);
+    user-select: none;
+    font-size: 13.5px;
+}
+
+.oca-details-content {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.oca-details-content label {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+.oca-details-content input[type="text"] {
+    padding: 8px 12px;
+    font-size: 13.5px;
+}
+
+.framework-item-sb input[type="checkbox"] {
+    margin-right: 6px;
+    cursor: pointer;
+}
+
+/* MSE sidebar checkbox / radio labels */
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12.5px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+}
+
+.checkbox-label:hover {
+    background: var(--tab-hover-bg, rgba(100,100,255,0.07));
+}
+
+.checkbox-label input[type="checkbox"] {
+    accent-color: var(--primary);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.radio-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12.5px;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+}
+
+.radio-label:hover {
+    background: var(--tab-hover-bg, rgba(100,100,255,0.07));
+}
+
+.radio-label input[type="radio"] {
+    accent-color: var(--primary);
+    width: 14px;
+    height: 14px;
+    cursor: pointer;
+    flex-shrink: 0;
+}
+
+.oca-details-content textarea {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 13px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--input-bg, var(--surface));
+    color: var(--text-primary);
+    resize: vertical;
+    font-family: inherit;
+    box-sizing: border-box;
+}
 

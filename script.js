@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const lockError = document.getElementById("lock-error");
 
     function checkPassword() {
-        if (passInput.value.toLowerCase() === "psych") {
+        if (passInput.value.toLowerCase() === "psych123") {
             lockScreen.classList.remove("active");
             // Optional: store in sessionStorage to prevent locking on refresh
             sessionStorage.setItem("unlocked", "true");
@@ -163,14 +163,14 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-container").forEach(container => {
         const tabButtons = container.querySelectorAll(":scope > .tab-buttons > .tab-button");
         const tabContents = container.querySelectorAll(":scope > .tab-content");
-        
+
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
                 const tabId = button.dataset.tab;
                 tabButtons.forEach(btn => btn.classList.remove("active"));
                 button.classList.add("active");
                 tabContents.forEach(content => content.classList.remove("active"));
-                
+
                 const activeContent = container.querySelector(`#${tabId}`);
                 if (activeContent) activeContent.classList.add("active");
             });
@@ -184,7 +184,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function setupScaleCalculator(config) {
         const template = document.getElementById("calculator-template");
         const container = document.getElementById(config.id);
-        
+
         if (!template || !container) return;
 
         const calcNode = template.cloneNode(true);
@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
             severityEl.textContent = severity;
 
             let summary = `${config.name} assessed. Total score: ${total} (${severity}).\nBreakdown:\n${breakdown}`;
-            
+
             // Special alerts for specific scales
             if (config.id === "epds") {
                 const q10Radio = itemsContainer.querySelector(`input[name="epds-q-9"]:checked`);
@@ -263,12 +263,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     summary += `\n!! ALERT: Positive suicidal behavior screen. Immediate safety plan required. !!`;
                 }
             }
-            
+
             emrSummaryEl.value = summary.trim();
         }
 
         itemsContainer.addEventListener("change", updateState);
-        
+
         copyBtn.addEventListener("click", () => {
             emrSummaryEl.select();
             navigator.clipboard.writeText(emrSummaryEl.value);
@@ -314,7 +314,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (scaleSelector) {
         scaleSelector.addEventListener("change", syncScaleView);
-        
+
         prevScaleBtn.addEventListener("click", () => {
             let idx = scaleSelector.selectedIndex - 1;
             if (idx < 0) idx = scaleSelector.options.length - 1;
@@ -335,10 +335,10 @@ document.addEventListener("DOMContentLoaded", () => {
     // =================================================================
 
     // Standard options databases
-    const optNotAtAll = [ { value: 0, label: "0 - Not at all" }, { value: 1, label: "1 - Several days" }, { value: 2, label: "2 - More than half the days" }, { value: 3, label: "3 - Nearly every day" } ];
-    const optYesNo = [ { value: 0, label: "No" }, { value: 1, label: "Yes" } ];
-    const optZeroFour = [ { value: 0, label: "0 - Not at all" }, { value: 1, label: "1 - A little bit" }, { value: 2, label: "2 - Moderately" }, { value: 3, label: "3 - Quite a bit" }, { value: 4, label: "4 - Extremely" } ];
-    const optZeroFourClinical = [ { value: 0, label: "0 - None / Normal" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Very Severe" } ];
+    const optNotAtAll = [{ value: 0, label: "0 - Not at all" }, { value: 1, label: "1 - Several days" }, { value: 2, label: "2 - More than half the days" }, { value: 3, label: "3 - Nearly every day" }];
+    const optYesNo = [{ value: 0, label: "No" }, { value: 1, label: "Yes" }];
+    const optZeroFour = [{ value: 0, label: "0 - Not at all" }, { value: 1, label: "1 - A little bit" }, { value: 2, label: "2 - Moderately" }, { value: 3, label: "3 - Quite a bit" }, { value: 4, label: "4 - Extremely" }];
+    const optZeroFourClinical = [{ value: 0, label: "0 - None / Normal" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Very Severe" }];
 
     // 1. PHQ-9
     setupScaleCalculator({
@@ -396,16 +396,16 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Please select the response that comes closest to how you have felt in the past 7 days.",
         reference: "Cox JL, Holden JM, Sagovsky R. Detection of postnatal depression. Development of the 10-item Edinburgh Postnatal Depression Scale. Br J Psychiatry. 1987;150:782-786.",
         items: [
-            { displayName: "1. I have been able to laugh and see the funny side of things", options: [ { value: 0, label: "As much as I always could" }, { value: 1, label: "Not quite so much now" }, { value: 2, label: "Definitely not so much now" }, { value: 3, label: "Not at all" } ] },
-            { displayName: "2. I have looked forward with enjoyment to things", options: [ { value: 0, label: "As much as I ever did" }, { value: 1, label: "Rather less than I used to" }, { value: 2, label: "Definitely less than I used to" }, { value: 3, label: "Hardly at all" } ] },
-            { displayName: "3. I have blamed myself unnecessarily when things went wrong", options: [ { value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, some of the time" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, never" } ] },
-            { displayName: "4. I have been anxious or worried for no good reason", options: [ { value: 0, label: "No, not at all" }, { value: 1, label: "Hardly ever" }, { value: 2, label: "Yes, sometimes" }, { value: 3, label: "Yes, very often" } ] },
-            { displayName: "5. I have felt scared or panicky for no very good reason", options: [ { value: 3, label: "Yes, quite a lot" }, { value: 2, label: "Yes, sometimes" }, { value: 1, label: "No, not much" }, { value: 0, label: "No, not at all" } ] },
-            { displayName: "6. Things have been getting on top of me", options: [ { value: 3, label: "Yes, most of the time I haven't been able to cope at all" }, { value: 2, label: "Yes, sometimes I haven't been coping as well as usual" }, { value: 1, label: "No, most of the time I have coped quite well" }, { value: 0, label: "No, I have been coping as well as ever" } ] },
-            { displayName: "7. I have been so unhappy that I have had difficulty sleeping", options: [ { value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, sometimes" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, not at all" } ] },
-            { displayName: "8. I have felt sad or miserable", options: [ { value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, quite often" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, not at all" } ] },
-            { displayName: "9. I have been so unhappy that I have been crying", options: [ { value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, quite often" }, { value: 1, label: "Only occasionally" }, { value: 0, label: "No, never" } ] },
-            { displayName: "10. The thought of harming myself has occurred to me", options: [ { value: 3, label: "Yes, quite often" }, { value: 2, label: "Sometimes" }, { value: 1, label: "Hardly ever" }, { value: 0, label: "Never" } ] }
+            { displayName: "1. I have been able to laugh and see the funny side of things", options: [{ value: 0, label: "As much as I always could" }, { value: 1, label: "Not quite so much now" }, { value: 2, label: "Definitely not so much now" }, { value: 3, label: "Not at all" }] },
+            { displayName: "2. I have looked forward with enjoyment to things", options: [{ value: 0, label: "As much as I ever did" }, { value: 1, label: "Rather less than I used to" }, { value: 2, label: "Definitely less than I used to" }, { value: 3, label: "Hardly at all" }] },
+            { displayName: "3. I have blamed myself unnecessarily when things went wrong", options: [{ value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, some of the time" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, never" }] },
+            { displayName: "4. I have been anxious or worried for no good reason", options: [{ value: 0, label: "No, not at all" }, { value: 1, label: "Hardly ever" }, { value: 2, label: "Yes, sometimes" }, { value: 3, label: "Yes, very often" }] },
+            { displayName: "5. I have felt scared or panicky for no very good reason", options: [{ value: 3, label: "Yes, quite a lot" }, { value: 2, label: "Yes, sometimes" }, { value: 1, label: "No, not much" }, { value: 0, label: "No, not at all" }] },
+            { displayName: "6. Things have been getting on top of me", options: [{ value: 3, label: "Yes, most of the time I haven't been able to cope at all" }, { value: 2, label: "Yes, sometimes I haven't been coping as well as usual" }, { value: 1, label: "No, most of the time I have coped quite well" }, { value: 0, label: "No, I have been coping as well as ever" }] },
+            { displayName: "7. I have been so unhappy that I have had difficulty sleeping", options: [{ value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, sometimes" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, not at all" }] },
+            { displayName: "8. I have felt sad or miserable", options: [{ value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, quite often" }, { value: 1, label: "Not very often" }, { value: 0, label: "No, not at all" }] },
+            { displayName: "9. I have been so unhappy that I have been crying", options: [{ value: 3, label: "Yes, most of the time" }, { value: 2, label: "Yes, quite often" }, { value: 1, label: "Only occasionally" }, { value: 0, label: "No, never" }] },
+            { displayName: "10. The thought of harming myself has occurred to me", options: [{ value: 3, label: "Yes, quite often" }, { value: 2, label: "Sometimes" }, { value: 1, label: "Hardly ever" }, { value: 0, label: "Never" }] }
         ],
         severityLogic: (score) => {
             if (score >= 13) return "High probability of depression (Further clinical assessment recommended)";
@@ -455,17 +455,17 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Rate each item based on report and observation over the past 48 hours. Note that items 5, 6, 8, and 9 are double-weighted (options are 0, 2, 4, 6, 8 points).",
         reference: "Young RC, Biggs JT, Ziegler VE, et al. A rating scale for mania: reliability, validity and sensitivity. Br J Psychiatry. 1978;133:429-435.",
         items: [
-            { displayName: "1. Elevated Mood", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mildly or possibly increased" }, { value: 2, label: "2 - Definite subjective elevation" }, { value: 3, label: "3 - Elated, inappropriate laughing" }, { value: 4, label: "4 - Euphoric, inappropriate singing" } ] },
-            { displayName: "2. Increased Motor Activity-Energy", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Subjective increase" }, { value: 2, label: "2 - Appears energetic" }, { value: 3, label: "3 - Excessive energy, restless" }, { value: 4, label: "4 - Continuous hyperactivity" } ] },
-            { displayName: "3. Sexual Interest", options: [ { value: 0, label: "0 - Normal / Absent" }, { value: 1, label: "1 - Mildly or possibly increased" }, { value: 2, label: "2 - Definite increase" }, { value: 3, label: "3 - Hypersexual" }, { value: 4, label: "4 - Overt sexual acts" } ] },
-            { displayName: "4. Sleep", options: [ { value: 0, label: "0 - Reports no decrease" }, { value: 1, label: "1 - Sleeping less up to 1 hr" }, { value: 2, label: "2 - Sleeping less > 1 hr" }, { value: 3, label: "3 - Decreased need for sleep" }, { value: 4, label: "4 - Denies need for sleep" } ] },
-            { displayName: "5. Irritability (Double Weighted)", options: [ { value: 0, label: "0 - Absent" }, { value: 2, label: "2 - Subjectively increased / irritable at times" }, { value: 4, label: "4 - Frequently irritable / outbursts" }, { value: 6, label: "6 - Hostile, threatening" }, { value: 8, label: "8 - Assaultive, destructive" } ] },
-            { displayName: "6. Speech (Rate and Amount) (Double Weighted)", options: [ { value: 0, label: "0 - No increase" }, { value: 2, label: "2 - Talkative at times" }, { value: 4, label: "4 - Pressured; difficult to interrupt" }, { value: 6, label: "6 - Continuous, pressured" }, { value: 8, label: "8 - Incomprehensible" } ] },
-            { displayName: "7. Language-Thought Disorder", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Circumstantial, mild distractibility" }, { value: 2, label: "2 - Distractible, changes topics" }, { value: 3, label: "3 - Flight of ideas, clanging" }, { value: 4, label: "4 - Incoherent, incomprehensible" } ] },
-            { displayName: "8. Content (Double Weighted)", options: [ { value: 0, label: "0 - Normal" }, { value: 2, label: "2 - Questionable plans / special projects" }, { value: 4, label: "4 - Grandiose plans or ideas" }, { value: 6, label: "6 - Paranoid accusations / delusions" }, { value: 8, label: "8 - Hallucinations / bizarre delusions" } ] },
-            { displayName: "9. Disruptive-Aggressive Behavior (Double Weighted)", options: [ { value: 0, label: "0 - Absent" }, { value: 2, label: "2 - Sarcastic, loud or demanding" }, { value: 4, label: "4 - Shouting, demands, yelling" }, { value: 6, label: "6 - Threatens interviewer" }, { value: 8, label: "8 - Assaultive, destructive" } ] },
-            { displayName: "10. Appearance", options: [ { value: 0, label: "0 - Appropriate dress / grooming" }, { value: 1, label: "1 - Slightly unkempt" }, { value: 2, label: "2 - Poorly groomed / moderately disheveled" }, { value: 3, label: "3 - Disheveled, bizarre garb" }, { value: 4, label: "4 - Completely unkempt / bizarre" } ] },
-            { displayName: "11. Insight", options: [ { value: 0, label: "0 - Admits illness; agrees to treatment" }, { value: 1, label: "1 - Possibly ill" }, { value: 2, label: "2 - Admits behavior change; denies illness" }, { value: 3, label: "3 - Admits possible change; denies illness" }, { value: 4, label: "4 - Denies behavior change" } ] }
+            { displayName: "1. Elevated Mood", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mildly or possibly increased" }, { value: 2, label: "2 - Definite subjective elevation" }, { value: 3, label: "3 - Elated, inappropriate laughing" }, { value: 4, label: "4 - Euphoric, inappropriate singing" }] },
+            { displayName: "2. Increased Motor Activity-Energy", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Subjective increase" }, { value: 2, label: "2 - Appears energetic" }, { value: 3, label: "3 - Excessive energy, restless" }, { value: 4, label: "4 - Continuous hyperactivity" }] },
+            { displayName: "3. Sexual Interest", options: [{ value: 0, label: "0 - Normal / Absent" }, { value: 1, label: "1 - Mildly or possibly increased" }, { value: 2, label: "2 - Definite increase" }, { value: 3, label: "3 - Hypersexual" }, { value: 4, label: "4 - Overt sexual acts" }] },
+            { displayName: "4. Sleep", options: [{ value: 0, label: "0 - Reports no decrease" }, { value: 1, label: "1 - Sleeping less up to 1 hr" }, { value: 2, label: "2 - Sleeping less > 1 hr" }, { value: 3, label: "3 - Decreased need for sleep" }, { value: 4, label: "4 - Denies need for sleep" }] },
+            { displayName: "5. Irritability (Double Weighted)", options: [{ value: 0, label: "0 - Absent" }, { value: 2, label: "2 - Subjectively increased / irritable at times" }, { value: 4, label: "4 - Frequently irritable / outbursts" }, { value: 6, label: "6 - Hostile, threatening" }, { value: 8, label: "8 - Assaultive, destructive" }] },
+            { displayName: "6. Speech (Rate and Amount) (Double Weighted)", options: [{ value: 0, label: "0 - No increase" }, { value: 2, label: "2 - Talkative at times" }, { value: 4, label: "4 - Pressured; difficult to interrupt" }, { value: 6, label: "6 - Continuous, pressured" }, { value: 8, label: "8 - Incomprehensible" }] },
+            { displayName: "7. Language-Thought Disorder", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Circumstantial, mild distractibility" }, { value: 2, label: "2 - Distractible, changes topics" }, { value: 3, label: "3 - Flight of ideas, clanging" }, { value: 4, label: "4 - Incoherent, incomprehensible" }] },
+            { displayName: "8. Content (Double Weighted)", options: [{ value: 0, label: "0 - Normal" }, { value: 2, label: "2 - Questionable plans / special projects" }, { value: 4, label: "4 - Grandiose plans or ideas" }, { value: 6, label: "6 - Paranoid accusations / delusions" }, { value: 8, label: "8 - Hallucinations / bizarre delusions" }] },
+            { displayName: "9. Disruptive-Aggressive Behavior (Double Weighted)", options: [{ value: 0, label: "0 - Absent" }, { value: 2, label: "2 - Sarcastic, loud or demanding" }, { value: 4, label: "4 - Shouting, demands, yelling" }, { value: 6, label: "6 - Threatens interviewer" }, { value: 8, label: "8 - Assaultive, destructive" }] },
+            { displayName: "10. Appearance", options: [{ value: 0, label: "0 - Appropriate dress / grooming" }, { value: 1, label: "1 - Slightly unkempt" }, { value: 2, label: "2 - Poorly groomed / moderately disheveled" }, { value: 3, label: "3 - Disheveled, bizarre garb" }, { value: 4, label: "4 - Completely unkempt / bizarre" }] },
+            { displayName: "11. Insight", options: [{ value: 0, label: "0 - Admits illness; agrees to treatment" }, { value: 1, label: "1 - Possibly ill" }, { value: 2, label: "2 - Admits behavior change; denies illness" }, { value: 3, label: "3 - Admits possible change; denies illness" }, { value: 4, label: "4 - Denies behavior change" }] }
         ],
         severityLogic: (score) => {
             if (score >= 20) return "Moderate to severe mania (Further clinical assessment/intervention required)";
@@ -495,7 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "Q1.12: Did things that were unusual for you or that other people might have thought were excessive, foolish, or risky?", options: optYesNo },
             { displayName: "Q1.13: Spending money got you or your family into trouble?", options: optYesNo },
             { displayName: "Q2: Have several of these ever happened during the same period of time?", options: optYesNo },
-            { displayName: "Q3: How much of a problem did any of these cause you?", options: [ { value: 0, label: "0 - No Problem" }, { value: 1, label: "1 - Minor Problem" }, { value: 2, label: "2 - Moderate Problem" }, { value: 3, label: "3 - Serious Problem" } ] }
+            { displayName: "Q3: How much of a problem did any of these cause you?", options: [{ value: 0, label: "0 - No Problem" }, { value: 1, label: "1 - Minor Problem" }, { value: 2, label: "2 - Moderate Problem" }, { value: 3, label: "3 - Serious Problem" }] }
         ],
         severityLogic: (score, itemsContainer) => {
             let yesCount = 0;
@@ -528,12 +528,12 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Adult ADHD Self-Report Scale 6-item screening version. Shaded indicators are: Q1-3 (Sometimes/Often/Very Often) and Q4-6 (Often/Very Often). 4 or more indicators constitutes a positive screen.",
         reference: "Kessler RC, Adler L, Ames M, et al. The World Health Organization Adult ADHD Self-Report Scale (ASRS): a short screening scale for use in the general population. Psychol Med. 2005;35(2):245-256.",
         items: [
-            { displayName: "1. Trouble wrapping up the final details of a project, once the challenging parts have been done?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] },
-            { displayName: "2. Difficulty getting things in order when you have to task a task that requires organization?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] },
-            { displayName: "3. Problems remembering appointments or obligations?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] },
-            { displayName: "4. When you have a task that requires a lot of thought, how often do you avoid or delay getting started?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] },
-            { displayName: "5. Fidget or squirm with your hands or feet when you have to sit down for a long time?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] },
-            { displayName: "6. Feel overly active and compelled to do things, as if you were driven by a motor?", options: [ { value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" } ] }
+            { displayName: "1. Trouble wrapping up the final details of a project, once the challenging parts have been done?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] },
+            { displayName: "2. Difficulty getting things in order when you have to task a task that requires organization?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] },
+            { displayName: "3. Problems remembering appointments or obligations?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] },
+            { displayName: "4. When you have a task that requires a lot of thought, how often do you avoid or delay getting started?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] },
+            { displayName: "5. Fidget or squirm with your hands or feet when you have to sit down for a long time?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] },
+            { displayName: "6. Feel overly active and compelled to do things, as if you were driven by a motor?", options: [{ value: 0, label: "Never" }, { value: 1, label: "Rarely" }, { value: 2, label: "Sometimes" }, { value: 3, label: "Often" }, { value: 4, label: "Very Often" }] }
         ],
         severityLogic: (score, itemsContainer) => {
             let indicators = 0;
@@ -563,23 +563,23 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Evaluate based on clinical interview (17-item version).",
         reference: "Hamilton M. A rating scale for depression. J Neurol Neurosurg Psychiatry. 1960;23:56-62.",
         items: [
-            { displayName: "1. Depressed Mood", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Very Severe" } ] },
-            { displayName: "2. Feelings of Guilt", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Self-reproach" }, { value: 2, label: "2 - Ideas of guilt" }, { value: 3, label: "3 - Present illness is punishment" }, { value: 4, label: "4 - Hallucinations of guilt" } ] },
-            { displayName: "3. Suicide", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Feels life not worth living" }, { value: 2, label: "2 - Wishes he were dead" }, { value: 3, label: "3 - Suicidal ideas/gestures" }, { value: 4, label: "4 - Attempts" } ] },
-            { displayName: "4. Insomnia (Initial)", options: [ { value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Occasional difficulty" }, { value: 2, label: "2 - Nightly difficulty" } ] },
-            { displayName: "5. Insomnia (Middle)", options: [ { value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Restless/disturbed" }, { value: 2, label: "2 - Waking during night" } ] },
-            { displayName: "6. Insomnia (Late)", options: [ { value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Waking early but goes back to sleep" }, { value: 2, label: "2 - Unable to fall asleep again" } ] },
-            { displayName: "7. Work and Activities", options: [ { value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Feelings of incapacity" }, { value: 2, label: "2 - Loss of interest" }, { value: 3, label: "3 - Decrease in actual time spent" }, { value: 4, label: "4 - Stopped working" } ] },
-            { displayName: "8. Retardation (Psychomotor)", options: [ { value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Slight retardation" }, { value: 2, label: "2 - Obvious retardation" }, { value: 3, label: "3 - Interview difficult" }, { value: 4, label: "4 - Stupor" } ] },
-            { displayName: "9. Agitation", options: [ { value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Hand wringing/pulling hair" } ] },
-            { displayName: "10. Anxiety (Psychic)", options: [ { value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Tension/irritability" }, { value: 2, label: "2 - Worrying" }, { value: 3, label: "3 - Apprehension" }, { value: 4, label: "4 - Panic" } ] },
-            { displayName: "11. Anxiety (Somatic)", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild (GI, CV, etc)" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Incapacitating" } ] },
-            { displayName: "12. Somatic Symptoms (GI)", options: [ { value: 0, label: "0 - None" }, { value: 1, label: "1 - Loss of appetite" }, { value: 2, label: "2 - Heavy GI complaints" } ] },
-            { displayName: "13. Somatic Symptoms (General)", options: [ { value: 0, label: "0 - None" }, { value: 1, label: "1 - Heaviness in limbs, backaches" }, { value: 2, label: "2 - Clear somatic symptoms" } ] },
-            { displayName: "14. Genital Symptoms (e.g. libido loss)", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Severe" } ] },
-            { displayName: "15. Hypochondriasis", options: [ { value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Self-absorption" }, { value: 2, label: "2 - Preoccupation with health" }, { value: 3, label: "3 - Frequent complaints" }, { value: 4, label: "4 - Hypochondriacal delusions" } ] },
-            { displayName: "16. Loss of Weight", options: [ { value: 0, label: "0 - No weight loss" }, { value: 1, label: "1 - Probable loss" }, { value: 2, label: "2 - Definite loss" } ] },
-            { displayName: "17. Insight", options: [ { value: 0, label: "0 - Acknowledges illness" }, { value: 1, label: "1 - Attributes cause to other sources" }, { value: 2, label: "2 - Denies illness" } ] }
+            { displayName: "1. Depressed Mood", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Very Severe" }] },
+            { displayName: "2. Feelings of Guilt", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Self-reproach" }, { value: 2, label: "2 - Ideas of guilt" }, { value: 3, label: "3 - Present illness is punishment" }, { value: 4, label: "4 - Hallucinations of guilt" }] },
+            { displayName: "3. Suicide", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Feels life not worth living" }, { value: 2, label: "2 - Wishes he were dead" }, { value: 3, label: "3 - Suicidal ideas/gestures" }, { value: 4, label: "4 - Attempts" }] },
+            { displayName: "4. Insomnia (Initial)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Occasional difficulty" }, { value: 2, label: "2 - Nightly difficulty" }] },
+            { displayName: "5. Insomnia (Middle)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Restless/disturbed" }, { value: 2, label: "2 - Waking during night" }] },
+            { displayName: "6. Insomnia (Late)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Waking early but goes back to sleep" }, { value: 2, label: "2 - Unable to fall asleep again" }] },
+            { displayName: "7. Work and Activities", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Feelings of incapacity" }, { value: 2, label: "2 - Loss of interest" }, { value: 3, label: "3 - Decrease in actual time spent" }, { value: 4, label: "4 - Stopped working" }] },
+            { displayName: "8. Retardation (Psychomotor)", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Slight retardation" }, { value: 2, label: "2 - Obvious retardation" }, { value: 3, label: "3 - Interview difficult" }, { value: 4, label: "4 - Stupor" }] },
+            { displayName: "9. Agitation", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Hand wringing/pulling hair" }] },
+            { displayName: "10. Anxiety (Psychic)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Tension/irritability" }, { value: 2, label: "2 - Worrying" }, { value: 3, label: "3 - Apprehension" }, { value: 4, label: "4 - Panic" }] },
+            { displayName: "11. Anxiety (Somatic)", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild (GI, CV, etc)" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Incapacitating" }] },
+            { displayName: "12. Somatic Symptoms (GI)", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Loss of appetite" }, { value: 2, label: "2 - Heavy GI complaints" }] },
+            { displayName: "13. Somatic Symptoms (General)", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Heaviness in limbs, backaches" }, { value: 2, label: "2 - Clear somatic symptoms" }] },
+            { displayName: "14. Genital Symptoms (e.g. libido loss)", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Severe" }] },
+            { displayName: "15. Hypochondriasis", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Self-absorption" }, { value: 2, label: "2 - Preoccupation with health" }, { value: 3, label: "3 - Frequent complaints" }, { value: 4, label: "4 - Hypochondriacal delusions" }] },
+            { displayName: "16. Loss of Weight", options: [{ value: 0, label: "0 - No weight loss" }, { value: 1, label: "1 - Probable loss" }, { value: 2, label: "2 - Definite loss" }] },
+            { displayName: "17. Insight", options: [{ value: 0, label: "0 - Acknowledges illness" }, { value: 1, label: "1 - Attributes cause to other sources" }, { value: 2, label: "2 - Denies illness" }] }
         ],
         severityLogic: (score) => {
             if (score <= 7) return "Normal / Euthymia";
@@ -649,15 +649,15 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Evaluate pain severity and interference.",
         reference: "Cleeland CS, Ryan KM. Pain assessment: global use of the Brief Pain Inventory. Ann Acad Med Singapore. 1994;23:129-138.",
         items: [
-            { displayName: "1. Pain Severity: Worst pain in last 24 hours (0-10)", options: [ { value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" } ] },
-            { displayName: "2. Pain Severity: Least pain in last 24 hours (0-10)", options: [ { value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" } ] },
-            { displayName: "3. Pain Severity: Pain on average (0-10)", options: [ { value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" } ] },
-            { displayName: "4. Pain Severity: Pain right now (0-10)", options: [ { value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" } ] },
-            { displayName: "5. Pain Interference: General Activity (0-10)", options: [ { value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" } ] },
-            { displayName: "6. Pain Interference: Mood (0-10)", options: [ { value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" } ] },
-            { displayName: "7. Pain Interference: Relations with other people (0-10)", options: [ { value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" } ] },
-            { displayName: "8. Pain Interference: Sleep (0-10)", options: [ { value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" } ] },
-            { displayName: "9. Pain Interference: Enjoyment of Life (0-10)", options: [ { value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" } ] }
+            { displayName: "1. Pain Severity: Worst pain in last 24 hours (0-10)", options: [{ value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" }] },
+            { displayName: "2. Pain Severity: Least pain in last 24 hours (0-10)", options: [{ value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" }] },
+            { displayName: "3. Pain Severity: Pain on average (0-10)", options: [{ value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" }] },
+            { displayName: "4. Pain Severity: Pain right now (0-10)", options: [{ value: 0, label: "0 - No pain" }, { value: 3, label: "3 - Mild" }, { value: 6, label: "6 - Moderate" }, { value: 10, label: "10 - Worst imaginable" }] },
+            { displayName: "5. Pain Interference: General Activity (0-10)", options: [{ value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" }] },
+            { displayName: "6. Pain Interference: Mood (0-10)", options: [{ value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" }] },
+            { displayName: "7. Pain Interference: Relations with other people (0-10)", options: [{ value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" }] },
+            { displayName: "8. Pain Interference: Sleep (0-10)", options: [{ value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" }] },
+            { displayName: "9. Pain Interference: Enjoyment of Life (0-10)", options: [{ value: 0, label: "0 - Does not interfere" }, { value: 5, label: "5 - Moderately" }, { value: 10, label: "10 - Completely interferes" }] }
         ],
         severityLogic: (score) => {
             const avg = score / 9;
@@ -672,20 +672,20 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "A screening score of 2 or more indicates probable Catatonia.",
         reference: "Bush G, Fink M, Petrides G, et al. Catatonia. I. Rating scale and standardized examination. Acta Psychiatr Scand. 1996;93(2):129-136.",
         items: [
-            { displayName: "1. Immobility/Stupor", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "2. Mutism", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "3. Staring", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "4. Posturing/Catalepsy", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "5. Grimacing", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "6. Echophenomena", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "7. Stereotypy", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "8. Mannerisms", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "9. Verbigeration", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "10. Rigidity", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "11. Negativism", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "12. Waxy Flexibility", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "13. Withdrawal", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] },
-            { displayName: "14. Excitement", options: [ { value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" } ] }
+            { displayName: "1. Immobility/Stupor", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "2. Mutism", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "3. Staring", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "4. Posturing/Catalepsy", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "5. Grimacing", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "6. Echophenomena", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "7. Stereotypy", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "8. Mannerisms", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "9. Verbigeration", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "10. Rigidity", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "11. Negativism", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "12. Waxy Flexibility", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "13. Withdrawal", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] },
+            { displayName: "14. Excitement", options: [{ value: 0, label: "0 (Absent)" }, { value: 1, label: "1 (Mild)" }, { value: 2, label: "2 (Moderate)" }, { value: 3, label: "3 (Severe)" }] }
         ],
         severityLogic: (score) => {
             if (score >= 2) return "POSITIVE SCREEN for Catatonia (Further full rating advised)";
@@ -699,24 +699,24 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "Brief Psychiatric Rating Scale (BPRS)",
         reference: "Overall JE, Gorham DR. The Brief Psychiatric Rating Scale. Psychol Rep. 1962;10:799-812.",
         items: [
-            { displayName: "1. Somatic Concern", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "2. Anxiety", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "3. Depression", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "4. Suicidality", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "5. Guilt", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "6. Hostility", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "7. Elated Mood", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "8. Grandiosity", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "9. Suspiciousness", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "10. Hallucinations", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "11. Unusual Thought Content", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "12. Bizarre Behavior", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "13. Self-Neglect", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "14. Disorientation", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "15. Conceptual Disorganization", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "16. Blunted Affect", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "17. Emotional Withdrawal", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] },
-            { displayName: "18. Motor Retardation", options: [ { value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" } ] }
+            { displayName: "1. Somatic Concern", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "2. Anxiety", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "3. Depression", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "4. Suicidality", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "5. Guilt", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "6. Hostility", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "7. Elated Mood", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "8. Grandiosity", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "9. Suspiciousness", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "10. Hallucinations", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "11. Unusual Thought Content", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "12. Bizarre Behavior", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "13. Self-Neglect", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "14. Disorientation", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "15. Conceptual Disorganization", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "16. Blunted Affect", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "17. Emotional Withdrawal", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] },
+            { displayName: "18. Motor Retardation", options: [{ value: 1, label: "1 - Not present" }, { value: 2, label: "2 - Very Mild" }, { value: 3, label: "3 - Mild" }, { value: 4, label: "4 - Moderate" }, { value: 5, label: "5 - Mod. Severe" }, { value: 6, label: "6 - Severe" }, { value: 7, label: "7 - Ext. Severe" }] }
         ],
         severityLogic: (score) => {
             return `Total score: ${score} (Scores range from 18 to 126)`;
@@ -730,36 +730,36 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Evaluate severity of schizophrenia symptoms.",
         reference: "Kay SR, Fiszbein A, Opler LA. The Positive and Negative Syndrome Scale (PANSS) for schizophrenia. Schizophr Bull. 1987;13(2):261-276.",
         items: [
-            { displayName: "P1: Delusions", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P2: Conceptual Disorganization", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P3: Hallucinatory Behavior", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P4: Excitement", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P5: Grandiosity", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P6: Suspiciousness/Persecution", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "P7: Hostility", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N1: Blunted Affect", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N2: Emotional Withdrawal", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N3: Poor Rapport", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N4: Passive/Apathetic Social Withdrawal", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N5: Difficulty in Abstract Thinking", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N6: Lack of Spontaneity & Flow of Conversation", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "N7: Stereotyped Thinking", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G1: Somatic Concern", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G2: Anxiety", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G3: Guilt Feelings", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G4: Tension", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G5: Mannerisms & Posturing", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G6: Depression", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G7: Motor Retardation", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G8: Uncooperativeness", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G9: Unusual Thought Content", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G10: Disorientation", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G11: Poor Attention", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G12: Lack of Judgment & Insight", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G13: Disturbance of Volition", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G14: Poor Impulse Control", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G15: Preoccupation", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] },
-            { displayName: "G16: Active Social Avoidance", options: [ { value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" } ] }
+            { displayName: "P1: Delusions", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P2: Conceptual Disorganization", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P3: Hallucinatory Behavior", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P4: Excitement", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P5: Grandiosity", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P6: Suspiciousness/Persecution", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "P7: Hostility", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N1: Blunted Affect", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N2: Emotional Withdrawal", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N3: Poor Rapport", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N4: Passive/Apathetic Social Withdrawal", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N5: Difficulty in Abstract Thinking", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N6: Lack of Spontaneity & Flow of Conversation", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "N7: Stereotyped Thinking", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G1: Somatic Concern", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G2: Anxiety", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G3: Guilt Feelings", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G4: Tension", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G5: Mannerisms & Posturing", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G6: Depression", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G7: Motor Retardation", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G8: Uncooperativeness", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G9: Unusual Thought Content", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G10: Disorientation", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G11: Poor Attention", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G12: Lack of Judgment & Insight", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G13: Disturbance of Volition", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G14: Poor Impulse Control", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G15: Preoccupation", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] },
+            { displayName: "G16: Active Social Avoidance", options: [{ value: 1, label: "1 (Absent)" }, { value: 2, label: "2 (Minimal)" }, { value: 3, label: "3 (Mild)" }, { value: 4, label: "4 (Moderate)" }, { value: 5, label: "5 (Moderate Severe)" }, { value: 6, label: "6 (Severe)" }, { value: 7, label: "7 (Extreme)" }] }
         ],
         severityLogic: (score) => {
             return `Total PANSS Score: ${score} (Min: 30, Max: 210)`;
@@ -793,16 +793,16 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "AUDIT (Alcohol Use Disorders Identification Test)",
         reference: "Saunders JB, Aasland OG, Babor TF, et al. Development of the Alcohol Use Disorders Identification Test (AUDIT): WHO Collaborative Project. Drug Alcohol Depend. 1993;33(3):209-229.",
         items: [
-            { displayName: "1. How often do you have a drink containing alcohol?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Monthly or less" }, { value: 2, label: "2 - 2-4 times a month" }, { value: 3, label: "3 - 2-3 times a week" }, { value: 4, label: "4 - 4+ times a week" } ] },
-            { displayName: "2. How many standard drinks do you have on a typical day when you are drinking?", options: [ { value: 0, label: "0 - 1 or 2" }, { value: 1, label: "1 - 3 or 4" }, { value: 2, label: "2 - 5 or 6" }, { value: 3, label: "3 - 7 to 9" }, { value: 4, label: "4 - 10+" } ] },
-            { displayName: "3. How often do you have six or more drinks on one occasion?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "4. How often during the last year have you found that you were not able to stop drinking once you had started?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "5. How often during the last year have you failed to do what was normally expected from you because of drinking?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "6. How often during the last year have you needed a first drink in the morning to get yourself going after a heavy drinking session?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "7. How often during the last year have you had a feeling of guilt or remorse after drinking?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "8. How often during the last year have you been unable to remember what happened the night before because you had been drinking?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "9. Have you or someone else been injured as a result of your drinking?", options: [ { value: 0, label: "0 - No" }, { value: 2, label: "2 - Yes, but not in the last year" }, { value: 4, label: "4 - Yes, during the last year" } ] },
-            { displayName: "10. Has a relative or friend, doctor or other health worker been concerned about your drinking or suggested you cut down?", options: [ { value: 0, label: "0 - No" }, { value: 2, label: "2 - Yes, but not in the last year" }, { value: 4, label: "4 - Yes, during the last year" } ] }
+            { displayName: "1. How often do you have a drink containing alcohol?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Monthly or less" }, { value: 2, label: "2 - 2-4 times a month" }, { value: 3, label: "3 - 2-3 times a week" }, { value: 4, label: "4 - 4+ times a week" }] },
+            { displayName: "2. How many standard drinks do you have on a typical day when you are drinking?", options: [{ value: 0, label: "0 - 1 or 2" }, { value: 1, label: "1 - 3 or 4" }, { value: 2, label: "2 - 5 or 6" }, { value: 3, label: "3 - 7 to 9" }, { value: 4, label: "4 - 10+" }] },
+            { displayName: "3. How often do you have six or more drinks on one occasion?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "4. How often during the last year have you found that you were not able to stop drinking once you had started?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "5. How often during the last year have you failed to do what was normally expected from you because of drinking?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "6. How often during the last year have you needed a first drink in the morning to get yourself going after a heavy drinking session?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "7. How often during the last year have you had a feeling of guilt or remorse after drinking?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "8. How often during the last year have you been unable to remember what happened the night before because you had been drinking?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "9. Have you or someone else been injured as a result of your drinking?", options: [{ value: 0, label: "0 - No" }, { value: 2, label: "2 - Yes, but not in the last year" }, { value: 4, label: "4 - Yes, during the last year" }] },
+            { displayName: "10. Has a relative or friend, doctor or other health worker been concerned about your drinking or suggested you cut down?", options: [{ value: 0, label: "0 - No" }, { value: 2, label: "2 - Yes, but not in the last year" }, { value: 4, label: "4 - Yes, during the last year" }] }
         ],
         severityLogic: (score) => {
             if (score >= 8) return "Hazardous or harmful alcohol consumption pattern (score >= 8)";
@@ -819,7 +819,7 @@ document.addEventListener("DOMContentLoaded", () => {
         items: [
             { displayName: "1. Have you used drugs other than those required for medical reasons?", options: optYesNo },
             { displayName: "2. Do you abuse more than one drug?", options: optYesNo },
-            { displayName: "3. Are you always able to stop using drugs when you want to?", options: [ { value: 1, label: "No (Significant)" }, { value: 0, label: "Yes" } ] },
+            { displayName: "3. Are you always able to stop using drugs when you want to?", options: [{ value: 1, label: "No (Significant)" }, { value: 0, label: "Yes" }] },
             { displayName: "4. Have you had blackouts or flashbacks as a result of drug use?", options: optYesNo },
             { displayName: "5. Do you ever feel bad or guilty about your drug use?", options: optYesNo },
             { displayName: "6. Does your spouse (or parents) ever complain about your drug involvement?", options: optYesNo },
@@ -843,14 +843,14 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "CUDIT-R (Cannabis Use Disorders Identification Test - Revised)",
         reference: "Adamson SJ, Kay-Lambkin FJ, Baker AL, et al. An improved brief measure of cannabis use disorder: the CUDIT-R. Drug Alcohol Depend. 2010;110(1-2):137-143.",
         items: [
-            { displayName: "1. How often do you use cannabis?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Monthly or less" }, { value: 2, label: "2 - 2-4 times a month" }, { value: 3, label: "3 - 2-3 times per week" }, { value: 4, label: "4 - 4+ times a week" } ] },
-            { displayName: "2. How many hours were you 'stoned' on a typical day when you were using cannabis?", options: [ { value: 0, label: "0 - Less than 1" }, { value: 1, label: "1 - 1 or 2" }, { value: 2, label: "2 - 3 or 4" }, { value: 3, label: "3 - 5 or 6" }, { value: 4, label: "4 - 7 or more" } ] },
-            { displayName: "3. How often during the past 6 months have you found that you were not able to stop using cannabis once you had started?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "4. How often during the past 6 months have you failed to do what was normally expected of you because of your use of cannabis?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "5. How often during the past 6 months have you devoted a great deal of your time to obtaining, using, or recovering from cannabis?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "6. How often during the past 6 months have you had a problem with your health, social life, finances, or work/study as a result of your cannabis use?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "7. Has a relative, friend, doctor, or other health worker been concerned about your cannabis use or suggested you cut down?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] },
-            { displayName: "8. How often have you been told you have tolerance to cannabis, OR, how often have you had to use a lot more cannabis to get the same effect?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" } ] }
+            { displayName: "1. How often do you use cannabis?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Monthly or less" }, { value: 2, label: "2 - 2-4 times a month" }, { value: 3, label: "3 - 2-3 times per week" }, { value: 4, label: "4 - 4+ times a week" }] },
+            { displayName: "2. How many hours were you 'stoned' on a typical day when you were using cannabis?", options: [{ value: 0, label: "0 - Less than 1" }, { value: 1, label: "1 - 1 or 2" }, { value: 2, label: "2 - 3 or 4" }, { value: 3, label: "3 - 5 or 6" }, { value: 4, label: "4 - 7 or more" }] },
+            { displayName: "3. How often during the past 6 months have you found that you were not able to stop using cannabis once you had started?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "4. How often during the past 6 months have you failed to do what was normally expected of you because of your use of cannabis?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "5. How often during the past 6 months have you devoted a great deal of your time to obtaining, using, or recovering from cannabis?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "6. How often during the past 6 months have you had a problem with your health, social life, finances, or work/study as a result of your cannabis use?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "7. Has a relative, friend, doctor, or other health worker been concerned about your cannabis use or suggested you cut down?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] },
+            { displayName: "8. How often have you been told you have tolerance to cannabis, OR, how often have you had to use a lot more cannabis to get the same effect?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Less than monthly" }, { value: 2, label: "2 - Monthly" }, { value: 3, label: "3 - Weekly" }, { value: 4, label: "4 - Daily or almost daily" }] }
         ],
         severityLogic: (score) => {
             if (score >= 8) return "Possible Cannabis Use Disorder / Hazardous cannabis use pattern";
@@ -864,9 +864,9 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "PGSI (Problem Gambling Severity Index)",
         reference: "Ferris J, Wynne H. The Canadian Problem Gambling Index: Final Report. Canadian Consortium for Gambling Research. 2001.",
         items: [
-            { displayName: "1. Have you bet more than you could afford to lose?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" } ] },
-            { displayName: "2. Have you needed to gamble with larger amounts of money to get the same feeling of excitement?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" } ] },
-            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [ { value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" } ] }
+            { displayName: "1. Have you bet more than you could afford to lose?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "2. Have you needed to gamble with larger amounts of money to get the same feeling of excitement?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] }
         ],
         severityLogic: (score) => {
             if (score === 0) return "Non-problem gambler";
@@ -883,14 +883,14 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Evaluate cognitive domains. Total score max 30.",
         reference: "Nasreddine ZS, Phillips NA, Bedirian V, et al. The Montreal Cognitive Assessment, MoCA: a brief screening tool for mild cognitive impairment. J Am Geriatr Soc. 2005;53(4):695-699.",
         items: [
-            { displayName: "1. Visuospatial / Executive (Trail, Cube, Clock)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" } ] },
-            { displayName: "2. Naming (Lion, Rhino, Camel)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" } ] },
-            { displayName: "3. Attention (Digit span, Vigilance, Serial 7s)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" } ] },
-            { displayName: "4. Language (Repetition, Fluency)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" } ] },
-            { displayName: "5. Abstraction (Similarity)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" } ] },
-            { displayName: "6. Delayed Recall (Short-term memory)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" } ] },
-            { displayName: "7. Orientation (Time, Place)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" } ] },
-            { displayName: "8. Education Adjustment (<= 12 years formal education)", options: [ { value: 0, label: "0 - No" }, { value: 1, label: "1 - Yes (+1 point)" } ] }
+            { displayName: "1. Visuospatial / Executive (Trail, Cube, Clock)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
+            { displayName: "2. Naming (Lion, Rhino, Camel)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }] },
+            { displayName: "3. Attention (Digit span, Vigilance, Serial 7s)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" }] },
+            { displayName: "4. Language (Repetition, Fluency)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }] },
+            { displayName: "5. Abstraction (Similarity)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }] },
+            { displayName: "6. Delayed Recall (Short-term memory)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
+            { displayName: "7. Orientation (Time, Place)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" }] },
+            { displayName: "8. Education Adjustment (<= 12 years formal education)", options: [{ value: 0, label: "0 - No" }, { value: 1, label: "1 - Yes (+1 point)" }] }
         ],
         severityLogic: (score) => {
             if (score > 30) score = 30; // Max score is 30
@@ -908,12 +908,12 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "Mini-Mental State Examination (MMSE Subset)",
         reference: "Folstein MF, Folstein SE, McHugh PR. 'Mini-mental state'. A practical method for grading the cognitive state of patients for the clinician. J Psychiatr Res. 1975;12(3):189-198.",
         items: [
-            { displayName: "1. Orientation to Time (Year, Season, Month, Date, Day)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" } ] },
-            { displayName: "2. Orientation to Place (State, County, Town, Hospital, Floor)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" } ] },
-            { displayName: "3. Registration (Naming 3 objects)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" } ] },
-            { displayName: "4. Attention and Calculation (Serial 7s backward OR WORLD backward)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" } ] },
-            { displayName: "5. Recall (Name 3 objects from step 3)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" } ] },
-            { displayName: "6. Language (Naming, Repetition, 3-stage command, Reading, Writing, Copying)", options: [ { value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" }, { value: 7, label: "7" }, { value: 8, label: "8" }, { value: 9, label: "9" } ] }
+            { displayName: "1. Orientation to Time (Year, Season, Month, Date, Day)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
+            { displayName: "2. Orientation to Place (State, County, Town, Hospital, Floor)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
+            { displayName: "3. Registration (Naming 3 objects)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }] },
+            { displayName: "4. Attention and Calculation (Serial 7s backward OR WORLD backward)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
+            { displayName: "5. Recall (Name 3 objects from step 3)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }] },
+            { displayName: "6. Language (Naming, Repetition, 3-stage command, Reading, Writing, Copying)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }, { value: 6, label: "6" }, { value: 7, label: "7" }, { value: 8, label: "8" }, { value: 9, label: "9" }] }
         ],
         severityLogic: (score) => {
             let interp = "Severe cognitive impairment";
@@ -931,12 +931,12 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Measures executive fronto-striatal function.",
         reference: "Dubois B, Slachevsky A, Litvan I, et al. The FAB: a Frontal Assessment Battery at bedside. Neurology. 2000;55(11):1621-1626.",
         items: [
-            { displayName: "1. Similarities (Conceptualization)", options: [ { value: 0, label: "0 - 0 correct" }, { value: 1, label: "1 - 1 correct" }, { value: 2, label: "2 - 2 correct" }, { value: 3, label: "3 - 3 correct" } ] },
-            { displayName: "2. Lexical Fluency (Mental Flexibility)", options: [ { value: 0, label: "0 - < 3 words" }, { value: 1, label: "1 - 3 to 5 words" }, { value: 2, label: "2 - 6 to 9 words" }, { value: 3, label: "3 - > 9 words" } ] },
-            { displayName: "3. Motor Series (Luria's Test)", options: [ { value: 0, label: "0 - Unable" }, { value: 1, label: "1 - Needs prompting" }, { value: 2, label: "2 - Correctly performs >3 series" }, { value: 3, label: "3 - Correctly performs 6 series" } ] },
-            { displayName: "4. Conflicting Instructions", options: [ { value: 0, label: "0 - > 2 errors" }, { value: 1, label: "1 - 2 errors" }, { value: 2, label: "2 - 1 error" }, { value: 3, label: "3 - 0 errors" } ] },
-            { displayName: "5. Go-No Go", options: [ { value: 0, label: "0 - > 2 errors" }, { value: 1, label: "1 - 2 errors" }, { value: 2, label: "2 - 1 error" }, { value: 3, label: "3 - 0 errors" } ] },
-            { displayName: "6. Prehension Behavior", options: [ { value: 0, label: "0 - Takes hands" }, { value: 1, label: "1 - Hesitates then takes" }, { value: 2, label: "2 - Hesitates, no take" }, { value: 3, label: "3 - Does not take hands" } ] }
+            { displayName: "1. Similarities (Conceptualization)", options: [{ value: 0, label: "0 - 0 correct" }, { value: 1, label: "1 - 1 correct" }, { value: 2, label: "2 - 2 correct" }, { value: 3, label: "3 - 3 correct" }] },
+            { displayName: "2. Lexical Fluency (Mental Flexibility)", options: [{ value: 0, label: "0 - < 3 words" }, { value: 1, label: "1 - 3 to 5 words" }, { value: 2, label: "2 - 6 to 9 words" }, { value: 3, label: "3 - > 9 words" }] },
+            { displayName: "3. Motor Series (Luria's Test)", options: [{ value: 0, label: "0 - Unable" }, { value: 1, label: "1 - Needs prompting" }, { value: 2, label: "2 - Correctly performs >3 series" }, { value: 3, label: "3 - Correctly performs 6 series" }] },
+            { displayName: "4. Conflicting Instructions", options: [{ value: 0, label: "0 - > 2 errors" }, { value: 1, label: "1 - 2 errors" }, { value: 2, label: "2 - 1 error" }, { value: 3, label: "3 - 0 errors" }] },
+            { displayName: "5. Go-No Go", options: [{ value: 0, label: "0 - > 2 errors" }, { value: 1, label: "1 - 2 errors" }, { value: 2, label: "2 - 1 error" }, { value: 3, label: "3 - 0 errors" }] },
+            { displayName: "6. Prehension Behavior", options: [{ value: 0, label: "0 - Takes hands" }, { value: 1, label: "1 - Hesitates then takes" }, { value: 2, label: "2 - Hesitates, no take" }, { value: 3, label: "3 - Does not take hands" }] }
         ],
         severityLogic: (score) => {
             return `Total FAB Score: ${score}/18\n` + (score < 11 ? "Interpretation: Score is suggestive of frontal lobe dysfunction." : "Interpretation: Score is not suggestive of frontal lobe dysfunction.");
@@ -974,26 +974,26 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Evaluate psychopathic traits.",
         reference: "Hare RD. The Hare Psychopathy Checklist-Revised. Multi-Health Systems. 1991.",
         items: [
-            { displayName: "1. Glibness/Superficial Charm", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "2. Grandiose Sense of Self-Worth", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "3. Need for Stimulation", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "4. Pathological Lying", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "5. Conning/Manipulative", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "6. Lack of Remorse or Guilt", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "7. Shallow Affect", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "8. Callous/Lack of Empathy", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "9. Parasitic Lifestyle", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "10. Poor Behavioral Controls", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "11. Promiscuous Sexual Behavior", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "12. Early Behavior Problems", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "13. Lack of Realistic, Long-Term Goals", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "14. Impulsivity", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "15. Irresponsibility", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "16. Failure to Accept Responsibility", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "17. Many Short-Term Marital Relationships", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "18. Juvenile Delinquency", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "19. Revocation of Conditional Release", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] },
-            { displayName: "20. Criminal Versatility", options: [ { value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" } ] }
+            { displayName: "1. Glibness/Superficial Charm", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "2. Grandiose Sense of Self-Worth", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "3. Need for Stimulation", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "4. Pathological Lying", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "5. Conning/Manipulative", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "6. Lack of Remorse or Guilt", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "7. Shallow Affect", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "8. Callous/Lack of Empathy", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "9. Parasitic Lifestyle", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "10. Poor Behavioral Controls", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "11. Promiscuous Sexual Behavior", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "12. Early Behavior Problems", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "13. Lack of Realistic, Long-Term Goals", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "14. Impulsivity", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "15. Irresponsibility", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "16. Failure to Accept Responsibility", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "17. Many Short-Term Marital Relationships", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "18. Juvenile Delinquency", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "19. Revocation of Conditional Release", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] },
+            { displayName: "20. Criminal Versatility", options: [{ value: 0, label: "0 (Not Present)" }, { value: 1, label: "1 (Partially Present)" }, { value: 2, label: "2 (Present)" }] }
         ],
         severityLogic: (score) => {
             return `Total PCL-R Score: ${score} / 40`;
@@ -1007,16 +1007,16 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Diagnostic referral screen for adult autism.",
         reference: "Allison C, Auyeung B, Baron-Cohen S. A user guide to the AQ-10. J Am Acad Child Adolesc Psychiatry. 2012;51(2):202-212.",
         items: [
-            { displayName: "1. I often notice small sounds when others do not.", options: [ { value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" } ] },
-            { displayName: "2. I usually concentrate more on the whole picture, rather than the small details.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "3. I find it easy to do more than one thing at once.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "4. If there is an interruption, I can switch back to what I was doing very quickly.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "5. I find it easy to 'read between the lines' when someone is talking to me.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "6. I know how to tell if someone listening to me is getting bored.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "7. When I'm reading a story, I find it difficult to work out the characters' intentions.", options: [ { value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" } ] },
-            { displayName: "8. I like to collect information about categories of things.", options: [ { value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" } ] },
-            { displayName: "9. I find it easy to work out what someone is thinking or feeling just by looking at their face.", options: [ { value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" } ] },
-            { displayName: "10. I find it difficult to work out people's intentions.", options: [ { value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" } ] }
+            { displayName: "1. I often notice small sounds when others do not.", options: [{ value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" }] },
+            { displayName: "2. I usually concentrate more on the whole picture, rather than the small details.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "3. I find it easy to do more than one thing at once.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "4. If there is an interruption, I can switch back to what I was doing very quickly.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "5. I find it easy to 'read between the lines' when someone is talking to me.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "6. I know how to tell if someone listening to me is getting bored.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "7. When I'm reading a story, I find it difficult to work out the characters' intentions.", options: [{ value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" }] },
+            { displayName: "8. I like to collect information about categories of things.", options: [{ value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" }] },
+            { displayName: "9. I find it easy to work out what someone is thinking or feeling just by looking at their face.", options: [{ value: 0, label: "Definitely Agree" }, { value: 0, label: "Slightly Agree" }, { value: 1, label: "Slightly Disagree" }, { value: 1, label: "Definitely Disagree" }] },
+            { displayName: "10. I find it difficult to work out people's intentions.", options: [{ value: 1, label: "Definitely Agree" }, { value: 1, label: "Slightly Agree" }, { value: 0, label: "Slightly Disagree" }, { value: 0, label: "Definitely Disagree" }] }
         ],
         severityLogic: (score) => {
             if (score >= 6) return `Score: ${score}/10 - Suggests referral for formal autism spectrum assessment (score >= 6)`;
@@ -1031,14 +1031,14 @@ document.addEventListener("DOMContentLoaded", () => {
         note: "Screening tool for personality disorders.",
         reference: "Moran P, Leese M, Lee T, et al. Standardised Assessment of Personality - Abbreviated Scale (SAPAS). Br J Psychiatry. 2003;183:228-232.",
         items: [
-            { displayName: "1. In general, do you have difficulty making and keeping friends?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "2. Would you normally describe yourself as a loner?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "3. In general, do you trust other people?", options: [ { value: 1, label: "No (1)" }, { value: 0, label: "Yes (0)" } ] },
-            { displayName: "4. Do you normally get into arguments or fights?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "5. Do you often feel that you have to be the life of the party?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "6. Do you generally do things on the spur of the moment?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "7. Do you often worry about things that other people may be thinking of you?", options: [ { value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" } ] },
-            { displayName: "8. Is it your practice to keep on good terms with everyone?", options: [ { value: 1, label: "No (1)" }, { value: 0, label: "Yes (0)" } ] }
+            { displayName: "1. In general, do you have difficulty making and keeping friends?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "2. Would you normally describe yourself as a loner?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "3. In general, do you trust other people?", options: [{ value: 1, label: "No (1)" }, { value: 0, label: "Yes (0)" }] },
+            { displayName: "4. Do you normally get into arguments or fights?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "5. Do you often feel that you have to be the life of the party?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "6. Do you generally do things on the spur of the moment?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "7. Do you often worry about things that other people may be thinking of you?", options: [{ value: 0, label: "No (0)" }, { value: 1, label: "Yes (1)" }] },
+            { displayName: "8. Is it your practice to keep on good terms with everyone?", options: [{ value: 1, label: "No (1)" }, { value: 0, label: "Yes (0)" }] }
         ],
         severityLogic: (score) => {
             if (score >= 3) return `Score: ${score}/8 - Suggests potential personality dysfunction. Further assessment recommended.`;
@@ -1061,7 +1061,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "6. Suicidal Behavior (Have you ever done anything, started to do anything, or prepared to do anything to end your life?)", options: optYesNo }
         ],
         severityLogic: (score, itemsContainer) => {
-            const hasIdeation = [1,2,3,4,5].some(idx => {
+            const hasIdeation = [1, 2, 3, 4, 5].some(idx => {
                 const radio = itemsContainer.querySelector(`input[name="cssrs-q-${idx}"]:checked`);
                 return radio && parseInt(radio.value, 10) === 1;
             });
@@ -1084,9 +1084,9 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "PSQI (Pittsburgh Sleep Quality Index Subset)",
         reference: "Buysse DJ, Reynolds CF, Monk TH, et al. The Pittsburgh Sleep Quality Index: a new instrument for psychiatric practice and research. Psychiatry Res. 1989;28(2):193-213.",
         items: [
-            { displayName: "1. Subjective sleep quality", options: [ { value: 0, label: "0 - Very Good" }, { value: 1, label: "1 - Fairly Good" }, { value: 2, label: "2 - Fairly Bad" }, { value: 3, label: "3 - Very Bad" } ] },
-            { displayName: "2. Sleep latency (trouble falling asleep within 30 min)", options: [ { value: 0, label: "0 - Not during past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" } ] },
-            { displayName: "3. Sleep duration (hours of sleep)", options: [ { value: 0, label: "0 - > 7 hours" }, { value: 1, label: "1 - 6-7 hours" }, { value: 2, label: "2 - 5-6 hours" }, { value: 3, label: "3 - < 5 hours" } ] }
+            { displayName: "1. Subjective sleep quality", options: [{ value: 0, label: "0 - Very Good" }, { value: 1, label: "1 - Fairly Good" }, { value: 2, label: "2 - Fairly Bad" }, { value: 3, label: "3 - Very Bad" }] },
+            { displayName: "2. Sleep latency (trouble falling asleep within 30 min)", options: [{ value: 0, label: "0 - Not during past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" }] },
+            { displayName: "3. Sleep duration (hours of sleep)", options: [{ value: 0, label: "0 - > 7 hours" }, { value: 1, label: "1 - 6-7 hours" }, { value: 2, label: "2 - 5-6 hours" }, { value: 3, label: "3 - < 5 hours" }] }
         ],
         severityLogic: (score) => {
             if (score >= 5) return "Poor sleep quality suggested (Score >= 5)";
@@ -1100,35 +1100,35 @@ document.addEventListener("DOMContentLoaded", () => {
         name: "BIS-11 (Barratt Impulsiveness Scale)",
         reference: "Patton JH, Stanford MS, Barratt ES. Factor structure of the Barratt Impulsiveness Scale. J Clin Psychol. 1995;51(6):768-774.",
         items: [
-            { displayName: "1. I plan tasks carefully.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "2. I do things without thinking.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "3. I make-up my mind quickly.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "4. I am happy-go-lucky.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "5. I don't 'pay attention.'", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "6. I have 'racing' thoughts.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "7. I plan trips well ahead of time.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "8. I am self-controlled.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "9. I concentrate easily.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "10. I save regularly.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "11. I 'squirm' at plays or lectures.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "12. I am a careful thinker.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "13. I plan for job security.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "14. I say things without thinking.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "15. I like to think about complex problems.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "16. I change jobs.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "17. I act 'on impulse.'", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "18. I get easily bored when solving thought problems.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "19. I act on the spur of the moment.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "20. I am a steady thinker.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "21. I change residences.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "22. I buy things on impulse.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "23. I can only think about one thing at a time.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "24. I change hobbies.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "25. I spend or charge more than I earn.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "26. I am more interested in the present than the future.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "27. I am restless at the theater or lectures.", options: [ { value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" } ] },
-            { displayName: "28. I like puzzles.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] },
-            { displayName: "29. I am future-oriented.", options: [ { value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" } ] }
+            { displayName: "1. I plan tasks carefully.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "2. I do things without thinking.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "3. I make-up my mind quickly.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "4. I am happy-go-lucky.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "5. I don't 'pay attention.'", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "6. I have 'racing' thoughts.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "7. I plan trips well ahead of time.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "8. I am self-controlled.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "9. I concentrate easily.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "10. I save regularly.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "11. I 'squirm' at plays or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "12. I am a careful thinker.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "13. I plan for job security.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "14. I say things without thinking.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "15. I like to think about complex problems.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "16. I change jobs.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "17. I act 'on impulse.'", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "18. I get easily bored when solving thought problems.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "19. I act on the spur of the moment.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "20. I am a steady thinker.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "21. I change residences.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "22. I buy things on impulse.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "23. I can only think about one thing at a time.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "24. I change hobbies.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "25. I spend or charge more than I earn.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "26. I am more interested in the present than the future.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "27. I am restless at the theater or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "28. I like puzzles.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "29. I am future-oriented.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] }
         ],
         severityLogic: (score) => {
             return `Total Impulsivity Score: ${score} (Range 30-120)`;
@@ -1161,7 +1161,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let d = parseDate(dateStr);
             let current = startDose;
             let log = `--- Methadone Commencement Titration Schedule ---\nStarting Dose: ${startDose}mg, Target Dose: ${targetDose}mg\n\n`;
-            
+
             while (current <= targetDose) {
                 const stepStart = formatDate(d);
                 d.setDate(d.getDate() + days - 1);
@@ -1203,7 +1203,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let d = parseDate(dateStr);
             let current = startDose;
             let log = `--- Buprenorphine/Suboxone Commencement Schedule ---\nStarting Dose: ${startDose}mg, Target Dose: ${targetDose}mg\n\n`;
-            
+
             while (current <= targetDose) {
                 const stepStart = formatDate(d);
                 d.setDate(d.getDate() + days - 1);
@@ -1338,7 +1338,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 recommendation += "Low Dependency Nicotine Intake.\nPlan: Single agent or PRN oral therapy.\n";
                 recommendation += "- Nicotine Patch: 7mg or 14mg daily.\n- Oral NRT: Gum/lozenge 2mg PRN.";
             }
-            
+
             let note = `--- NRT Assessment & Dosage Recommendation ---\nCigarettes per Day: ${cpd}\nTime to first cigarette: ${time === "within-30" ? "Within 30 mins" : "More than 30 mins"}\n\n`;
             note += recommendation;
             outEl.value = note;
@@ -1413,9 +1413,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderQtcTable(filterText = "") {
         if (!qtcTableBody) return;
         qtcTableBody.innerHTML = "";
-        
+
         const filtered = QTC_DRUGS.filter(d => d.name.toLowerCase().includes(filterText.toLowerCase()));
-        
+
         filtered.forEach(d => {
             const tr = document.createElement("tr");
             const badgeClass = d.risk === "High" ? "risk-high" : d.risk === "Intermediate" ? "risk-intermediate" : "risk-low";
@@ -1626,7 +1626,7 @@ document.addEventListener("DOMContentLoaded", () => {
             behParts.push(`Eye contact is ${elements.eyeContact.value.toLowerCase()}.`);
             behParts.push(`Posture is ${elements.posture.value.toLowerCase()}.`);
             behParts.push(`Psychomotor activity is ${elements.activity.value.toLowerCase()}.`);
-            
+
             const motors = getCheckedLabels(motorChecks);
             if (motors.length > 0) {
                 behParts.push(`Abnormal movements noted: ${motors.join(", ").toLowerCase()}.`);
@@ -1896,7 +1896,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 return { subject: "they", object: "them", possessive: "their", possessivePronoun: "theirs", verb: "report", presents: "present", copes: "cope", CopingCapitalized: "They report" };
             }
         }
-        
+
         const pronouns = getPronouns(gender);
 
         const ppTextParts = [];
@@ -1912,7 +1912,7 @@ document.addEventListener("DOMContentLoaded", () => {
             } else {
                 symptomsPhrase = `who ${pronouns.presents} with ${durStr} of ${symptoms}`;
             }
-            
+
             // Determine if the next clause (context) will start a new sentence
             let nextStartsNewSentence = false;
             if (context) {
@@ -1921,7 +1921,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     nextStartsNewSentence = true;
                 }
             }
-            
+
             // If there's no context, or the context starts a new sentence, end this sentence with a period
             if (!context || nextStartsNewSentence) {
                 symptomsPhrase += ".";
@@ -1949,9 +1949,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (coping) {
             let copingStr = coping;
             const lowerCoping = copingStr.toLowerCase().trim();
-            if (lowerCoping.startsWith("they report") || 
-                lowerCoping.startsWith("he reports") || 
-                lowerCoping.startsWith("she reports") || 
+            if (lowerCoping.startsWith("they report") ||
+                lowerCoping.startsWith("he reports") ||
+                lowerCoping.startsWith("she reports") ||
                 lowerCoping.startsWith("patient reports")) {
                 let rest = copingStr;
                 if (lowerCoping.startsWith("they report")) rest = copingStr.slice(11).trim();
@@ -1990,7 +1990,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const details = [];
             const subCats = factorsMap[pKeyFilter];
             if (!subCats) return details;
-            
+
             if (subKeyFilter) {
                 const factorsList = subCats[subKeyFilter] || [];
                 factorsList.forEach(factor => {
@@ -2277,10 +2277,10 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!draftStr) return;
         try {
             const draftData = JSON.parse(draftStr);
-            
+
             // Load PP and diagnostic text inputs
             const basicFields = [
-                "form-pp-name", "form-pp-age", "form-pp-gender", "form-pp-duration", 
+                "form-pp-name", "form-pp-age", "form-pp-gender", "form-pp-duration",
                 "form-pp-symptoms", "form-pp-context", "form-pp-coping",
                 "form-diag-primary", "form-diag-diff", "form-diag-contrib",
                 "form-mgmt"
@@ -2511,7 +2511,300 @@ document.addEventListener("DOMContentLoaded", () => {
     const templates = {
         addiction: `Addiction Medicine Clinic Consultation Note\n\nBackground:\nLives with:\nFamily:\nWork/Finances:\nGP/Pharmacy:\n\nDrug & Alcohol History:\n- Alcohol:\n- Tobacco:\n- Cannabis:\n- Opioids:\n- Stimulants (Methamphetamine/Cocaine):\n\nPhysical & Lab Checks (LFTs, EUC, BAC):\n\nImpression & Treatment Plan:\n- Pharmacological Support:\n- Psychosocial Referral:\n- Follow-up details:`,
         otp: `OTP Clinic Review Note\n\nCurrent Medication Type: Methadone / Suboxone / Buvidal\nCurrent daily dose: _____mg\nLast injection date (LAI): __/__/____\n\nAdverse effects screening (Constipation, Sedation, Dental check):\nCravings / Withdrawal check:\nUrine Drug Screen (UDS) results:\nSafety & Takeaway storage verified: Yes/No\n\nImpression:\nPlan & Dosing updates:`,
-        review: `Psychiatry Initial Review & Assessment Note\n\nHistory of Presenting Illness (HPI):\n\nDiagnostic Screen (DSM-5 / ICD-11):\n- Organic causes ruled out: Yes/No\n- Psychotic Symptoms:\n- Mood Symptoms (Mania/Depression):\n- Anxiety/Trauma Symptoms:\n\nRisk Assessment:\n- Risk to Self (Ideation/Intent/Plan):\n- Risk to Others:\n- Vulnerability/Self-neglect:\n\nMental Status Examination (MSE):\n\nFormulation (Biopsychosocial):\n\nTreatment Plan (Biomedical, Psychological, Social):`
+        review: `Psychiatry Initial Review & Assessment Note\n\nHistory of Presenting Illness (HPI):\n\nDiagnostic Screen (DSM-5 / ICD-11):\n- Organic causes ruled out: Yes/No\n- Psychotic Symptoms:\n- Mood Symptoms (Mania/Depression):\n- Anxiety/Trauma Symptoms:\n\nRisk Assessment:\n- Risk to Self (Ideation/Intent/Plan):\n- Risk to Others:\n- Vulnerability/Self-neglect:\n\nMental Status Examination (MSE):\n\nFormulation (Biopsychosocial):\n\nTreatment Plan (Biomedical, Psychological, Social):`,
+        oca: `Registrar Initial Review - Koessler
+
+Situation:
+
+Psychosocial Background:
+Address - 
+Lives with 
+Family - 
+	Person responsible: 
+Pets - 
+Work - 
+Finances -  
+GP - 
+Pharmacy - 
+Previous Diagnoses -
+Ethnicity - 
+Religion - 
+Relevant other services / professionals - 
+
+On review:
+
+
+
+
+Diagnostic screen:
+- Organic
+- Substance
+- Cognitive and developmental
+- Psychotic
+- Manic
+- Depressive
+- Anxiety
+- Personality
+- Trauma
+
+Functional screen:
+ADLs:
+-Bathing & Hygiene:
+-Dressing: 
+-Toileting: 
+-Mobility (Transfers): 
+-Eating/Feeding: 
+
+iADLs:
+-Managing Finances
+-Managing Medication
+-Meal Preparation
+-Housekeeping & Laundry
+-Shopping
+-Transportation
+-Communication: Using the phone, mail, or computer
+
+
+Risk Assessment
+Risk to Self:
+	Suicidal Ideation: (Current/past, intent, plan, access to means)
+	Self-Harm: (Current/past, nature of harm)
+	Self-Neglect / Vulnerability:
+
+Risk to Others:
+	Aggression/Violence: (Current/past ideation, intent, plan, targets)
+	Child Welfare Concerns:
+
+Risk From Others:
+	Domestic Violence, Exploitation, Abuse:
+
+Substance-Specific Risks:
+	Overdose Risk: (History of OD, current tolerance changes, polypharmacy)
+	Withdrawal Risk: (History of severe withdrawal, seizures, delirium tremens)
+	Injecting-Related Risks: (BBV status/risk, vein care, needle sharing)
+	Driving/Operating Machinery:
+
+
+Past Mental Health History: 
+- Diagnoses:
+
+- Previous admissions:
+
+- Psychology:
+
+- Psychiatry:
+
+Past Medical History: 
+
+[Blood-Borne Viruses (BBVs): Hepatitis C/B, HIV status, testing dates.
+Liver disease: Cirrhosis, abnormal LFTs.
+Cardiovascular: Endocarditis, cardiomyopathy.
+Neurological: Thyroid issues; Seizures, peripheral neuropathy, cognitive impairment.
+Trauma/Injuries.]
+
+Current Medications:
+
+Safescript review:
+
+ADRs / Allergies:
+
+
+Drug and Alcohol History 
+- Alcohol 
+- Tobacco 
+- Cannabis 
+- Amphetamine type substances (ice, MDMA etc.) 
+- Benzodiazepines (prescribed & illicit) 
+- Heroin
+- Other opioids (oxycodone, non-prescribed methadone/buprenorphine) 
+- Cocaine 
+- Hallucinogens  
+- Ketamine 
+- GHB 
+- Other substances (e.g. inhalants / solvents, nitrous oxide, hand sanitiser, anabolic steroids) 
+
+
+Alcohol and other drug treatment history - Previous withdrawal management (setting, medications, outcome), rehabilitation (program, duration), counselling, mutual help groups (AA/NA).
+
+Gambling History: 
+
+Forensic History:
+
+
+Family History / Family Structure
+- Psychiatric
+
+- Medical
+
+Personal / developmental history
+- Birth
+Location:
+Ante, peri or post-natal complications:
+
+- Illnesses as a baby:
+
+- Milestones (especially walking and talking)
+
+- What sort of childhood memories do you recall?
+
+- 3 words/phrases to describe mum:
+- 3 words/phrases to describe dad: 
+
+- Parental occupation
+
+- DV exposure and violence in the home
+
+- Major traumas (e.g. physical or sexual abuse)
+
+- School: 
+Enjoyment -
+Social and friends -
+Bullying - 
+Academic function -  
+Behavioural issues - 
+Age left school - 
+
+- Workplace / vocational history
+After school
+Job history
+Longest period of employment
+
+- Relationship – romantic & platonic, psychosexual history, children
+Number of significant relationshops
+Longest relationship
+"What sort of person are you in the relationship?"
+"Do you find your relationships get unusually emotionally intense?"
+"Are you sensitive to rejection or constantly fearful of being abandoned in relationships?"
+
+# Strengths, Goals & Recovery Capital:
+- Patient-identified strengths, skills, and positive attributes.
+- Hobbies and friendships
+- Life goals (short and long term).
+- Culture - 
+- Spirituality - 
+	
+# Goals for this treatment episode:
+
+MSE
+Appearance: __ appears of stated age in top and __. __ Distinctive features. Appears of reasonable hygiene.
+Behaviour: cooperative and openly communicating. Psychomotor __
+Speech: normal R/T/V. __ paucity and vagueness of speech
+Emotions
+	Mood: states mood is 
+	Affect: congruent, appears 
+Perceptions: denies auditory, visual, tactile or other hallucinations
+Thought form: No evidence of FTD - coherent and logical
+Thought content: __ TOSH / suicidal ideation. __ delusions / overvalued ideas
+Insight/judgement: Insight into mental condition is __. Insight into precipitants and causes is __
+Cognition:  Oriented to PPT, aware of own autobiographical details. No formal cognitive testing at present.
+
+Orientation: Date - Month - Year - Day - Place - Suburb
+
+Delayed Recall: Face - Velvet - Church - Daisy - Red
+
+Frontal assessments:
+- Similarities - in what way are these alike?
+An apple and banana [fruit]
+Table and a chair [furniture]
+Tulip, a rose and a daisy [flowers]
+- Luria test (fist - knife - palm down - 3 examiner alone; 3 with patient; then get them to do it 6 times alone)- 
+
+Physical examination:
+# General examination
+Vitals
+
+# Thyroid
+Weight
+Voice hoarseness 
+Hands: Thyroid acropachy and onycholysis; palmar erythema, tremor
+Sweat
+Lid retraction, exopthalmos, lid lag
+Neck midline masses / scars; swallow and tongue protrude (masses and thyroglossal cysts move upwards with swallowing but only TG cysts move with tongue protrusion)
+Palpate thyroid gland - size, symmetry, consistency, masses, thrill 
+Lymph nodes
+Tracheal deviation (goitre)
++/- reflexes; myopathy; pretibial myxoedema
+
+# EPSEs
+Gait
+Tone
+Tremor (postural / intention / resting)
+Orobuccal dyskinesia
+Abnormal involuntary movements (chorea / athetosis / tics)
+Akathisia
+
+
+
+Impression:
+Diagnosis
+# 
+
+
+Integrative Formulation:
+# Presentation and Context:
+
+# Biopsychosocial Considerations:
+
+# Speculative/Theoretical Hypotheses:
+
+
+Barriers to implementation:
+Rapport/alliance:
+Alliance:
+
+
+Prognosis:
+Short-term:
+Long-term:
+Anticipated response to treatment:
+
+Risks
+Abs - 
+Agg - 
+DSH - 
+SR - 
+SS - 
+Vul -  
+
+N.B.: while risk formulation may serve a heuristic purpose during admission, relative risk for all categories for patients admitted to a mental health ward is significantly elevated compared to the general population. Please interpret with care.
+
+Plan:
+# Setting and risk management
+(consider Crisis safety or distress tolerance plan, consider if patient needs to have overdose prevention education and Naloxone kit.)
+
+# Diagnostic clarification and information gathering
+- Sources of collateral history:
+
+# Psychiatric and psychobiological treatment of symptoms
+
+- Relapse prevention
+
+# Other medical treatment / Ix
+
+# D&A
+
+- Relapse prevention
+
+# Psychological
+
+- Relapse prevention
+
+# Social and cultural
+
+- Psychosocial rehabilitation
+
+# Legal and ethical
+
+# Follow-up and referrals to other professionals and organisations
+
+# Discharge arrangements and conditions
+
+-Legal status: __
+-CL: 3
+-Leave: nil
+
+Dr Trent Koessler
+Psychiatry Registrar`
     };
 
     const templateSelect = document.getElementById("template-select");
@@ -2522,7 +2815,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const selected = templateSelect.value;
             templateNoteOut.value = templates[selected] || "";
         });
-        
+
         document.getElementById("template-copy-btn").addEventListener("click", () => {
             templateNoteOut.select();
             navigator.clipboard.writeText(templateNoteOut.value);
@@ -2846,8 +3139,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // 7. Check if LAI antipsychotic (warn user)
             const isLAI = selectedOption && selectedOption.parentElement &&
-                          selectedOption.parentElement.label &&
-                          selectedOption.parentElement.label.includes("LAI Antipsychotic");
+                selectedOption.parentElement.label &&
+                selectedOption.parentElement.label.includes("LAI Antipsychotic");
 
             // 8. Update SS panel
             if (ssData && pkSSPanel) {
@@ -3026,6 +3319,1075 @@ document.addEventListener("DOMContentLoaded", () => {
             benzoFromDose.addEventListener("input", calculateBenzoEquivalents);
             benzoToDrug.addEventListener("change", calculateBenzoEquivalents);
         }
+    }
+
+    // =================================================================
+    // PATIENT REVIEW WORKSPACE (OCA) LOGIC
+    // =================================================================
+
+    const ocaEditor = document.getElementById("oca-editor");
+
+    // 1. Navigation & Default Template Load
+    if (ocaEditor && !ocaEditor.value.trim()) {
+        ocaEditor.value = templates.oca || "";
+    }
+
+    // 2. Sidebar Tab Toggling
+    const ocaTabBtns = document.querySelectorAll(".oca-tab-btn");
+    ocaTabBtns.forEach(btn => {
+        btn.addEventListener("click", () => {
+            const targetId = btn.dataset.ocaTab;
+            ocaTabBtns.forEach(b => b.classList.remove("active"));
+            btn.classList.add("active");
+
+            document.querySelectorAll(".oca-panel-content").forEach(content => {
+                content.classList.remove("active");
+            });
+            const targetPanel = document.getElementById(targetId);
+            if (targetPanel) {
+                targetPanel.classList.add("active");
+            }
+        });
+    });
+
+    // 3. Auto-save to Local File via File System Access API
+    let ocaFileHandle = null;
+    const ocaConnectBtn = document.getElementById("oca-connect-btn");
+    const ocaSaveStatus = document.getElementById("oca-save-status");
+    const ocaStatusText = document.getElementById("oca-status-text");
+
+    async function writeToFile(fileHandle, contents) {
+        try {
+            const writable = await fileHandle.createWritable();
+            await writable.write(contents);
+            await writable.close();
+            return true;
+        } catch (err) {
+            console.error("Auto-save failed", err);
+            return false;
+        }
+    }
+
+    let saveTimeout = null;
+    function triggerAutoSave() {
+        if (!ocaFileHandle) return;
+
+        ocaSaveStatus.className = "oca-save-status-saving";
+        ocaStatusText.textContent = "Saving...";
+
+        if (saveTimeout) clearTimeout(saveTimeout);
+        saveTimeout = setTimeout(async () => {
+            if (!ocaFileHandle) return;
+            const success = await writeToFile(ocaFileHandle, ocaEditor.value);
+            if (success) {
+                ocaSaveStatus.className = "oca-save-status-success";
+                ocaStatusText.textContent = "Auto-saved to Desktop";
+            } else {
+                ocaSaveStatus.className = "oca-save-status-error";
+                ocaStatusText.textContent = "Error auto-saving";
+            }
+        }, 500);
+    }
+
+    if (ocaConnectBtn) {
+        ocaConnectBtn.addEventListener("click", async () => {
+            try {
+                const opts = {
+                    suggestedName: 'patient_review_assessment.txt',
+                    types: [{
+                        description: 'Text Files',
+                        accept: { 'text/plain': ['.txt'] },
+                    }],
+                };
+                ocaFileHandle = await window.showSaveFilePicker(opts);
+                ocaSaveStatus.className = "oca-save-status-success";
+                ocaStatusText.textContent = "Connected to file";
+                triggerAutoSave();
+            } catch (err) {
+                console.warn("User cancelled or file access denied", err);
+                ocaSaveStatus.className = "oca-save-status-idle";
+                ocaStatusText.textContent = "Not connected (Auto-save offline)";
+            }
+        });
+    }
+
+    if (ocaEditor) {
+        ocaEditor.addEventListener("input", triggerAutoSave);
+    }
+
+    // 4. Live-updating MSE Generator Sidebar
+    const ocaMseMotorChecks = ["oca-mse-motor-tremor", "oca-mse-motor-chorea", "oca-mse-motor-athetosis", "oca-mse-motor-dystonias", "oca-mse-motor-tics", "oca-mse-motor-catatonic"];
+    const ocaMseMannerismChecks = ["oca-mse-mannerism-stereotypies", "oca-mse-mannerism-compulsions", "oca-mse-mannerism-lip-smacking", "oca-mse-mannerism-wringing-hands"];
+    const ocaMseHallucinationChecks = ["oca-mse-hallucination-denies", "oca-mse-hallucination-auditory", "oca-mse-hallucination-visual", "oca-mse-hallucination-tactile", "oca-mse-hallucination-olfactory"];
+    const ocaMseThoughtFormChecks = ["oca-mse-thought-form-coherent", "oca-mse-thought-form-circumstantial", "oca-mse-thought-form-tangential", "oca-mse-thought-form-loosening", "oca-mse-thought-form-salad"];
+    const ocaMseOtherThoughtChecks = ["oca-mse-other-obsessions", "oca-mse-other-ruminations", "oca-mse-other-preoccupations"];
+    const ocaMseDelusionChecks = ["oca-mse-delusion-none", "oca-mse-delusion-persecutory", "oca-mse-delusion-grandiose", "oca-mse-delusion-referential", "oca-mse-delusion-somatic", "oca-mse-delusion-nihilistic", "oca-mse-delusion-control", "oca-mse-delusion-insertion"];
+    const ocaMseInsightRadios = ["oca-mse-insight-good", "oca-mse-insight-partial", "oca-mse-insight-poor", "oca-mse-insight-absent"];
+
+    function getOcaCheckedLabels(list) {
+        const labels = [];
+        list.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.checked) {
+                labels.push(el.value);
+            }
+        });
+        return labels;
+    }
+
+    function getOcaCheckedLabelsExclude(list, excludeVal) {
+        const labels = [];
+        list.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.checked && el.value !== excludeVal) {
+                labels.push(el.value);
+            }
+        });
+        return labels;
+    }
+
+    function updateMseInOcaText() {
+        if (!ocaEditor) return;
+        let text = ocaEditor.value;
+
+        const consciousness = document.getElementById("oca-mse-consciousness").value;
+        const ageAppearance = document.getElementById("oca-mse-age-appearance").value;
+        const habitus = document.getElementById("oca-mse-habitus").value;
+        const facialExpression = document.getElementById("oca-mse-facial-expression").value;
+        const hygiene = document.getElementById("oca-mse-hygiene").value;
+        const appearanceFree = document.getElementById("oca-mse-appearance-free").value.trim();
+
+        const attitude = document.getElementById("oca-mse-attitude").value;
+        const eyeContact = document.getElementById("oca-mse-eye-contact").value;
+        const posture = document.getElementById("oca-mse-posture").value;
+        const activity = document.getElementById("oca-mse-activity").value;
+        const behaviourFree = document.getElementById("oca-mse-behaviour-free").value.trim();
+
+        const speechRate = document.getElementById("oca-mse-speech-rate").value;
+        const speechVolume = document.getElementById("oca-mse-speech-volume").value;
+        const speechProsody = document.getElementById("oca-mse-speech-prosody").value;
+        const speechArticulation = document.getElementById("oca-mse-speech-articulation").value;
+        const speechFree = document.getElementById("oca-mse-speech-free").value.trim();
+
+        const mood = document.getElementById("oca-mse-mood").value.trim();
+        const affectType = document.getElementById("oca-mse-affect-type").value;
+        const affectRange = document.getElementById("oca-mse-affect-range").value;
+        const affectIntensity = document.getElementById("oca-mse-affect-intensity").value;
+        const affectMobility = document.getElementById("oca-mse-affect-mobility").value;
+        const affectCongruence = document.getElementById("oca-mse-affect-congruence").value;
+        const affectFree = document.getElementById("oca-mse-affect-free").value.trim();
+
+        const perceptionFree = document.getElementById("oca-mse-perception-free").value.trim();
+        const hallucinationDesc = document.getElementById("oca-mse-hallucination-desc").value.trim();
+
+        const si = document.getElementById("oca-mse-si").value;
+        const siDesc = document.getElementById("oca-mse-si-desc").value.trim();
+        const shi = document.getElementById("oca-mse-shi").value.trim();
+        const tho = document.getElementById("oca-mse-tho").value.trim();
+        const delusionDesc = document.getElementById("oca-mse-delusion-desc").value.trim();
+
+        const judgement = document.getElementById("oca-mse-judgement").value;
+        const orientation = document.getElementById("oca-mse-orientation").value;
+        const concentration = document.getElementById("oca-mse-concentration").value;
+        const abstraction = document.getElementById("oca-mse-abstraction").value.trim();
+        const visuospatial = document.getElementById("oca-mse-visuospatial").value.trim();
+
+        const parts = [];
+
+        // 1. Appearance
+        const appParts = [];
+        appParts.push(`appears ${ageAppearance.toLowerCase()}.`);
+        if (habitus !== "(Select...)") {
+            appParts.push(`Build is ${habitus.toLowerCase()}.`);
+        }
+        if (facialExpression !== "(Select...)") {
+            appParts.push(`Facial expression is ${facialExpression.toLowerCase()}.`);
+        }
+        appParts.push(`Hygiene is ${hygiene.toLowerCase()}.`);
+        if (appearanceFree) appParts.push(appearanceFree);
+        parts.push(`Appearance: Level of consciousness is ${consciousness.toLowerCase()}. ` + appParts.join(" "));
+
+        // 2. Behavior
+        const behParts = [];
+        behParts.push(`Attitude is ${attitude.toLowerCase()}.`);
+        behParts.push(`Eye contact is ${eyeContact.toLowerCase()}.`);
+        behParts.push(`Posture is ${posture.toLowerCase()}.`);
+        behParts.push(`Psychomotor activity is ${activity.toLowerCase()}.`);
+
+        const motors = getOcaCheckedLabels(ocaMseMotorChecks);
+        if (motors.length > 0) {
+            behParts.push(`Abnormal movements noted: ${motors.join(", ").toLowerCase()}.`);
+        }
+        const mannerisms = getOcaCheckedLabels(ocaMseMannerismChecks);
+        if (mannerisms.length > 0) {
+            behParts.push(`Mannerisms noted: ${mannerisms.join(", ").toLowerCase()}.`);
+        }
+        if (behaviourFree) behParts.push(behaviourFree);
+        parts.push(`Behaviour: ` + behParts.join(" "));
+
+        // 3. Speech
+        const speechParts = [];
+        speechParts.push(`Rate is ${speechRate.toLowerCase()}, volume is ${speechVolume.toLowerCase()}, with ${speechArticulation.toLowerCase()} articulation and ${speechProsody.toLowerCase()} tone.`);
+        if (speechFree) speechParts.push(speechFree);
+        parts.push(`Speech: ` + speechParts.join(" "));
+
+        // 4. Emotions
+        const emoParts = [];
+        if (mood) {
+            emoParts.push(`Mood is subjectively '${mood}'.`);
+        } else {
+            emoParts.push(`Mood is euthymic.`);
+        }
+        emoParts.push(`Affect is ${affectType.toLowerCase()} with a ${affectRange.toLowerCase()} range and ${affectIntensity.toLowerCase()} intensity. Mobility is ${affectMobility.toLowerCase()}. It is ${affectCongruence.toLowerCase()}.`);
+        if (affectFree) emoParts.push(affectFree);
+        parts.push(`Emotions: ` + emoParts.join(" "));
+
+        // 5. Perceptions
+        const percParts = [];
+        const hallucinations = getOcaCheckedLabelsExclude(ocaMseHallucinationChecks, "Denies hallucinations");
+        if (hallucinations.length > 0) {
+            const descStr = hallucinationDesc ? ` (describes: ${hallucinationDesc})` : "";
+            percParts.push(`Reports ${hallucinations.join(", ").toLowerCase()} hallucinations${descStr}.`);
+        } else {
+            percParts.push(`Denies hallucinations.`);
+        }
+        if (perceptionFree) percParts.push(perceptionFree);
+        parts.push(`Perceptions: ` + percParts.join(" "));
+
+        // 6. Thought
+        const tForm = getOcaCheckedLabelsExclude(ocaMseThoughtFormChecks, "Coherent and logical");
+        const formStr = "Form: " + (tForm.length > 0 ? tForm.join(", ").toLowerCase() : "coherent and logical.");
+
+        const contentParts = [];
+        if (si !== "Denied") {
+            const descStr = siDesc ? ` (details: ${siDesc})` : "";
+            contentParts.push(`suicidal ideation is present (${si.toLowerCase()})${descStr}`);
+        } else {
+            contentParts.push(`denies suicidal ideation`);
+        }
+
+        contentParts.push(shi ? `self-harm ideation: ${shi}` : `denies self-harm ideation`);
+        contentParts.push(tho ? `homicidal/violent ideation: ${tho}` : `denies homicidal/violent ideation`);
+
+        const otherThoughts = getOcaCheckedLabels(ocaMseOtherThoughtChecks);
+        if (otherThoughts.length > 0) {
+            contentParts.push(`other phenomena include ${otherThoughts.join(", ").toLowerCase()}`);
+        }
+
+        const delusions = getOcaCheckedLabelsExclude(ocaMseDelusionChecks, "No delusions present");
+        if (delusions.length > 0) {
+            const descStr = delusionDesc ? ` (details: ${delusionDesc})` : "";
+            contentParts.push(`expresses delusions of a ${delusions.join(", ").toLowerCase()} nature${descStr}`);
+        } else {
+            contentParts.push(`denies delusions`);
+        }
+
+        const contentStr = "Content: " + contentParts.join("; ") + ".";
+        parts.push(`Thought:\n  - ${formStr}\n  - ${contentStr}`);
+
+        // 7. Insight & Judgement
+        let insightChecked = "Good";
+        ocaMseInsightRadios.forEach(id => {
+            const r = document.getElementById(id);
+            if (r && r.checked) {
+                insightChecked = r.value;
+            }
+        });
+        parts.push(`Insight/Judgement: Insight is ${insightChecked.toLowerCase()}. Judgement appears ${judgement.toLowerCase()}.`);
+
+        // 8. Cognition
+        const cogParts = [];
+        cogParts.push(`Is ${orientation.toLowerCase()}.`);
+        cogParts.push(`Attention and concentration appear ${concentration.toLowerCase()}.`);
+        if (abstraction) cogParts.push(`Abstraction is ${abstraction}.`);
+        if (visuospatial) cogParts.push(`Visuoconstructional ability is ${visuospatial}.`);
+        parts.push(`Cognition: ` + cogParts.join(" "));
+
+        const compiledMse = `MSE\n` + parts.join("\n");
+        const fixedOcaMseDetails = `Orientation: Date - Month - Year - Day - Place - Suburb\n\nDelayed Recall: Face - Velvet - Church - Daisy - Red\n\nFrontal assessments:\n- Similarities - in what way are these alike?\nAn apple and banana [fruit]\nTable and a chair [furniture]\nTulip, a rose and a daisy [flowers]\n- Luria test (fist - knife - palm down - 3 examiner alone; 3 with patient; then get them to do it 6 times alone)-`;
+
+        const startRegex = /^MSE\b/m;
+        const endRegex = /^Physical examination:/m;
+
+        const startMatch = text.match(startRegex);
+        const endMatch = text.match(endRegex);
+
+        if (startMatch && endMatch && startMatch.index < endMatch.index) {
+            const beforeMse = text.substring(0, startMatch.index);
+            const afterMse = text.substring(endMatch.index);
+            ocaEditor.value = beforeMse + compiledMse + "\n\n" + fixedOcaMseDetails + "\n\n\n" + afterMse;
+        }
+    }
+
+    const ocaMseSimpleInputIds = [
+        "oca-mse-consciousness", "oca-mse-age-appearance", "oca-mse-habitus", "oca-mse-facial-expression", "oca-mse-hygiene", "oca-mse-appearance-free",
+        "oca-mse-attitude", "oca-mse-eye-contact", "oca-mse-posture", "oca-mse-activity", "oca-mse-behaviour-free",
+        "oca-mse-speech-rate", "oca-mse-speech-volume", "oca-mse-speech-prosody", "oca-mse-speech-articulation", "oca-mse-speech-free",
+        "oca-mse-mood", "oca-mse-affect-type", "oca-mse-affect-range", "oca-mse-affect-intensity", "oca-mse-affect-mobility", "oca-mse-affect-congruence", "oca-mse-affect-free",
+        "oca-mse-hallucination-desc", "oca-mse-perception-free",
+        "oca-mse-si", "oca-mse-si-desc", "oca-mse-shi", "oca-mse-tho", "oca-mse-delusion-desc",
+        "oca-mse-judgement", "oca-mse-orientation", "oca-mse-concentration", "oca-mse-abstraction", "oca-mse-visuospatial"
+    ];
+
+    ocaMseSimpleInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            const eventType = el.tagName === "INPUT" || el.tagName === "TEXTAREA" ? "input" : "change";
+            el.addEventListener(eventType, () => {
+                updateMseInOcaText();
+                triggerAutoSave();
+            });
+        }
+    });
+
+    // Register check/uncheck denies behavior for Hallucinations
+    const ocaDeniesHal = document.getElementById("oca-mse-hallucination-denies");
+    const ocaHalContainer = document.getElementById("oca-mse-hallucination-desc-container");
+    const ocaHalDesc = document.getElementById("oca-mse-hallucination-desc");
+
+    if (ocaDeniesHal) {
+        ocaDeniesHal.addEventListener("change", () => {
+            if (ocaDeniesHal.checked) {
+                ocaMseHallucinationChecks.forEach(id => {
+                    if (id !== "oca-mse-hallucination-denies") {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = false;
+                    }
+                });
+                if (ocaHalContainer) ocaHalContainer.style.display = "none";
+                if (ocaHalDesc) ocaHalDesc.value = "";
+            }
+            updateMseInOcaText();
+            triggerAutoSave();
+        });
+    }
+
+    ocaMseHallucinationChecks.forEach(id => {
+        if (id !== "oca-mse-hallucination-denies") {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("change", () => {
+                    if (el.checked) {
+                        if (ocaDeniesHal) ocaDeniesHal.checked = false;
+                        if (ocaHalContainer) ocaHalContainer.style.display = "block";
+                    } else {
+                        const anyChecked = ocaMseHallucinationChecks.some(hid => {
+                            if (hid === "oca-mse-hallucination-denies") return false;
+                            const hEl = document.getElementById(hid);
+                            return hEl && hEl.checked;
+                        });
+                        if (!anyChecked) {
+                            if (ocaDeniesHal) ocaDeniesHal.checked = true;
+                            if (ocaHalContainer) ocaHalContainer.style.display = "none";
+                            if (ocaHalDesc) ocaHalDesc.value = "";
+                        }
+                    }
+                    updateMseInOcaText();
+                    triggerAutoSave();
+                });
+            }
+        }
+    });
+
+    // Register SI visibility toggle
+    const ocaSiSelect = document.getElementById("oca-mse-si");
+    const ocaSiContainer = document.getElementById("oca-mse-si-desc-container");
+    const ocaSiDesc = document.getElementById("oca-mse-si-desc");
+    if (ocaSiSelect) {
+        ocaSiSelect.addEventListener("change", () => {
+            if (ocaSiSelect.value !== "Denied") {
+                if (ocaSiContainer) ocaSiContainer.style.display = "block";
+            } else {
+                if (ocaSiContainer) ocaSiContainer.style.display = "none";
+                if (ocaSiDesc) ocaSiDesc.value = "";
+            }
+            updateMseInOcaText();
+            triggerAutoSave();
+        });
+    }
+
+    // Register check/uncheck denies behavior for Delusions
+    const ocaDeniesDel = document.getElementById("oca-mse-delusion-none");
+    const ocaDelContainer = document.getElementById("oca-mse-delusion-desc-container");
+    const ocaDelDesc = document.getElementById("oca-mse-delusion-desc");
+
+    if (ocaDeniesDel) {
+        ocaDeniesDel.addEventListener("change", () => {
+            if (ocaDeniesDel.checked) {
+                ocaMseDelusionChecks.forEach(id => {
+                    if (id !== "oca-mse-delusion-none") {
+                        const el = document.getElementById(id);
+                        if (el) el.checked = false;
+                    }
+                });
+                if (ocaDelContainer) ocaDelContainer.style.display = "none";
+                if (ocaDelDesc) ocaDelDesc.value = "";
+            }
+            updateMseInOcaText();
+            triggerAutoSave();
+        });
+    }
+
+    ocaMseDelusionChecks.forEach(id => {
+        if (id !== "oca-mse-delusion-none") {
+            const el = document.getElementById(id);
+            if (el) {
+                el.addEventListener("change", () => {
+                    if (el.checked) {
+                        if (ocaDeniesDel) ocaDeniesDel.checked = false;
+                        if (ocaDelContainer) ocaDelContainer.style.display = "block";
+                    } else {
+                        const anyChecked = ocaMseDelusionChecks.some(did => {
+                            if (did === "oca-mse-delusion-none") return false;
+                            const dEl = document.getElementById(did);
+                            return dEl && dEl.checked;
+                        });
+                        if (!anyChecked) {
+                            if (ocaDeniesDel) ocaDeniesDel.checked = true;
+                            if (ocaDelContainer) ocaDelContainer.style.display = "none";
+                            if (ocaDelDesc) ocaDelDesc.value = "";
+                        }
+                    }
+                    updateMseInOcaText();
+                    triggerAutoSave();
+                });
+            }
+        }
+    });
+
+    const ocaMseOtherChecks = [
+        ...ocaMseMotorChecks,
+        ...ocaMseMannerismChecks,
+        ...ocaMseThoughtFormChecks,
+        ...ocaMseOtherThoughtChecks
+    ];
+    ocaMseOtherChecks.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("change", () => {
+                updateMseInOcaText();
+                triggerAutoSave();
+            });
+        }
+    });
+
+    ocaMseInsightRadios.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("change", () => {
+                updateMseInOcaText();
+                triggerAutoSave();
+            });
+        }
+    });
+
+    // 5. Formulation Builder & Gemini AI
+    function updateFormulationInOcaText() {
+        if (!ocaEditor) return;
+        let text = ocaEditor.value;
+
+        // 1. Synthesize Presenting Problem
+        const name = document.getElementById("oca-form-pp-name").value.trim();
+        const age = document.getElementById("oca-form-pp-age").value.trim();
+        const gender = document.getElementById("oca-form-pp-gender").value.trim();
+        const duration = document.getElementById("oca-form-pp-duration").value.trim();
+        const symptoms = document.getElementById("oca-form-pp-symptoms").value.trim();
+        const context = document.getElementById("oca-form-pp-context").value.trim();
+        const coping = document.getElementById("oca-form-pp-coping").value.trim();
+
+        // Get pronouns based on entered gender
+        function getPronouns(genderStr) {
+            const g = (genderStr || "").toLowerCase().trim();
+            if (g === "female" || g === "woman" || g === "she" || g === "f" || g === "girl") {
+                return { subject: "she", object: "her", possessive: "her", possessivePronoun: "hers", verb: "reports", presents: "presents", copes: "copes", CopingCapitalized: "She reports" };
+            } else if (g === "male" || g === "man" || g === "he" || g === "m" || g === "boy") {
+                return { subject: "he", object: "him", possessive: "his", possessivePronoun: "his", verb: "reports", presents: "presents", copes: "copes", CopingCapitalized: "He reports" };
+            } else {
+                return { subject: "they", object: "them", possessive: "their", possessivePronoun: "theirs", verb: "report", presents: "present", copes: "cope", CopingCapitalized: "They report" };
+            }
+        }
+
+        const pronouns = getPronouns(gender);
+
+        const ppTextParts = [];
+        if (name && age && gender) {
+            ppTextParts.push(`${name} is a ${age}-year-old ${gender}`);
+        }
+        if (symptoms) {
+            let durStr = duration || "a history";
+            const lowerDur = durStr.toLowerCase().trim();
+            let symptomsPhrase = "";
+            if (lowerDur.endsWith("of")) {
+                symptomsPhrase = `who ${pronouns.presents} with ${durStr} ${symptoms}`;
+            } else {
+                symptomsPhrase = `who ${pronouns.presents} with ${durStr} of ${symptoms}`;
+            }
+
+            let nextStartsNewSentence = false;
+            if (context) {
+                const lowerContext = context.toLowerCase().trim();
+                if (lowerContext.startsWith("precipitated by") || lowerContext.startsWith("occurring")) {
+                    nextStartsNewSentence = true;
+                }
+            }
+
+            if (!context || nextStartsNewSentence) {
+                symptomsPhrase += ".";
+            }
+            ppTextParts.push(symptomsPhrase);
+        } else if (ppTextParts.length > 0 && !context) {
+            ppTextParts[ppTextParts.length - 1] += ".";
+        }
+
+        if (context) {
+            let contextStr = context;
+            const lowerContext = contextStr.toLowerCase().trim();
+            if (lowerContext.startsWith("in the context of")) {
+                ppTextParts.push(`${contextStr}.`);
+            } else if (lowerContext.startsWith("precipitated by") || lowerContext.startsWith("occurring")) {
+                const capitalizedContext = contextStr.charAt(0).toUpperCase() + contextStr.slice(1);
+                ppTextParts.push(`${capitalizedContext}.`);
+            } else {
+                ppTextParts.push(`in the context of ${contextStr}.`);
+            }
+        }
+
+        if (coping) {
+            let copingStr = coping;
+            const lowerCoping = copingStr.toLowerCase().trim();
+            if (lowerCoping.startsWith("they report") ||
+                lowerCoping.startsWith("he reports") ||
+                lowerCoping.startsWith("she reports") ||
+                lowerCoping.startsWith("patient reports")) {
+                let rest = copingStr;
+                if (lowerCoping.startsWith("they report")) rest = copingStr.slice(11).trim();
+                else if (lowerCoping.startsWith("he reports")) rest = copingStr.slice(10).trim();
+                else if (lowerCoping.startsWith("she reports")) rest = copingStr.slice(11).trim();
+                else if (lowerCoping.startsWith("patient reports")) rest = copingStr.slice(15).trim();
+
+                ppTextParts.push(`${pronouns.CopingCapitalized} ${rest}.`);
+            } else if (lowerCoping.startsWith("resulting in")) {
+                ppTextParts.push(`This is ${copingStr}.`);
+            } else {
+                ppTextParts.push(`${pronouns.CopingCapitalized} ${copingStr}.`);
+            }
+        }
+
+        // Helper to get factors text for a category and subcategory
+        function getOcaFactorsText(pKeyFilter, subKeyFilter) {
+            const details = [];
+            const subCats = factorsMap[pKeyFilter];
+            if (!subCats) return details;
+
+            if (subKeyFilter) {
+                const factorsList = subCats[subKeyFilter] || [];
+                factorsList.forEach(factor => {
+                    const id = `oca-${pKeyFilter}_${subKeyFilter}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                    const el = document.getElementById(id);
+                    if (el && el.value.trim()) {
+                        details.push(el.value.trim());
+                    }
+                });
+            } else {
+                Object.keys(subCats).forEach(sk => {
+                    const factorsList = subCats[sk] || [];
+                    factorsList.forEach(factor => {
+                        const id = `oca-${pKeyFilter}_${sk}_${factor.replace(/\//g, '_').replace(/ /g, '_')}`;
+                        const el = document.getElementById(id);
+                        if (el && el.value.trim()) {
+                            details.push(el.value.trim());
+                        }
+                    });
+                });
+            }
+            return details;
+        }
+
+        // 2. Generate Narrative Formulation
+        const narrativeParts = [];
+        const bioDiathesis = getOcaFactorsText("Predisposing", "Biological");
+        if (bioDiathesis.length > 0) {
+            const subjectPronoun = pronouns.subject.charAt(0).toUpperCase() + pronouns.subject.slice(1);
+            const verbHave = pronouns.subject === "they" ? "have" : "has";
+            narrativeParts.push(`${subjectPronoun} ${verbHave} a biological diathesis of mental illness from ${bioDiathesis.join(", ")}.`);
+        }
+        const psychPredisposition = getOcaFactorsText("Predisposing", "Psychological");
+        if (psychPredisposition.length > 0) {
+            const possessivePronoun = pronouns.possessive.charAt(0).toUpperCase() + pronouns.possessive.slice(1);
+            narrativeParts.push(`${possessivePronoun} psychological predisposition to illness includes ${psychPredisposition.join(", ")}.`);
+        }
+        const socialFactors = getOcaFactorsText("Predisposing", "Social");
+        if (socialFactors.length > 0) {
+            narrativeParts.push(`This is further augmented by social factors of ${socialFactors.join(", ")}.`);
+        }
+
+        const precipitatingFactors = getOcaFactorsText("Precipitating");
+        if (precipitatingFactors.length > 0) {
+            narrativeParts.push(`Precipitating this presentation was ${precipitatingFactors.join(", ")}.`);
+        }
+        const perpetuatingFactors = getOcaFactorsText("Perpetuating");
+        if (perpetuatingFactors.length > 0) {
+            narrativeParts.push(`Perpetuating these problems, the patient faces a milieu of ${perpetuatingFactors.join(", ")}.`);
+        }
+        const protectiveFactors = getOcaFactorsText("Protective");
+        if (protectiveFactors.length > 0) {
+            const subjectPronoun = pronouns.subject === "they" ? "they" : pronouns.subject;
+            const verbHave = pronouns.subject === "they" ? "have" : "has";
+            narrativeParts.push(`Protectively, ${subjectPronoun} ${verbHave} ${protectiveFactors.join(", ")}.`);
+        }
+
+        // 3. Compile Frameworks
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        const theoryProseParts = [];
+
+        activeFrameworks.forEach(fw => {
+            const cb = document.getElementById(`oca-form-framework-${fw}`);
+            if (cb && cb.checked) {
+                let prose = "";
+
+                if (fw === "cbt") {
+                    const core = document.getElementById("oca-form-cbt-core").value.trim();
+                    const inter = document.getElementById("oca-form-cbt-intermediate").value.trim();
+                    const thoughts = document.getElementById("oca-form-cbt-thoughts").value.trim();
+
+                    if (core || inter || thoughts) {
+                        const proseParts = [];
+                        if (core) proseParts.push(`core beliefs/schemas of "${core}"`);
+                        if (inter) proseParts.push(`rules/assumptions including "${inter}"`);
+                        if (thoughts) proseParts.push(`automatic thoughts/cognitive distortions of "${thoughts}"`);
+                        prose = `From a Cognitive Behavioral (CBT) perspective, this presentation is maintained by ${proseParts.join(", and ")}.`;
+                    }
+                } else if (fw === "psychodynamic") {
+                    const defenses = document.getElementById("oca-form-dyn-defenses").value.trim();
+                    const conflict = document.getElementById("oca-form-dyn-conflict").value.trim();
+                    const ego = document.getElementById("oca-form-dyn-ego").value.trim();
+
+                    if (defenses || conflict || ego) {
+                        const proseParts = [];
+                        if (defenses) proseParts.push(`defense mechanisms of ${defenses}`);
+                        if (conflict) proseParts.push(`a central conflict of ${conflict}`);
+                        if (ego) proseParts.push(`ego functioning described as ${ego}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbUtilize = pronouns.subject === "they" ? "utilize" : "utilizes";
+                        prose = `Psychodynamically, the presentation is understood through ${subjectPronoun} ${verbUtilize} of ${proseParts.join(", alongside ")}.`;
+                    }
+                } else if (fw === "selfpsych") {
+                    const needs = document.getElementById("oca-form-self-needs").value.trim();
+                    const cohesion = document.getElementById("oca-form-self-cohesion").value.trim();
+
+                    if (needs || cohesion) {
+                        const proseParts = [];
+                        if (needs) proseParts.push(`unmet selfobject needs for ${needs}`);
+                        if (cohesion) proseParts.push(`self cohesion vs. fragmentation dynamics of ${cohesion}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbExperience = pronouns.subject === "they" ? "experience" : "experiences";
+                        prose = `Under a Self Psychology framework, ${subjectPronoun} ${verbExperience} ${proseParts.join(", with ")}.`;
+                    }
+                } else if (fw === "erikson") {
+                    const currentStage = document.getElementById("oca-form-erikson-current").value.trim();
+                    const pastStage = document.getElementById("oca-form-erikson-past").value.trim();
+
+                    if (currentStage || pastStage) {
+                        const proseParts = [];
+                        if (currentStage) proseParts.push(`currently navigating the conflict of ${currentStage}`);
+                        if (pastStage) proseParts.push(`with unresolved developmental issues from the stage of ${pastStage}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbBe = pronouns.subject === "they" ? "are" : "is";
+                        prose = `Developmentally, Erikson's model suggests ${subjectPronoun} ${verbBe} ${proseParts.join(" ")}.`;
+                    }
+                } else if (fw === "attachment") {
+                    const style = document.getElementById("oca-form-attach-style").value.trim();
+                    const dynamics = document.getElementById("oca-form-attach-dynamics").value.trim();
+
+                    if (style || dynamics) {
+                        const proseParts = [];
+                        if (style) proseParts.push(`a dominant attachment style of ${style}`);
+                        if (dynamics) proseParts.push(`separation/threat dynamics involving ${dynamics}`);
+                        prose = `Attachment formulation indicates ${proseParts.join(", alongside ")}.`;
+                    }
+                }
+
+                if (prose) {
+                    theoryProseParts.push(prose);
+                }
+            }
+        });
+
+        // 4. Assemble Integrative Formulation Cohesive Prose
+        const primary = document.getElementById("oca-form-diag-primary").value.trim();
+        const diff = document.getElementById("oca-form-diag-diff").value.trim();
+        const contrib = document.getElementById("oca-form-diag-contrib").value.trim();
+
+        const diagProseParts = [];
+        if (primary) diagProseParts.push(`The primary clinical diagnostic impression is ${primary}`);
+        if (diff) diagProseParts.push(`with key differential considerations including ${diff}`);
+        if (contrib) diagProseParts.push(`complicated by contributing factors of ${contrib}`);
+
+        const diagProse = diagProseParts.length > 0 ? diagProseParts.join(", ") + "." : "";
+
+        const section1Text = ppTextParts.join(" ");
+        const section2Text = [diagProse, narrativeParts.join(" ")].filter(p => p).join(" ");
+        const section3Text = theoryProseParts.join(" ");
+
+        const compiledFormulation = `Integrative Formulation:
+# Presentation and Context:
+${section1Text || 'N/A'}
+
+# Biopsychosocial Considerations:
+${section2Text || 'N/A'}
+
+# Speculative/Theoretical Hypotheses:
+${section3Text || 'No theoretical frameworks selected.'}`;
+
+        const startRegex = /^Integrative Formulation:/m;
+        const endRegex = /^Barriers to implementation:/m;
+
+        const startMatch = text.match(startRegex);
+        const endMatch = text.match(endRegex);
+
+        if (startMatch && endMatch && startMatch.index < endMatch.index) {
+            const beforeForm = text.substring(0, startMatch.index);
+            const afterForm = text.substring(endMatch.index);
+            ocaEditor.value = beforeForm + compiledFormulation + "\n\n\n" + afterForm;
+        }
+    }
+
+    const ocaFormulationInputIds = [
+        "oca-form-pp-name", "oca-form-pp-age", "oca-form-pp-gender",
+        "oca-form-pp-duration", "oca-form-pp-symptoms", "oca-form-pp-context", "oca-form-pp-coping",
+        "oca-form-diag-primary", "oca-form-diag-diff", "oca-form-diag-contrib",
+        "oca-Predisposing_Biological_Family_history", "oca-Predisposing_Biological_Medical_illness",
+        "oca-Predisposing_Psychological_Development_history", "oca-Predisposing_Psychological_Trauma_history", "oca-Predisposing_Psychological_Personality_traits_structure",
+        "oca-Predisposing_Social_Accommodation", "oca-Predisposing_Social_Finance_vocation", "oca-Predisposing_Social_Migration_Cultural_factors",
+        "oca-Precipitating_Biological_Medication_change", "oca-Precipitating_Biological_New_medical_illness",
+        "oca-Precipitating_Psychological_Interpersonal_conflict", "oca-Precipitating_Psychological_Loss_or_grief",
+        "oca-Precipitating_Social_Changes_to_social_supports", "oca-Precipitating_Social_Legal_issues",
+        "oca-Perpetuating_Biological_Ongoing_substance_use", "oca-Perpetuating_Biological_Poor_sleep_nutrition",
+        "oca-Perpetuating_Psychological_Cognitive_distortions", "oca-Perpetuating_Psychological_Poor_insight", "oca-Perpetuating_Psychological_Avoidant_coping",
+        "oca-Perpetuating_Social_Stigma", "oca-Perpetuating_Social_Lack_of_access_to_services",
+        "oca-Protective_Biological_Good_physical_health", "oca-Protective_Biological_Medication_adherence",
+        "oca-Protective_Psychological_Good_insight", "oca-Protective_Psychological_History_of_resilience",
+        "oca-Protective_Social_Strong_support_networks", "oca-Protective_Social_Stable_accommodation",
+        "oca-form-cbt-core", "oca-form-cbt-intermediate", "oca-form-cbt-thoughts",
+        "oca-form-dyn-defenses", "oca-form-dyn-conflict", "oca-form-dyn-ego",
+        "oca-form-self-needs", "oca-form-self-cohesion",
+        "oca-form-erikson-current", "oca-form-erikson-past",
+        "oca-form-attach-style", "oca-form-attach-dynamics"
+    ];
+
+    const ocaFormulationCheckboxes = [
+        "oca-form-framework-cbt", "oca-form-framework-psychodynamic",
+        "oca-form-framework-selfpsych", "oca-form-framework-erikson", "oca-form-framework-attachment"
+    ];
+
+    ocaFormulationCheckboxes.forEach(fwId => {
+        const cb = document.getElementById(fwId);
+        if (cb) {
+            const shortName = fwId.replace("oca-form-framework-", "");
+            const fieldsDiv = document.getElementById(`oca-framework-fields-${shortName}`);
+            cb.addEventListener("change", () => {
+                if (fieldsDiv) {
+                    fieldsDiv.style.display = cb.checked ? "block" : "none";
+                }
+                updateFormulationInOcaText();
+                triggerAutoSave();
+            });
+        }
+    });
+
+    ocaFormulationInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("input", () => {
+                updateFormulationInOcaText();
+                triggerAutoSave();
+            });
+        }
+    });
+
+    // 6. API Configuration Modal and Storage
+    const ocaKeyBtn = document.getElementById("oca-key-btn");
+    const ocaKeyModal = document.getElementById("oca-key-modal");
+    const ocaKeyClose = document.getElementById("oca-key-close");
+    const ocaKeySaveBtn = document.getElementById("oca-key-save-btn");
+    const ocaKeyClearBtn = document.getElementById("oca-key-clear-btn");
+    const ocaGeminiKeyInput = document.getElementById("oca-gemini-key");
+
+    if (ocaKeyBtn && ocaKeyModal) {
+        ocaKeyBtn.addEventListener("click", () => {
+            const savedKey = localStorage.getItem("oca_gemini_api_key") || "";
+            if (ocaGeminiKeyInput) ocaGeminiKeyInput.value = savedKey;
+            ocaKeyModal.style.display = "block";
+        });
+    }
+    if (ocaKeyClose) {
+        ocaKeyClose.addEventListener("click", () => {
+            ocaKeyModal.style.display = "none";
+        });
+    }
+    if (ocaKeySaveBtn) {
+        ocaKeySaveBtn.addEventListener("click", () => {
+            const key = ocaGeminiKeyInput.value.trim();
+            if (key) {
+                localStorage.setItem("oca_gemini_api_key", key);
+                alert("Gemini API key saved locally.");
+            }
+            ocaKeyModal.style.display = "none";
+        });
+    }
+    if (ocaKeyClearBtn) {
+        ocaKeyClearBtn.addEventListener("click", () => {
+            localStorage.removeItem("oca_gemini_api_key");
+            if (ocaGeminiKeyInput) ocaGeminiKeyInput.value = "";
+            alert("Gemini API key cleared.");
+            ocaKeyModal.style.display = "none";
+        });
+    }
+    window.addEventListener("click", (e) => {
+        if (e.target === ocaKeyModal) {
+            ocaKeyModal.style.display = "none";
+        }
+    });
+
+    // 7. Gemini AI call to auto-fill
+    const ocaGeminiFillBtn = document.getElementById("oca-gemini-fill-btn");
+    if (ocaGeminiFillBtn) {
+        ocaGeminiFillBtn.addEventListener("click", async () => {
+            const apiKey = localStorage.getItem("oca_gemini_api_key");
+            if (!apiKey) {
+                alert("Please enter a Gemini API Key under settings first.");
+                if (ocaKeyModal) ocaKeyModal.style.display = "block";
+                return;
+            }
+
+            const btn = ocaGeminiFillBtn;
+            btn.disabled = true;
+            btn.textContent = "🪄 Analyzing...";
+
+            try {
+                const notesText = ocaEditor.value;
+                const prompt = `You are an expert clinical psychiatry assistant.
+Read the following clinician notes from a patient review:
+---
+${notesText}
+---
+Extract the predisposing, precipitating, perpetuating, and protective factors under the Biopsychosocial (Biological, Psychological, Social) framework.
+Also extract presenting problem context (name, age, gender, symptoms, duration, context, coping mechanisms), diagnostic impressions (primary, differentials, and contributing), and any applicable theoretical frameworks (CBT, psychodynamic, self psychology, Erikson's stages, or attachment dynamics).
+
+Return the result strictly as a JSON object matching this schema:
+{
+  "name": "Patient's name",
+  "age": "Patient's age",
+  "gender": "Patient's gender",
+  "duration": "Duration of symptoms",
+  "symptoms": "Primary presenting symptoms",
+  "context": "Stressors or context of onset",
+  "coping": "Coping mechanisms or impairment",
+  "primary": "Primary diagnosis",
+  "diff": "Differential diagnoses",
+  "contrib": "Contributing factors",
+  "Predisposing_Biological_Family_history": "Biological family history factors",
+  "Predisposing_Biological_Medical_illness": "Predisposing medical illness",
+  "Predisposing_Psychological_Development_history": "Predisposing developmental history",
+  "Predisposing_Psychological_Trauma_history": "Predisposing trauma history",
+  "Predisposing_Psychological_Personality_traits_structure": "Predisposing personality traits",
+  "Predisposing_Social_Accommodation": "Predisposing accommodation factors",
+  "Predisposing_Social_Finance_vocation": "Predisposing financial/vocational factors",
+  "Predisposing_Social_Migration_Cultural_factors": "Predisposing migration/cultural factors",
+  "Precipitating_Biological_Medication_change": "Precipitating medication changes",
+  "Precipitating_Biological_New_medical_illness": "Precipitating new medical illnesses",
+  "Precipitating_Psychological_Interpersonal_conflict": "Precipitating interpersonal conflicts",
+  "Precipitating_Psychological_Loss_or_grief": "Precipitating loss/grief",
+  "Precipitating_Social_Changes_to_social_supports": "Precipitating changes to supports",
+  "Precipitating_Social_Legal_issues": "Precipitating legal issues",
+  "Perpetuating_Biological_Ongoing_substance_use": "Perpetuating substance use",
+  "Perpetuating_Biological_Poor_sleep_nutrition": "Perpetuating sleep/nutrition issues",
+  "Perpetuating_Psychological_Cognitive_distortions": "Perpetuating cognitive distortions",
+  "Perpetuating_Psychological_Poor_insight": "Perpetuating poor insight",
+  "Perpetuating_Psychological_Avoidant_coping": "Perpetuating avoidant coping",
+  "Perpetuating_Social_Stigma": "Perpetuating stigma",
+  "Perpetuating_Social_Lack_of_access_to_services": "Perpetuating access issues",
+  "Protective_Biological_Good_physical_health": "Protective physical health",
+  "Protective_Biological_Medication_adherence": "Protective medication adherence",
+  "Protective_Psychological_Good_insight": "Protective insight",
+  "Protective_Psychological_History_of_resilience": "Protective history of resilience",
+  "Protective_Social_Strong_support_networks": "Protective social networks",
+  "Protective_Social_Stable_accommodation": "Protective accommodation",
+  "framework_cbt": false,
+  "cbt_core": "CBT core beliefs if any",
+  "cbt_intermediate": "CBT intermediate beliefs if any",
+  "cbt_thoughts": "CBT automatic thoughts if any",
+  "framework_psychodynamic": false,
+  "dyn_defenses": "Defense mechanisms if any",
+  "dyn_conflict": "Central conflicts if any",
+  "dyn_ego": "Ego functioning if any",
+  "framework_selfpsych": false,
+  "self_needs": "Unmet selfobject needs if any",
+  "self_cohesion": "Self cohesion details if any",
+  "framework_erikson": false,
+  "erikson_current": "Current Erikson stage conflict if any",
+  "erikson_past": "Unresolved past stage conflict if any",
+  "framework_attachment": false,
+  "attach_style": "Attachment style if any",
+  "attach_dynamics": "Attachment dynamics if any"
+}
+If a category lacks information in the notes, use a blank string "". Set the framework boolean fields to true if there is relevant theoretical material, otherwise false. Do not include any formatting or other text, just the raw JSON.`;
+
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{ text: prompt }]
+                        }],
+                        generationConfig: {
+                            responseMimeType: "application/json"
+                        }
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`API returned status ${response.status}`);
+                }
+
+                const data = await response.json();
+                const jsonText = data.candidates[0].content.parts[0].text;
+                const parsed = JSON.parse(jsonText);
+
+                const keyMap = {
+                    "oca-form-pp-name": "name",
+                    "oca-form-pp-age": "age",
+                    "oca-form-pp-gender": "gender",
+                    "oca-form-pp-duration": "duration",
+                    "oca-form-pp-symptoms": "symptoms",
+                    "oca-form-pp-context": "context",
+                    "oca-form-pp-coping": "coping",
+                    "oca-form-diag-primary": "primary",
+                    "oca-form-diag-diff": "diff",
+                    "oca-form-diag-contrib": "contrib",
+                    "oca-form-cbt-core": "cbt_core",
+                    "oca-form-cbt-intermediate": "cbt_intermediate",
+                    "oca-form-cbt-thoughts": "cbt_thoughts",
+                    "oca-form-dyn-defenses": "dyn_defenses",
+                    "oca-form-dyn-conflict": "dyn_conflict",
+                    "oca-form-dyn-ego": "dyn_ego",
+                    "oca-form-self-needs": "self_needs",
+                    "oca-form-self-cohesion": "self_cohesion",
+                    "oca-form-erikson-current": "erikson_current",
+                    "oca-form-erikson-past": "erikson_past",
+                    "oca-form-attach-style": "attach_style",
+                    "oca-form-attach-dynamics": "attach_dynamics"
+                };
+
+                // Populate text fields
+                ocaFormulationInputIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (!el) return;
+                    let jsonKey = keyMap[id];
+                    if (!jsonKey) {
+                        jsonKey = id.replace("oca-", "");
+                    }
+                    if (parsed[jsonKey] !== undefined) {
+                        el.value = parsed[jsonKey] || "";
+                    }
+                });
+
+                // Populate checkboxes
+                ocaFormulationCheckboxes.forEach(id => {
+                    const cb = document.getElementById(id);
+                    if (!cb) return;
+                    const jsonKey = id.replace("oca-form-", "").replace(/-/g, "_");
+                    if (parsed[jsonKey] !== undefined) {
+                        cb.checked = !!parsed[jsonKey];
+                        const shortName = id.replace("oca-form-framework-", "");
+                        const fieldsDiv = document.getElementById(`oca-framework-fields-${shortName}`);
+                        if (fieldsDiv) {
+                            fieldsDiv.style.display = cb.checked ? "block" : "none";
+                        }
+                    }
+                });
+
+                // Update editor text
+                updateFormulationInOcaText();
+                triggerAutoSave();
+                alert("Formulation successfully populated with detailed cohesive narrative!");
+            } catch (err) {
+                console.error("Gemini autofill error", err);
+                alert("Failed to parse and autofill: " + err.message);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = "🪄 Auto-Fill with Gemini";
+            }
+        });
+    }
+
+    // 8. Reset Session
+    const ocaResetBtn = document.getElementById("oca-reset-btn");
+    if (ocaResetBtn) {
+        ocaResetBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to reset the current patient review session? This will clear all changes.")) {
+                if (ocaEditor) ocaEditor.value = templates.oca || "";
+
+                // Reset formulation fields
+                ocaFormulationInputIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = "";
+                });
+                ocaFormulationCheckboxes.forEach(id => {
+                    const cb = document.getElementById(id);
+                    if (cb) {
+                        cb.checked = false;
+                        const shortName = id.replace("oca-form-framework-", "");
+                        const fieldsDiv = document.getElementById(`oca-framework-fields-${shortName}`);
+                        if (fieldsDiv) fieldsDiv.style.display = "none";
+                    }
+                });
+
+                // Reset MSE simple selects/inputs
+                ocaMseSimpleInputIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        if (el.tagName === "SELECT") {
+                            el.selectedIndex = 0;
+                        } else {
+                            el.value = "";
+                        }
+                    }
+                });
+
+                // Reset MSE checkboxes to defaults
+                const allMseChecks = [
+                    ...ocaMseMotorChecks, ...ocaMseMannerismChecks,
+                    ...ocaMseHallucinationChecks, ...ocaMseThoughtFormChecks,
+                    ...ocaMseOtherThoughtChecks, ...ocaMseDelusionChecks
+                ];
+                allMseChecks.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) {
+                        // Default checked: "denies" boxes
+                        el.checked = (id === "oca-mse-hallucination-denies" || id === "oca-mse-delusion-none" || id === "oca-mse-thought-form-coherent");
+                    }
+                });
+
+                // Reset insight radios
+                ocaMseInsightRadios.forEach((id, i) => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = (i === 0); // default = "Good"
+                });
+
+                // Hide conditional containers
+                const halDescCont = document.getElementById("oca-mse-hallucination-desc-container");
+                if (halDescCont) halDescCont.style.display = "none";
+                const siDescCont = document.getElementById("oca-mse-si-desc-container");
+                if (siDescCont) siDescCont.style.display = "none";
+                const delDescCont = document.getElementById("oca-mse-delusion-desc-container");
+                if (delDescCont) delDescCont.style.display = "none";
+
+                triggerAutoSave();
+            }
+        });
     }
 
 });

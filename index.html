@@ -57,6 +57,10 @@
             <!-- Home Dashboard Page -->
             <div id="home-page" class="page active-page">
                 <nav class="button-container">
+                    <button class="big-button" data-page="oca-assessment-page" style="border: 2px solid var(--primary-color);">
+                        <span>📋 Patient Review Workspace (OCA)</span>
+                        <span style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Write reviews, auto-save to desktop, and auto-formulate with Gemini AI.</span>
+                    </button>
                     <button class="big-button" data-page="scales-page">Psychiatric Screening Scales</button>
                     <button class="big-button" data-page="equivalents-page">Dose Equivalents Converters</button>
                     <button class="big-button" data-page="monitoring-page">Interactive Monitoring Checklists</button>
@@ -67,6 +71,635 @@
                     <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
                     <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
                 </nav>
+            </div>
+
+            <!-- Patient Review Workspace (OCA) Page -->
+            <div id="oca-assessment-page" class="page" data-title="Patient Review Workspace (OCA)">
+                <div class="oca-header-bar">
+                    <div class="oca-header-left">
+                        <button id="oca-connect-btn" class="btn-primary">📁 Connect Desktop File</button>
+                        <span id="oca-save-status" class="oca-save-status-idle">
+                            <span class="status-dot"></span> <span id="oca-status-text">Not connected (Auto-save offline)</span>
+                        </span>
+                    </div>
+                    <div class="oca-header-right">
+                        <button id="oca-key-btn" class="btn-primary" style="background-color: var(--accent-color);">🔑 Gemini API Key</button>
+                        <button id="oca-reset-btn" class="reset-btn">🔄 Reset Session</button>
+                    </div>
+                </div>
+
+                <div class="oca-split-view">
+                    <!-- Left Panel: Note Editor -->
+                    <div class="oca-left-panel">
+                        <div class="oca-panel-header">
+                            <h4>Patient Review Note (OCA Template)</h4>
+                            <span style="font-size:12px; color:var(--text-muted);">Editable Workspace</span>
+                        </div>
+                        <textarea id="oca-editor" class="oca-notepad" placeholder="Write patient review here..."></textarea>
+                    </div>
+
+                    <!-- Right Panel: Sidebar Modules -->
+                    <div class="oca-right-panel">
+                        <div class="oca-right-tabs">
+                            <button class="oca-tab-btn active" data-oca-tab="oca-mse-panel">MSE Live Builder</button>
+                            <button class="oca-tab-btn" data-oca-tab="oca-formulation-panel">Formulation Builder</button>
+                        </div>
+
+                        <!-- MSE builder panel -->
+                        <div id="oca-mse-panel" class="oca-panel-content active">
+                            <div class="oca-panel-subheader">
+                                <h5>MSE Live Builder</h5>
+                                <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Select options to dynamically update the MSE section in your assessment note.</p>
+                            </div>
+                            <div class="oca-drawer-scrollable" id="oca-mse-controls-container">
+                                <!-- 1. Appearance -->
+                                <details open class="oca-form-details">
+                                    <summary>Appearance</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-mse-consciousness">Level of consciousness:</label>
+                                        <select id="oca-mse-consciousness">
+                                            <option value="Alert">Alert</option>
+                                            <option value="Drowsy">Drowsy</option>
+                                            <option value="Lethargic">Lethargic</option>
+                                            <option value="Obtunded">Obtunded</option>
+                                            <option value="Stuporous">Stuporous</option>
+                                        </select>
+
+                                        <label for="oca-mse-age-appearance">Apparent Age:</label>
+                                        <select id="oca-mse-age-appearance">
+                                            <option value="Stated age">Stated age</option>
+                                            <option value="Older than stated age">Older than stated age</option>
+                                            <option value="Younger than stated age">Younger than stated age</option>
+                                        </select>
+
+                                        <label for="oca-mse-habitus">Build/Stature:</label>
+                                        <select id="oca-mse-habitus">
+                                            <option value="(Select...)">(Select...)</option>
+                                            <option value="Well-nourished">Well-nourished</option>
+                                            <option value="Thin">Thin</option>
+                                            <option value="Frail">Frail</option>
+                                            <option value="Emaciated">Emaciated</option>
+                                            <option value="Stocky">Stocky</option>
+                                            <option value="Overweight">Overweight</option>
+                                            <option value="Obese">Obese</option>
+                                        </select>
+
+                                        <label for="oca-mse-facial-expression">Facial Expression:</label>
+                                        <select id="oca-mse-facial-expression">
+                                            <option value="(Select...)">(Select...)</option>
+                                            <option value="Animated">Animated</option>
+                                            <option value="Tense">Tense</option>
+                                            <option value="Worried">Worried</option>
+                                            <option value="Sad">Sad</option>
+                                            <option value="Apathetic">Apathetic</option>
+                                            <option value="Expressionless/Mask-like">Expressionless/Mask-like</option>
+                                        </select>
+
+                                        <label for="oca-mse-hygiene">Hygiene:</label>
+                                        <select id="oca-mse-hygiene">
+                                            <option value="Reasonable">Reasonable</option>
+                                            <option value="Meticulous">Meticulous</option>
+                                            <option value="Good">Good</option>
+                                            <option value="Poor">Poor</option>
+                                            <option value="Neglected">Neglected</option>
+                                        </select>
+
+                                        <label for="oca-mse-appearance-free">Appearance (free text):</label>
+                                        <input type="text" id="oca-mse-appearance-free" placeholder="clothing, visible markings...">
+                                    </div>
+                                </details>
+
+                                <!-- 2. Attitude & Behaviour -->
+                                <details class="oca-form-details">
+                                    <summary>Attitude & Behaviour</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-mse-attitude">Attitude:</label>
+                                        <select id="oca-mse-attitude">
+                                            <option value="Cooperative">Cooperative</option>
+                                            <option value="Uncooperative">Uncooperative</option>
+                                            <option value="Guarded">Guarded</option>
+                                            <option value="Suspicious">Suspicious</option>
+                                            <option value="Hostile">Hostile</option>
+                                            <option value="Apathetic">Apathetic</option>
+                                        </select>
+
+                                        <label for="oca-mse-eye-contact">Eye contact:</label>
+                                        <select id="oca-mse-eye-contact">
+                                            <option value="Appropriate">Appropriate</option>
+                                            <option value="Good">Good</option>
+                                            <option value="Intense/Staring">Intense/Staring</option>
+                                            <option value="Fleeting">Fleeting</option>
+                                            <option value="Poor">Poor</option>
+                                            <option value="Avoidant">Avoidant</option>
+                                        </select>
+
+                                        <label for="oca-mse-posture">Posture:</label>
+                                        <select id="oca-mse-posture">
+                                            <option value="Normal/Relaxed">Normal/Relaxed</option>
+                                            <option value="Stiff/Tense">Stiff/Tense</option>
+                                            <option value="Guarded">Guarded</option>
+                                            <option value="Slumped/Stooped">Slumped/Stooped</option>
+                                            <option value="Bizarre">Bizarre</option>
+                                        </select>
+
+                                        <label for="oca-mse-activity">Psychomotor activity:</label>
+                                        <select id="oca-mse-activity">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Restless/Fidgety">Restless/Fidgety</option>
+                                            <option value="Slowed/Bradykinetic">Slowed/Bradykinetic</option>
+                                            <option value="Agitated">Agitated</option>
+                                            <option value="Akathisia">Akathisia</option>
+                                        </select>
+
+                                        <strong style="margin-top:10px; font-size:12.5px;">Symptomatic Movements:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-tremor" value="Tremor"> Tremor</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-chorea" value="Chorea"> Chorea</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-athetosis" value="Athetosis"> Athetosis</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-dystonias" value="Dystonias"> Dystonias</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-tics" value="Tics"> Tics</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-motor-catatonic" value="Catatonic phenomena"> Catatonia</label>
+                                        </div>
+
+                                        <strong style="margin-top:10px; font-size:12.5px;">Mannerisms / Oddities:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-mannerism-stereotypies" value="Stereotypies"> Stereotypies</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-mannerism-compulsions" value="Compulsions"> Compulsions</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-mannerism-lip-smacking" value="Lip smacking"> Lip smacking</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-mannerism-wringing-hands" value="Wringing hands"> Wringing hands</label>
+                                        </div>
+
+                                        <label for="oca-mse-behaviour-free">Behaviour (free text):</label>
+                                        <input type="text" id="oca-mse-behaviour-free" placeholder="e.g. Cooperative, restless...">
+                                    </div>
+                                </details>
+
+                                <!-- 3. Speech and Language -->
+                                <details class="oca-form-details">
+                                    <summary>Speech and Language</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-mse-speech-rate">Rate:</label>
+                                        <select id="oca-mse-speech-rate">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Slow">Slow</option>
+                                            <option value="Rapid">Rapid</option>
+                                            <option value="Pressured">Pressured</option>
+                                        </select>
+
+                                        <label for="oca-mse-speech-volume">Volume:</label>
+                                        <select id="oca-mse-speech-volume">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Soft / Whispered">Soft / Whispered</option>
+                                            <option value="Loud / Shouting">Loud / Shouting</option>
+                                        </select>
+
+                                        <label for="oca-mse-speech-prosody">Tone / Prosody:</label>
+                                        <select id="oca-mse-speech-prosody">
+                                            <option value="Normal / Modulated">Normal / Modulated</option>
+                                            <option value="Monotonous / Flat">Monotonous / Flat</option>
+                                        </select>
+
+                                        <label for="oca-mse-speech-articulation">Articulation:</label>
+                                        <select id="oca-mse-speech-articulation">
+                                            <option value="Clear and intelligible">Clear and intelligible</option>
+                                            <option value="Slurred / Dysarthric">Slurred / Dysarthric</option>
+                                            <option value="Mumbled">Mumbled</option>
+                                        </select>
+
+                                        <label for="oca-mse-speech-free">Speech (free text):</label>
+                                        <input type="text" id="oca-mse-speech-free" placeholder="e.g. pauses, word-finding errors...">
+                                    </div>
+                                </details>
+
+                                <!-- 4. Emotions -->
+                                <details class="oca-form-details">
+                                    <summary>Emotions</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-mse-mood">Mood (Subjective):</label>
+                                        <input type="text" id="oca-mse-mood" placeholder="e.g. anxious, sad, happy, low">
+
+                                        <strong style="margin-top:10px; font-size:12.5px;">Affect (Objective):</strong>
+                                        <label for="oca-mse-affect-type">Type:</label>
+                                        <select id="oca-mse-affect-type">
+                                            <option value="Euthymic">Euthymic</option>
+                                            <option value="Dysphoric">Dysphoric</option>
+                                            <option value="Euphoric">Euphoric</option>
+                                            <option value="Anxious">Anxious</option>
+                                            <option value="Angry/Irritable">Angry/Irritable</option>
+                                        </select>
+
+                                        <label for="oca-mse-affect-range">Range:</label>
+                                        <select id="oca-mse-affect-range">
+                                            <option value="Full">Full</option>
+                                            <option value="Restricted">Restricted</option>
+                                        </select>
+
+                                        <label for="oca-mse-affect-intensity">Intensity:</label>
+                                        <select id="oca-mse-affect-intensity">
+                                            <option value="Normal">Normal</option>
+                                            <option value="Heightened/Exaggerated">Heightened/Exaggerated</option>
+                                            <option value="Blunted">Blunted</option>
+                                            <option value="Flat">Flat</option>
+                                        </select>
+
+                                        <label for="oca-mse-affect-mobility">Mobility:</label>
+                                        <select id="oca-mse-affect-mobility">
+                                            <option value="Mobile">Mobile</option>
+                                            <option value="Constricted">Constricted</option>
+                                            <option value="Fixed/Immobile">Fixed/Immobile</option>
+                                            <option value="Labile/Volatile">Labile/Volatile</option>
+                                        </select>
+
+                                        <label for="oca-mse-affect-congruence">Congruence:</label>
+                                        <select id="oca-mse-affect-congruence">
+                                            <option value="Congruent with mood">Congruent with mood</option>
+                                            <option value="Incongruent with mood">Incongruent with mood</option>
+                                        </select>
+
+                                        <label for="oca-mse-affect-free">Affect (free text):</label>
+                                        <input type="text" id="oca-mse-affect-free" placeholder="e.g. restricted range...">
+                                    </div>
+                                </details>
+
+                                <!-- 5. Perceptions -->
+                                <details class="oca-form-details">
+                                    <summary>Perceptions</summary>
+                                    <div class="oca-details-content">
+                                        <strong style="font-size:12.5px;">Hallucinations:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px; margin-bottom: 8px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-hallucination-denies" value="Denies hallucinations" checked> Denies</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-hallucination-auditory" value="Auditory"> Auditory</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-hallucination-visual" value="Visual"> Visual</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-hallucination-tactile" value="Tactile"> Tactile</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-hallucination-olfactory" value="Olfactory"> Olfactory</label>
+                                        </div>
+
+                                        <div id="oca-mse-hallucination-desc-container" style="display: none; margin-bottom: 8px;">
+                                            <label for="oca-mse-hallucination-desc">Details:</label>
+                                            <textarea id="oca-mse-hallucination-desc" placeholder="Describe hallucinations..." rows="2"></textarea>
+                                        </div>
+
+                                        <label for="oca-mse-perception-free">Perceptions (free text):</label>
+                                        <input type="text" id="oca-mse-perception-free" placeholder="e.g. derealization...">
+                                    </div>
+                                </details>
+
+                                <!-- 6. Thought Form & Content -->
+                                <details class="oca-form-details">
+                                    <summary>Thought Form & Content</summary>
+                                    <div class="oca-details-content">
+                                        <strong style="font-size:12.5px;">Form of Thought:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px; margin-bottom: 12px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-thought-form-coherent" value="Coherent and logical" checked> Coherent</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-thought-form-circumstantial" value="Circumstantial"> Circumstantial</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-thought-form-tangential" value="Tangential"> Tangential</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-thought-form-loosening" value="Loosening of associations"> Loose Assoc.</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-thought-form-salad" value="Word salad"> Word salad</label>
+                                        </div>
+
+                                        <strong style="font-size:12.5px;">Content - Risk:</strong>
+                                        <label for="oca-mse-si">Suicidal Ideation (TOSH):</label>
+                                        <select id="oca-mse-si">
+                                            <option value="Denied">Denied</option>
+                                            <option value="Fleeting thoughts, no intent/plan">Fleeting thoughts, no intent/plan</option>
+                                            <option value="Present with intent">Present with intent</option>
+                                            <option value="Present with plan">Present with plan</option>
+                                        </select>
+
+                                        <div id="oca-mse-si-desc-container" style="display: none; margin-bottom: 8px;">
+                                            <label for="oca-mse-si-desc">SI Details:</label>
+                                            <textarea id="oca-mse-si-desc" placeholder="Details of intent, plan, means..." rows="2"></textarea>
+                                        </div>
+
+                                        <label for="oca-mse-shi">Self-Harm Ideation:</label>
+                                        <input type="text" id="oca-mse-shi" placeholder="e.g. Denied, cutting ideas...">
+
+                                        <label for="oca-mse-tho">Homicidal/Violent Ideation:</label>
+                                        <input type="text" id="oca-mse-tho" placeholder="e.g. Denied, violent impulses...">
+
+                                        <strong style="margin-top:10px; font-size:12.5px;">Other Thought Phenomena:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px; margin-bottom: 12px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-other-obsessions" value="Obsessions"> Obsessions</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-other-ruminations" value="Ruminations"> Ruminations</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-other-preoccupations" value="Preoccupations"> Preoccupations</label>
+                                        </div>
+
+                                        <strong style="font-size:12.5px;">Delusions:</strong>
+                                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 6px; margin-top: 4px; margin-bottom: 8px;">
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-none" value="No delusions present" checked> None</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-persecutory" value="Persecutory"> Persecutory</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-grandiose" value="Grandiose"> Grandiose</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-referential" value="Referential"> Referential</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-somatic" value="Somatic"> Somatic</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-nihilistic" value="Nihilistic"> Nihilistic</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-control" value="Control"> Control</label>
+                                            <label class="checkbox-label"><input type="checkbox" id="oca-mse-delusion-insertion" value="Thought Insertion/Broadcast"> Insertion</label>
+                                        </div>
+
+                                        <div id="oca-mse-delusion-desc-container" style="display: none;">
+                                            <label for="oca-mse-delusion-desc">Delusion Details:</label>
+                                            <textarea id="oca-mse-delusion-desc" placeholder="Describe delusions..." rows="2"></textarea>
+                                        </div>
+                                    </div>
+                                </details>
+
+                                <!-- 7. Insight and Judgement -->
+                                <details class="oca-form-details">
+                                    <summary>Insight and Judgement</summary>
+                                    <div class="oca-details-content">
+                                        <strong style="font-size:12.5px;">Insight:</strong>
+                                        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px; margin-bottom: 12px;">
+                                            <label class="radio-label">
+                                                <input type="radio" name="oca-mse-insight" id="oca-mse-insight-good" value="Good" checked>
+                                                <strong>Good</strong>
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="oca-mse-insight" id="oca-mse-insight-partial" value="Partial">
+                                                <strong>Partial</strong>
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="oca-mse-insight" id="oca-mse-insight-poor" value="Poor">
+                                                <strong>Poor</strong>
+                                            </label>
+                                            <label class="radio-label">
+                                                <input type="radio" name="oca-mse-insight" id="oca-mse-insight-absent" value="Absent">
+                                                <strong>Absent</strong>
+                                            </label>
+                                        </div>
+
+                                        <label for="oca-mse-judgement">Judgement:</label>
+                                        <select id="oca-mse-judgement">
+                                            <option value="Good">Good</option>
+                                            <option value="Fair">Fair</option>
+                                            <option value="Impaired">Impaired</option>
+                                            <option value="Poor">Poor</option>
+                                        </select>
+                                    </div>
+                                </details>
+
+                                <!-- 8. Cognition -->
+                                <details class="oca-form-details">
+                                    <summary>Cognition</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-mse-orientation">Orientation:</label>
+                                        <select id="oca-mse-orientation">
+                                            <option value="Oriented to time, place, and person">Oriented to time, place, and person</option>
+                                            <option value="Disoriented to time">Disoriented to time</option>
+                                            <option value="Disoriented to place">Disoriented to place</option>
+                                        </select>
+
+                                        <label for="oca-mse-concentration">Attention/Concentration:</label>
+                                        <select id="oca-mse-concentration">
+                                            <option value="Intact">Intact</option>
+                                            <option value="Easily distracted">Easily distracted</option>
+                                            <option value="Impaired">Impaired</option>
+                                        </select>
+
+                                        <label for="oca-mse-abstraction">Abstraction:</label>
+                                        <input type="text" id="oca-mse-abstraction" placeholder="e.g. intact, concrete...">
+
+                                        <label for="oca-mse-visuospatial">Visuospatial:</label>
+                                        <input type="text" id="oca-mse-visuospatial" placeholder="e.g. intact drawing clock...">
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+
+                        <!-- Formulation builder panel -->
+                        <div id="oca-formulation-panel" class="oca-panel-content">
+                            <div class="oca-panel-subheader" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                                <h5>Formulation Live Builder</h5>
+                                <button id="oca-gemini-fill-btn" class="btn-primary" style="background-color: var(--accent-color); padding: 6px 12px; font-size:12px;">🪄 Auto-Fill with Gemini</button>
+                            </div>
+                            <div class="oca-drawer-scrollable">
+                                <!-- Section 1: Presenting Problem -->
+                                <details open class="oca-form-details">
+                                    <summary>Presenting Problem</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-form-pp-name">Name:</label>
+                                        <input type="text" id="oca-form-pp-name" placeholder="Ms. Smith">
+                                        <label for="oca-form-pp-age">Age:</label>
+                                        <input type="text" id="oca-form-pp-age" placeholder="34">
+                                        <label for="oca-form-pp-gender">Gender:</label>
+                                        <input type="text" id="oca-form-pp-gender" placeholder="female">
+                                        <label for="oca-form-pp-duration">Duration:</label>
+                                        <input type="text" id="oca-form-pp-duration" placeholder="e.g. chronic history of">
+                                        <label for="oca-form-pp-symptoms">Primary Symptoms:</label>
+                                        <input type="text" id="oca-form-pp-symptoms" placeholder="debilitating anxiety">
+                                        <label for="oca-form-pp-context">Context/Background:</label>
+                                        <input type="text" id="oca-form-pp-context" placeholder="a recent job loss">
+                                        <label for="oca-form-pp-coping">Explanation (Coping/Impairment):</label>
+                                        <input type="text" id="oca-form-pp-coping" placeholder="uses alcohol to cope">
+                                    </div>
+                                </details>
+
+                                <!-- Section 2: Diagnostic Impression -->
+                                <details class="oca-form-details">
+                                    <summary>Diagnostic Impression</summary>
+                                    <div class="oca-details-content">
+                                        <label for="oca-form-diag-primary">Primary Diagnosis:</label>
+                                        <input type="text" id="oca-form-diag-primary" placeholder="e.g. Panic Disorder">
+                                        <label for="oca-form-diag-diff">Differential Diagnoses:</label>
+                                        <input type="text" id="oca-form-diag-diff" placeholder="e.g. Major Depressive Disorder">
+                                        <label for="oca-form-diag-contrib">Contributing Factors:</label>
+                                        <input type="text" id="oca-form-diag-contrib" placeholder="e.g. Nicotine Dependence">
+                                    </div>
+                                </details>
+
+                                <!-- Section 3: Predisposing Factors -->
+                                <details class="oca-form-details">
+                                    <summary>Predisposing Factors (Why past?)</summary>
+                                    <div class="oca-details-content">
+                                        <strong>Biological:</strong>
+                                        <label for="oca-Predisposing_Biological_Family_history">Family history:</label>
+                                        <input type="text" id="oca-Predisposing_Biological_Family_history" placeholder="e.g. Family history of depression">
+                                        <label for="oca-Predisposing_Biological_Medical_illness">Medical illness:</label>
+                                        <input type="text" id="oca-Predisposing_Biological_Medical_illness" placeholder="e.g. Hypothyroidism">
+                                        
+                                        <strong style="margin-top:10px;">Psychological:</strong>
+                                        <label for="oca-Predisposing_Psychological_Development_history">Development history:</label>
+                                        <input type="text" id="oca-Predisposing_Psychological_Development_history" placeholder="e.g. Speech delay">
+                                        <label for="oca-Predisposing_Psychological_Trauma_history">Trauma history:</label>
+                                        <input type="text" id="oca-Predisposing_Psychological_Trauma_history" placeholder="e.g. Early childhood neglect">
+                                        <label for="oca-Predisposing_Psychological_Personality_traits_structure">Personality traits:</label>
+                                        <input type="text" id="oca-Predisposing_Psychological_Personality_traits_structure" placeholder="e.g. Perfectionism">
+
+                                        <strong style="margin-top:10px;">Social:</strong>
+                                        <label for="oca-Predisposing_Social_Accommodation">Accommodation:</label>
+                                        <input type="text" id="oca-Predisposing_Social_Accommodation" placeholder="e.g. Rental instability">
+                                        <label for="oca-Predisposing_Social_Finance_vocation">Finance/Vocation:</label>
+                                        <input type="text" id="oca-Predisposing_Social_Finance_vocation" placeholder="e.g. Unemployment">
+                                        <label for="oca-Predisposing_Social_Migration_Cultural_factors">Migration/Cultural:</label>
+                                        <input type="text" id="oca-Predisposing_Social_Migration_Cultural_factors" placeholder="e.g. Migrated in 2018">
+                                    </div>
+                                </details>
+
+                                <!-- Section 4: Precipitating Factors -->
+                                <details class="oca-form-details">
+                                    <summary>Precipitating Factors (Why now?)</summary>
+                                    <div class="oca-details-content">
+                                        <strong>Biological:</strong>
+                                        <label for="oca-Precipitating_Biological_Medication_change">Medication change:</label>
+                                        <input type="text" id="oca-Precipitating_Biological_Medication_change" placeholder="e.g. Stopped SSRI">
+                                        <label for="oca-Precipitating_Biological_New_medical_illness">New medical illness:</label>
+                                        <input type="text" id="oca-Precipitating_Biological_New_medical_illness" placeholder="e.g. Chronic pain onset">
+
+                                        <strong style="margin-top:10px;">Psychological:</strong>
+                                        <label for="oca-Precipitating_Psychological_Interpersonal_conflict">Interpersonal conflict:</label>
+                                        <input type="text" id="oca-Precipitating_Psychological_Interpersonal_conflict" placeholder="e.g. Divorce">
+                                        <label for="oca-Precipitating_Psychological_Loss_or_grief">Loss or grief:</label>
+                                        <input type="text" id="oca-Precipitating_Psychological_Loss_or_grief" placeholder="e.g. Bereavement">
+
+                                        <strong style="margin-top:10px;">Social:</strong>
+                                        <label for="oca-Precipitating_Social_Changes_to_social_supports">Changes to supports:</label>
+                                        <input type="text" id="oca-Precipitating_Social_Changes_to_social_supports" placeholder="e.g. Friend moved away">
+                                        <label for="oca-Precipitating_Social_Legal_issues">Legal issues:</label>
+                                        <input type="text" id="oca-Precipitating_Social_Legal_issues" placeholder="e.g. Pending court case">
+                                    </div>
+                                </details>
+
+                                <!-- Section 5: Perpetuating Factors -->
+                                <details class="oca-form-details">
+                                    <summary>Perpetuating Factors (What maintains?)</summary>
+                                    <div class="oca-details-content">
+                                        <strong>Biological:</strong>
+                                        <label for="oca-Perpetuating_Biological_Ongoing_substance_use">Ongoing substance use:</label>
+                                        <input type="text" id="oca-Perpetuating_Biological_Ongoing_substance_use" placeholder="e.g. Alcohol abuse">
+                                        <label for="oca-Perpetuating_Biological_Poor_sleep_nutrition">Poor sleep/nutrition:</label>
+                                        <input type="text" id="oca-Perpetuating_Biological_Poor_sleep_nutrition" placeholder="e.g. Insomnia">
+
+                                        <strong style="margin-top:10px;">Psychological:</strong>
+                                        <label for="oca-Perpetuating_Psychological_Cognitive_distortions">Cognitive distortions:</label>
+                                        <input type="text" id="oca-Perpetuating_Psychological_Cognitive_distortions" placeholder="e.g. Catastrophizing">
+                                        <label for="oca-Perpetuating_Psychological_Poor_insight">Poor insight:</label>
+                                        <input type="text" id="oca-Perpetuating_Psychological_Poor_insight" placeholder="e.g. Denies illness severity">
+                                        <label for="oca-Perpetuating_Psychological_Avoidant_coping">Avoidant coping:</label>
+                                        <input type="text" id="oca-Perpetuating_Psychological_Avoidant_coping" placeholder="e.g. Avoids leaving house">
+
+                                        <strong style="margin-top:10px;">Social:</strong>
+                                        <label for="oca-Perpetuating_Social_Stigma">Stigma:</label>
+                                        <input type="text" id="oca-Perpetuating_Social_Stigma" placeholder="e.g. Stigma at workplace">
+                                        <label for="oca-Perpetuating_Social_Lack_of_access_to_services">Lack of access:</label>
+                                        <input type="text" id="oca-Perpetuating_Social_Lack_of_access_to_services" placeholder="e.g. Long waitlists">
+                                    </div>
+                                </details>
+
+                                <!-- Section 6: Protective Factors -->
+                                <details class="oca-form-details">
+                                    <summary>Protective Factors (Strengths)</summary>
+                                    <div class="oca-details-content">
+                                        <strong>Biological:</strong>
+                                        <label for="oca-Protective_Biological_Good_physical_health">Good physical health:</label>
+                                        <input type="text" id="oca-Protective_Biological_Good_physical_health" placeholder="e.g. Exercises regularly">
+                                        <label for="oca-Protective_Biological_Medication_adherence">Medication adherence:</label>
+                                        <input type="text" id="oca-Protective_Biological_Medication_adherence" placeholder="e.g. Good compliance">
+
+                                        <strong style="margin-top:10px;">Psychological:</strong>
+                                        <label for="oca-Protective_Psychological_Good_insight">Good insight:</label>
+                                        <input type="text" id="oca-Protective_Psychological_Good_insight" placeholder="e.g. High motivation for therapy">
+                                        <label for="oca-Protective_Psychological_History_of_resilience">History of resilience:</label>
+                                        <input type="text" id="oca-Protective_Psychological_History_of_resilience" placeholder="e.g. Overcame past stress">
+
+                                        <strong style="margin-top:10px;">Social:</strong>
+                                        <label for="oca-Protective_Social_Strong_support_networks">Strong support networks:</label>
+                                        <input type="text" id="oca-Protective_Social_Strong_support_networks" placeholder="e.g. Supportive partner">
+                                        <label for="oca-Protective_Social_Stable_accommodation">Stable accommodation:</label>
+                                        <input type="text" id="oca-Protective_Social_Stable_accommodation" placeholder="e.g. Owns home">
+                                    </div>
+                                </details>
+
+                                <!-- Section 7: Theoretical Frameworks -->
+                                <details class="oca-form-details">
+                                    <summary>Theoretical Frameworks (Optional)</summary>
+                                    <div class="oca-details-content">
+                                        <!-- CBT -->
+                                        <div class="framework-item-sb">
+                                            <input type="checkbox" id="oca-form-framework-cbt">
+                                            <label for="oca-form-framework-cbt" style="display:inline; font-weight:700;">Cognitive Behavioral (CBT)</label>
+                                            <div id="oca-framework-fields-cbt" style="display:none; margin-left:15px; margin-top:5px; margin-bottom:10px;">
+                                                <label for="oca-form-cbt-core">Core Beliefs / Schemas:</label>
+                                                <input type="text" id="oca-form-cbt-core" placeholder="e.g. I am incompetent">
+                                                <label for="oca-form-cbt-intermediate">Rules & Assumptions:</label>
+                                                <input type="text" id="oca-form-cbt-intermediate" placeholder="e.g. If I fail, I am worthless">
+                                                <label for="oca-form-cbt-thoughts">Automatic Thoughts:</label>
+                                                <input type="text" id="oca-form-cbt-thoughts" placeholder="e.g. I can't do this">
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Psychodynamic -->
+                                        <div class="framework-item-sb" style="margin-top:10px;">
+                                            <input type="checkbox" id="oca-form-framework-psychodynamic">
+                                            <label for="oca-form-framework-psychodynamic" style="display:inline; font-weight:700;">Psychodynamic & Defenses</label>
+                                            <div id="oca-framework-fields-psychodynamic" style="display:none; margin-left:15px; margin-top:5px; margin-bottom:10px;">
+                                                <label for="oca-form-dyn-defenses">Defense Mechanisms:</label>
+                                                <input type="text" id="oca-form-dyn-defenses" placeholder="e.g. Projection, denial">
+                                                <label for="oca-form-dyn-conflict">Central Conflict:</label>
+                                                <input type="text" id="oca-form-dyn-conflict" placeholder="e.g. Autonomy vs dependence">
+                                                <label for="oca-form-dyn-ego">Ego functioning:</label>
+                                                <input type="text" id="oca-form-dyn-ego" placeholder="e.g. Poor impulse control">
+                                            </div>
+                                        </div>
+
+                                        <!-- Self Psychology -->
+                                        <div class="framework-item-sb" style="margin-top:10px;">
+                                            <input type="checkbox" id="oca-form-framework-selfpsych">
+                                            <label for="oca-form-framework-selfpsych" style="display:inline; font-weight:700;">Self Psychology</label>
+                                            <div id="oca-framework-fields-selfpsych" style="display:none; margin-left:15px; margin-top:5px; margin-bottom:10px;">
+                                                <label for="oca-form-self-needs">Unmet Selfobject Needs:</label>
+                                                <input type="text" id="oca-form-self-needs" placeholder="e.g. Mirroring, idealizing">
+                                                <label for="oca-form-self-cohesion">Cohesion vs Fragmentation:</label>
+                                                <input type="text" id="oca-form-self-cohesion" placeholder="e.g. Fragmentation under threat">
+                                            </div>
+                                        </div>
+
+                                        <!-- Erikson -->
+                                        <div class="framework-item-sb" style="margin-top:10px;">
+                                            <input type="checkbox" id="oca-form-framework-erikson">
+                                            <label for="oca-form-framework-erikson" style="display:inline; font-weight:700;">Erikson's Stages</label>
+                                            <div id="oca-framework-fields-erikson" style="display:none; margin-left:15px; margin-top:5px; margin-bottom:10px;">
+                                                <label for="oca-form-erikson-current">Current Stage Conflict:</label>
+                                                <input type="text" id="oca-form-erikson-current" placeholder="e.g. Intimacy vs Isolation">
+                                                <label for="oca-form-erikson-past">Unresolved Past Stage:</label>
+                                                <input type="text" id="oca-form-erikson-past" placeholder="e.g. Trust vs Mistrust">
+                                            </div>
+                                        </div>
+
+                                        <!-- Attachment -->
+                                        <div class="framework-item-sb" style="margin-top:10px;">
+                                            <input type="checkbox" id="oca-form-framework-attachment">
+                                            <label for="oca-form-framework-attachment" style="display:inline; font-weight:700;">Attachment Theory</label>
+                                            <div id="oca-framework-fields-attachment" style="display:none; margin-left:15px; margin-top:5px; margin-bottom:10px;">
+                                                <label for="oca-form-attach-style">Attachment Style:</label>
+                                                <input type="text" id="oca-form-attach-style" placeholder="e.g. Anxious-avoidant">
+                                                <label for="oca-form-attach-dynamics">Separation Dynamics:</label>
+                                                <input type="text" id="oca-form-attach-dynamics" placeholder="e.g. Threat triggers panic">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </details>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- API Key Config Modal -->
+                <div id="oca-key-modal" class="modal">
+                    <div class="modal-content">
+                        <span class="close-button" id="oca-key-close">&times;</span>
+                        <h4>Gemini API Configuration</h4>
+                        <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 15px;">
+                            Enter your Gemini API key below. It is stored securely in your browser's local storage and is only sent directly to Google's Gemini API endpoints.
+                        </p>
+                        <div class="form-grid" style="grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
+                            <label for="oca-gemini-key" style="font-weight:600;">Gemini API Key:</label>
+                            <input type="password" id="oca-gemini-key" placeholder="AIzaSy...">
+                        </div>
+                        <div class="button-group">
+                            <button id="oca-key-save-btn" class="btn-primary">Save Key</button>
+                            <button id="oca-key-clear-btn" class="reset-btn">Clear Key</button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Clinical Scales Page (Option A Navigation) -->
@@ -1479,6 +2112,7 @@
                                 <option value="addiction">Addiction Medicine Consultation Template</option>
                                 <option value="otp">OTP Clinic Consultation Template</option>
                                 <option value="review">Psychiatry Initial review/Admissions Review Template</option>
+                                <option value="oca">OCA template</option>
                             </select>
                         </div>
                         <textarea id="template-note-out" class="emr-summary" style="height: 400px; font-family: monospace; font-size:13px;"></textarea>
