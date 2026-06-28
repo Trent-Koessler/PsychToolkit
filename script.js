@@ -3391,12 +3391,22 @@ Psychiatry Registrar`
         }, 500);
     }
 
+    function getOcaSuggestedFilename() {
+        const now = new Date();
+        const dd = String(now.getDate()).padStart(2, '0');
+        const mm = String(now.getMonth() + 1).padStart(2, '0');
+        const yy = String(now.getFullYear()).slice(-2);
+        const hh = String(now.getHours()).padStart(2, '0');
+        const min = String(now.getMinutes()).padStart(2, '0');
+        return `Assessment_Date[${dd}-${mm}-${yy}]_${hh}${min}.txt`;
+    }
+
     // Connect new file (save picker)
     if (ocaConnectBtn) {
         ocaConnectBtn.addEventListener("click", async () => {
             try {
                 const opts = {
-                    suggestedName: 'patient_review_assessment.txt',
+                    suggestedName: getOcaSuggestedFilename(),
                     types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
                 };
                 ocaFileHandle = await window.showSaveFilePicker(opts);
@@ -3483,6 +3493,18 @@ Psychiatry Registrar`
                 ocaTimerEl.classList.toggle("timer-warning", mins >= 60);
             }
         }, 1000);
+    }
+
+    if (ocaTimerEl) {
+        ocaTimerEl.addEventListener("click", () => {
+            if (confirm("Reset session timer to 00:00?")) {
+                ocaSessionStart = Date.now();
+                if (ocaTimerEl) {
+                    ocaTimerEl.textContent = "⏱ 00:00";
+                    ocaTimerEl.classList.remove("timer-warning");
+                }
+            }
+        });
     }
 
     // Start timer when OCA page is navigated to
@@ -4136,42 +4158,32 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         }
     }
 
-    // Ward Risk Formulation compiler
+    // Ward Risk Formulation compiler (robust matches, no strict N.B. boundary)
     function updateWardRiskFormulationInOcaText(skipUndo = false) {
         if (!ocaEditor) return;
         let text = ocaEditor.value;
 
-        const startRegex = /^Ward Risk Formulation/m;
-        const endRegex = /^N\.B\.:/m;
-
+        // Match either "Ward Risk Formulation" or "Risk Formulation" case-insensitively
+        const startRegex = /^(Ward )?Risk Formulation/mi;
         const startMatch = text.match(startRegex);
-        const endMatch = text.match(endRegex);
+        if (!startMatch) return;
 
-        if (!startMatch || !endMatch || startMatch.index >= endMatch.index) return;
+        const headerIndex = startMatch.index;
+        let restText = text.substring(headerIndex);
 
-        const sectionText = text.substring(startMatch.index, endMatch.index);
-
-        function getExistingValue(field) {
-            const regex = new RegExp(`^${field} - (.*)$`, "m");
-            const match = sectionText.match(regex);
+        // Helper to locate a field line in the rest of the text
+        function getFieldInfo(field) {
+            const regex = new RegExp(`^(${field} - )(.*)$`, "m");
+            const match = restText.match(regex);
             if (match) {
-                const val = match[1].trim();
-                // If it is completely empty or just holds space, return null so we can populate it
-                if (val === "" || val.toLowerCase() === "n/a" || val === "-") {
-                    return null;
-                }
-                return val;
+                const fullLine = match[0];
+                const prefix = match[1];
+                const val = match[2].trim();
+                const isEmpty = (val === "" || val.toLowerCase() === "n/a" || val === "-");
+                return { fullLine, prefix, val, isEmpty };
             }
             return null;
         }
-
-        // Parse existing values to prevent overwriting started inputs
-        let absVal = getExistingValue("Abs");
-        let aggVal = getExistingValue("Agg");
-        let dshVal = getExistingValue("DSH");
-        let srVal = getExistingValue("SR");
-        let ssVal = getExistingValue("SS");
-        let vulVal = getExistingValue("Vul");
 
         // Fetch inputs from MSE
         const siEl = document.getElementById("oca-mse-si");
@@ -4180,110 +4192,192 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         const thoEl = document.getElementById("oca-mse-tho");
         const orientEl = document.getElementById("oca-mse-orientation");
         const activityEl = document.getElementById("oca-mse-activity");
-        
+
         // Fetch inputs from Formulation / Perpetuating / Presenting Problem
         const perpSubstanceEl = document.getElementById("oca-Perpetuating_Biological_Ongoing_substance_use");
         const ppCopingEl = document.getElementById("oca-form-pp-coping");
 
+        const fields = ["Abs", "Agg", "DSH", "SR", "SS", "Vul"];
+        const values = {};
+
+        // Parse existing values to prevent overwriting started inputs
+        fields.forEach(field => {
+            const info = getFieldInfo(field);
+            if (info) {
+                values[field] = info.isEmpty ? null : info.val;
+            } else {
+                values[field] = undefined; // Field not found in editor
+            }
+        });
+
         // 1. Suicide Risk (SR)
-        if (srVal === null) {
+        if (values["SR"] === null) {
             const si = siEl ? siEl.value : "Denied";
             const siDesc = (siDescEl && siDescEl.value.trim()) ? ` (${siDescEl.value.trim()})` : "";
             if (si === "Present with plan") {
-                srVal = `Elevated risk - active suicidal ideation with plan${siDesc}.`;
+                values["SR"] = `Elevated risk - active suicidal ideation with plan${siDesc}.`;
             } else if (si === "Present with intent") {
-                srVal = `Elevated risk - active suicidal ideation with intent${siDesc}.`;
+                values["SR"] = `Elevated risk - active suicidal ideation with intent${siDesc}.`;
             } else if (si === "Fleeting thoughts, no intent/plan") {
-                srVal = `Low/Moderate risk - passive or fleeting suicidal thoughts, denies intent/plan${siDesc}.`;
+                values["SR"] = `Low/Moderate risk - passive or fleeting suicidal thoughts, denies intent/plan${siDesc}.`;
             } else {
-                srVal = "Low risk - denies suicidal ideation.";
+                values["SR"] = "Low risk - denies suicidal ideation.";
             }
         }
 
         // 2. Deliberate Self-Harm (DSH)
-        if (dshVal === null) {
+        if (values["DSH"] === null) {
             const shi = shiEl ? shiEl.value.trim() : "";
             if (shi && shi.toLowerCase() !== "denied" && shi.toLowerCase() !== "no" && shi.toLowerCase() !== "none") {
-                dshVal = `Intermittent risk - self-harm ideation/behaviors noted: ${shi}.`;
+                values["DSH"] = `Intermittent risk - self-harm ideation/behaviors noted: ${shi}.`;
             } else if (shi) {
-                dshVal = `Low risk - ${shi.toLowerCase().startsWith("deni") ? shi : "denies self-harm"}.`;
+                values["DSH"] = `Low risk - ${shi.toLowerCase().startsWith("deni") ? shi : "denies self-harm"}.`;
             } else {
-                dshVal = "Low risk - denies deliberate self-harm.";
+                values["DSH"] = "Low risk - denies deliberate self-harm.";
             }
         }
 
         // 3. Aggression (Agg)
-        if (aggVal === null) {
+        if (values["Agg"] === null) {
             const tho = thoEl ? thoEl.value.trim() : "";
-            if (tho && tho.toLowerCase() !== "denied" && tho.toLowerCase() !== "no" && tho.toLowerCase() !== "none") {
-                aggVal = `Risk present - homicidal/violent ideation or history: ${tho}.`;
+
+            // Check HCR-20 checkboxes
+            const checkedHcr = [];
+            const ocaHcrInputIds = [
+                "oca-hcr-h1", "oca-hcr-h2", "oca-hcr-h3", "oca-hcr-h4", "oca-hcr-h5", "oca-hcr-h6", "oca-hcr-h7", "oca-hcr-h8", "oca-hcr-h9", "oca-hcr-h10",
+                "oca-hcr-c1", "oca-hcr-c2", "oca-hcr-c3", "oca-hcr-c4", "oca-hcr-c5",
+                "oca-hcr-r1", "oca-hcr-r2", "oca-hcr-r3", "oca-hcr-r4", "oca-hcr-r5"
+            ];
+            ocaHcrInputIds.forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.checked) {
+                    checkedHcr.push(el.value);
+                }
+            });
+
+            if (checkedHcr.length > 0) {
+                values["Agg"] = `Elevated risk of aggression/violence. Key HCR-20 markers present: ${checkedHcr.join(", ")}.`;
+                if (tho && tho.toLowerCase() !== "denied" && tho.toLowerCase() !== "no" && tho.toLowerCase() !== "none") {
+                    values["Agg"] += ` Clinical note: ${tho}.`;
+                }
+            } else if (tho && tho.toLowerCase() !== "denied" && tho.toLowerCase() !== "no" && tho.toLowerCase() !== "none") {
+                values["Agg"] = `Risk present - homicidal/violent ideation or history: ${tho}.`;
             } else if (tho) {
-                aggVal = `Low risk - ${tho.toLowerCase().startsWith("deni") ? tho : "denies violence/homicidal thoughts"}.`;
+                values["Agg"] = `Low risk - ${tho.toLowerCase().startsWith("deni") ? tho : "denies violence/homicidal thoughts"}.`;
             } else {
-                aggVal = "Low risk - denies homicidal/violent ideation.";
+                values["Agg"] = "Low risk - denies homicidal/violent ideation.";
             }
         }
 
         // 4. Absconding (Abs)
-        if (absVal === null) {
+        if (values["Abs"] === null) {
             const orient = orientEl ? orientEl.value : "Oriented to time, place, and person";
             const activity = activityEl ? activityEl.value.toLowerCase() : "normal";
             if (orient !== "Oriented to time, place, and person") {
-                absVal = `Increased risk due to cognitive disorientation (${orient}).`;
+                values["Abs"] = `Increased risk due to cognitive disorientation (${orient}).`;
             } else if (activity.includes("agitated") || activity.includes("restless") || activity.includes("hyperactive")) {
-                absVal = `Low/Moderate risk - alert and oriented but shows ${activity} psychomotor activity.`;
+                values["Abs"] = `Low/Moderate risk - alert and oriented but shows ${activity} psychomotor activity.`;
             } else {
-                absVal = "Low risk - alert, oriented, and cooperative.";
+                values["Abs"] = "Low risk - alert, oriented, and cooperative.";
             }
         }
 
-        // 5. Substance/Self-Sabotage (SS)
-        if (ssVal === null) {
-            const perpSub = perpSubstanceEl ? perpSubstanceEl.value.trim() : "";
-            const ppCoping = ppCopingEl ? ppCopingEl.value.trim() : "";
-            
-            if (perpSub) {
-                ssVal = `Risk present - ongoing substance use: ${perpSub}.`;
-            } else if (ppCoping && (ppCoping.toLowerCase().includes("alcohol") || ppCoping.toLowerCase().includes("drug") || ppCoping.toLowerCase().includes("substance") || ppCoping.toLowerCase().includes("smoke") || ppCoping.toLowerCase().includes("drink") || ppCoping.toLowerCase().includes("weed"))) {
-                ssVal = `Potential risk - history indicates coping via substance: ${ppCoping}.`;
+        // 5. Sexual Safety (SS)
+        if (values["SS"] === null) {
+            const activity = activityEl ? activityEl.value.toLowerCase() : "normal";
+            const behaviourFree = document.getElementById("oca-mse-behaviour-free") ? document.getElementById("oca-mse-behaviour-free").value.toLowerCase() : "";
+            const mood = document.getElementById("oca-mse-mood") ? document.getElementById("oca-mse-mood").value.toLowerCase() : "";
+
+            if (activity.includes("disinhibited") || activity.includes("intrusive") || activity.includes("hypersexual") ||
+                behaviourFree.includes("sexual") || behaviourFree.includes("boundary") || behaviourFree.includes("disinhibited") || behaviourFree.includes("inappropriate") ||
+                mood.includes("elated") || mood.includes("irritable")) {
+                values["SS"] = "Elevated risk - indicators of disinhibition, manic mood, or poor boundary maintenance observed/reported.";
             } else {
-                ssVal = "Low risk - no acute substance concerns or self-sabotage behaviors identified.";
+                values["SS"] = "Low risk - no disinhibition, boundary issues, or sexual safety concerns observed or reported.";
             }
         }
 
         // 6. Vulnerability (Vul)
-        if (vulVal === null) {
+        if (values["Vul"] === null) {
             const orient = orientEl ? orientEl.value : "Oriented to time, place, and person";
             const deniesHal = document.getElementById("oca-mse-hallucination-denies");
             const deniesDel = document.getElementById("oca-mse-delusion-none");
-            
+
             const hasHallucinations = deniesHal ? !deniesHal.checked : false;
             const hasDelusions = deniesDel ? !deniesDel.checked : false;
 
             if (orient !== "Oriented to time, place, and person") {
-                vulVal = "Vulnerable due to cognitive disorientation.";
+                values["Vul"] = "Vulnerable due to cognitive disorientation.";
             } else if (hasHallucinations || hasDelusions) {
-                vulVal = "Vulnerable due to active psychotic symptoms (hallucinations/delusions).";
+                values["Vul"] = "Vulnerable due to active psychotic symptoms (hallucinations/delusions).";
             } else {
-                vulVal = "Low risk of vulnerability identified at present.";
+                values["Vul"] = "Low risk of vulnerability identified at present.";
             }
         }
 
-        const compiledRisk = `Ward Risk Formulation
-Abs - ${absVal}
-Agg - ${aggVal}
-DSH - ${dshVal}
-SR - ${srVal}
-SS - ${ssVal}
-Vul - ${vulVal}`;
-
-        const beforeRisk = text.substring(0, startMatch.index);
-        const afterRisk = text.substring(endMatch.index);
+        // Replace each field's line in the text slice
+        let updatedRestText = restText;
+        fields.forEach(field => {
+            const info = getFieldInfo(field);
+            if (info && values[field] !== undefined) {
+                const finalVal = values[field] || "";
+                updatedRestText = updatedRestText.replace(info.fullLine, info.prefix + finalVal);
+            }
+        });
 
         if (!skipUndo) saveUndoSnapshot();
-        ocaEditor.value = beforeRisk + compiledRisk + "\n\n" + afterRisk;
+        ocaEditor.value = text.substring(0, headerIndex) + updatedRestText;
     }
 
+    // HCR-20 Static & Dynamic risk factors updater (Option 1)
+    function updateHcrRiskInOcaText() {
+        if (!ocaEditor) return;
+        let text = ocaEditor.value;
+
+        // Match the line that starts with 'Static and dynamic risk factors:'
+        const regex = /^(Static and dynamic risk factors:)(.*)$/m;
+        const match = text.match(regex);
+        if (!match) return;
+
+        const prefix = match[1];
+        const val = match[2].trim();
+
+        // If the user has typed something custom, preserve it
+        const isCustom = val !== "" && !val.startsWith("HCR-20 Indicators:");
+        if (isCustom) return;
+
+        // Compile active HCR-20 items
+        const staticItems = [];
+        const dynamicItems = [];
+
+        const hcrIds = [
+            "oca-hcr-h1", "oca-hcr-h2", "oca-hcr-h3", "oca-hcr-h4", "oca-hcr-h5", "oca-hcr-h6", "oca-hcr-h7", "oca-hcr-h8", "oca-hcr-h9", "oca-hcr-h10",
+            "oca-hcr-c1", "oca-hcr-c2", "oca-hcr-c3", "oca-hcr-c4", "oca-hcr-c5",
+            "oca-hcr-r1", "oca-hcr-r2", "oca-hcr-r3", "oca-hcr-r4", "oca-hcr-r5"
+        ];
+
+        hcrIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.checked) {
+                if (id.includes("-h")) staticItems.push(el.value);
+                else dynamicItems.push(el.value);
+            }
+        });
+
+        let updatedVal = "";
+        if (staticItems.length > 0 || dynamicItems.length > 0) {
+            updatedVal = " HCR-20 Indicators: ";
+            if (staticItems.length > 0) {
+                updatedVal += `Static [${staticItems.join(", ")}]`;
+            }
+            if (dynamicItems.length > 0) {
+                if (staticItems.length > 0) updatedVal += "; ";
+                updatedVal += `Dynamic [${dynamicItems.join(", ")}]`;
+            }
+        }
+
+        ocaEditor.value = text.replace(regex, prefix + updatedVal);
+    }
 
     const ocaFormulationInputIds = [
         "oca-form-pp-name", "oca-form-pp-age", "oca-form-pp-gender",
@@ -4556,12 +4650,37 @@ If a category lacks information in the notes, use a blank string "". Set the fra
         });
     }
 
+    // HCR-20 Checkbox bindings
+    const ocaHcrInputIds = [
+        "oca-hcr-h1", "oca-hcr-h2", "oca-hcr-h3", "oca-hcr-h4", "oca-hcr-h5", "oca-hcr-h6", "oca-hcr-h7", "oca-hcr-h8", "oca-hcr-h9", "oca-hcr-h10",
+        "oca-hcr-c1", "oca-hcr-c2", "oca-hcr-c3", "oca-hcr-c4", "oca-hcr-c5",
+        "oca-hcr-r1", "oca-hcr-r2", "oca-hcr-r3", "oca-hcr-r4", "oca-hcr-r5"
+    ];
+
+    ocaHcrInputIds.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+            el.addEventListener("change", () => {
+                saveUndoSnapshot();
+                updateHcrRiskInOcaText();
+                updateWardRiskFormulationInOcaText(true);
+                triggerAutoSave();
+            });
+        }
+    });
+
     // 8. Reset Session
     const ocaResetBtn = document.getElementById("oca-reset-btn");
     if (ocaResetBtn) {
         ocaResetBtn.addEventListener("click", () => {
             if (confirm("Are you sure you want to reset the current patient review session? This will clear all changes.")) {
                 if (ocaEditor) ocaEditor.value = templates.oca || "";
+
+                // Reset HCR-20 checkboxes
+                ocaHcrInputIds.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.checked = false;
+                });
 
                 // Reset formulation fields
                 ocaFormulationInputIds.forEach(id => {

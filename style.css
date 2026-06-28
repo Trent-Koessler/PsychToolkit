@@ -1837,16 +1837,28 @@ button.btn-primary:hover,
     background: rgba(0, 0, 0, 0.04);
     letter-spacing: 0.03em;
     white-space: nowrap;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+
+.oca-session-timer:hover {
+    background: rgba(0, 0, 0, 0.08);
+    color: var(--text-primary);
 }
 
 [data-theme="dark"] .oca-session-timer {
     background: rgba(255, 255, 255, 0.06);
 }
 
+[data-theme="dark"] .oca-session-timer:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
 .oca-session-timer.timer-warning {
     color: var(--warning-color, #f59e0b);
     background: rgba(245, 158, 11, 0.12);
 }
+
 
 #oca-save-status {
     display: flex;
