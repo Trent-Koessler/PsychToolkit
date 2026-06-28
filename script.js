@@ -2536,15 +2536,15 @@ On review:
 
 
 Diagnostic screen:
-- Sleep
-- Appetite and oral intake
+- Mood right now - 
+- Suicidality - 
+- Sleep - 
+- Appetite and oral intake - 
+- Manic
+- Depressive (anhedonia / guild / energy / concentration / slowing)
 - Organic and somatic - pain
 - Cognitive - difficulties thinking, confusion, memory
-- Psychotic
-- Mood right now
-- Suicidality
-Manic
-- Depressive (anhedonia / guild / energy / concentration / slowing)
+- Psychotic - 
 - Anxiety and panic attacks - worry difficult to control? Difficulty concentrating? Keyed up, on edge / restless?
 - Personality (difficulty making or keeping friends? Loner? Trust other people generally? Lose temper easily? Impulsive? Worrier? Depend on others a lot? Perfectionist?)
 - Trauma - nightmares, dissociation, and flashbacks
