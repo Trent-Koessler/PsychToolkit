@@ -2539,8 +2539,8 @@ On review:
 - Appetite and oral intake - 
 
 Diagnostic screen:
-- Manic experiences - 
-- Depressive (anhedonia / guild / energy / concentration / slowing)
+- Manic symptoms - 
+- Depressive symptoms - (anhedonia / guild / energy / concentration / slowing)
 - Organic and somatic - pain
 - Cognitive - difficulties thinking, confusion, memory
 - Psychotic experiences - 
