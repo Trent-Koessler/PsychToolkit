@@ -2738,17 +2738,20 @@ Akathisia
 
 
 Impression:
-Diagnosis
-# 
-
-
 Integrative Formulation:
 # Presentation and Context:
+
+# Salient Features of Case:
 
 # Biopsychosocial Considerations:
 
 # Speculative/Theoretical Hypotheses:
 
+
+Diagnosis
+# 
+
+# Differentials:
 
 Barriers to implementation:
 Rapport/alliance:
@@ -2776,6 +2779,8 @@ Plan:
 
 # Diagnostic clarification and information gathering
 - Sources of collateral history:
+
+- Gaps in history:
 
 # Psychiatric and psychobiological treatment of symptoms
 
@@ -4047,7 +4052,7 @@ Psychiatry Registrar`
         }
 
         // 3. Compile Frameworks
-        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment"];
+        const activeFrameworks = ["cbt", "psychodynamic", "selfpsych", "erikson", "attachment", "cultural"];
         const theoryProseParts = [];
 
         activeFrameworks.forEach(fw => {
@@ -4115,6 +4120,18 @@ Psychiatry Registrar`
                         if (dynamics) proseParts.push(`separation/threat dynamics involving ${dynamics}`);
                         prose = `Attachment formulation indicates ${proseParts.join(", alongside ")}.`;
                     }
+                } else if (fw === "cultural") {
+                    const identity = document.getElementById("oca-form-cult-identity").value.trim();
+                    const supports = document.getElementById("oca-form-cult-supports").value.trim();
+
+                    if (identity || supports) {
+                        const proseParts = [];
+                        if (identity) proseParts.push(`cultural identity/beliefs of ${identity}`);
+                        if (supports) proseParts.push(`systemic factors including ${supports}`);
+                        const subjectPronoun = pronouns.subject;
+                        const verbBe = pronouns.subject === "they" ? "are" : "is";
+                        prose = `Culturally and systemically, ${subjectPronoun} ${verbBe} influenced by ${proseParts.join(", alongside ")}.`;
+                    }
                 }
 
                 if (prose) {
@@ -4139,9 +4156,166 @@ Psychiatry Registrar`
         const section2Text = [diagProse, narrativeParts.join(" ")].filter(p => p).join(" ");
         const section3Text = theoryProseParts.join(" ");
 
+        // Build Affect description
+        const affectParts = [];
+        const affectType = document.getElementById("oca-mse-affect-type") ? document.getElementById("oca-mse-affect-type").value : "Euthymic";
+        const affectRange = document.getElementById("oca-mse-affect-range") ? document.getElementById("oca-mse-affect-range").value : "Normal range";
+        const affectCongruence = document.getElementById("oca-mse-affect-congruence") ? document.getElementById("oca-mse-affect-congruence").value : "Congruent";
+        const affectFree = document.getElementById("oca-mse-affect-free") ? document.getElementById("oca-mse-affect-free").value.trim() : "";
+
+        if (affectType && affectType !== "Euthymic") affectParts.push(affectType.toLowerCase());
+        if (affectRange && affectRange !== "Normal range") affectParts.push(affectRange.toLowerCase());
+        if (affectCongruence && affectCongruence !== "Congruent") affectParts.push(affectCongruence.toLowerCase());
+        if (affectFree) affectParts.push(affectFree);
+
+        const affectStr = affectParts.length > 0 ? affectParts.join(", ") : "euthymic and congruent";
+
+        // Build HCR-20 flags
+        const checkedHcrItems = [];
+        const hcrInputIds = [
+            "oca-hcr-h1", "oca-hcr-h2", "oca-hcr-h3", "oca-hcr-h4", "oca-hcr-h5", "oca-hcr-h6", "oca-hcr-h7", "oca-hcr-h8", "oca-hcr-h9", "oca-hcr-h10",
+            "oca-hcr-c1", "oca-hcr-c2", "oca-hcr-c3", "oca-hcr-c4", "oca-hcr-c5",
+            "oca-hcr-r1", "oca-hcr-r2", "oca-hcr-r3", "oca-hcr-r4", "oca-hcr-r5"
+        ];
+        hcrInputIds.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.checked) {
+                checkedHcrItems.push(el.value);
+            }
+        });
+
+        // Build Salient Features of Case (MSE and Risks only to prevent overlap)
+        const salientBullets = [];
+        const moodVal = document.getElementById("oca-mse-mood") ? document.getElementById("oca-mse-mood").value.trim() : "";
+        const shiVal = document.getElementById("oca-mse-shi") ? document.getElementById("oca-mse-shi").value.trim() : "";
+        const thoVal = document.getElementById("oca-mse-tho") ? document.getElementById("oca-mse-tho").value.trim() : "";
+
+        // 1. MSE & Cognitive Findings
+        const mseHighlights = [];
+        if (moodVal && moodVal !== "-") {
+            mseHighlights.push(`subjective mood is "${moodVal}" (${affectStr})`);
+        } else if (affectStr !== "euthymic and congruent") {
+            mseHighlights.push(`affect is ${affectStr}`);
+        }
+
+        // Thought form checkboxes
+        const ocaThoughtFormIds = [
+            "oca-mse-thought-form-coherent",
+            "oca-mse-thought-form-circumstantial",
+            "oca-mse-thought-form-tangential",
+            "oca-mse-thought-form-loosening",
+            "oca-mse-thought-form-salad"
+        ];
+        const checkedThoughtForms = [];
+        ocaThoughtFormIds.forEach(tfId => {
+            const tfEl = document.getElementById(tfId);
+            if (tfEl && tfEl.checked) {
+                checkedThoughtForms.push(tfEl.value || tfId.replace("oca-mse-thought-form-", ""));
+            }
+        });
+        if (checkedThoughtForms.length > 0 && !checkedThoughtForms.includes("Coherent and logical")) {
+            mseHighlights.push(`atypical thought form (${checkedThoughtForms.join(", ")})`);
+        }
+
+        // Hallucinations
+        const halDeniesEl = document.getElementById("oca-mse-hallucination-denies");
+        if (halDeniesEl && !halDeniesEl.checked) {
+            const halDescVal = document.getElementById("oca-mse-hallucination-desc") ? document.getElementById("oca-mse-hallucination-desc").value.trim() : "";
+            mseHighlights.push(`perceptual disturbances (${halDescVal || 'hallucinations present'})`);
+        }
+
+        // Delusions
+        const delNoneEl = document.getElementById("oca-mse-delusion-none");
+        if (delNoneEl && !delNoneEl.checked) {
+            const delDescVal = document.getElementById("oca-mse-delusion-desc") ? document.getElementById("oca-mse-delusion-desc").value.trim() : "";
+            mseHighlights.push(`delusional beliefs (${delDescVal || 'delusions present'})`);
+        }
+
+        // Orientation
+        const orientEl = document.getElementById("oca-mse-orientation");
+        const orientVal = orientEl ? orientEl.value : "Oriented to time, place, and person";
+        if (orientVal && orientVal !== "Oriented to time, place, and person") {
+            mseHighlights.push(`disorientation (${orientVal.toLowerCase()})`);
+        }
+
+        // Cognition details
+        const concVal = document.getElementById("oca-mse-concentration") ? document.getElementById("oca-mse-concentration").value.trim() : "";
+        if (concVal && concVal.toLowerCase() !== "intact" && concVal.toLowerCase() !== "normal" && concVal !== "-") {
+            mseHighlights.push(`concentration issues (${concVal})`);
+        }
+        const abstVal = document.getElementById("oca-mse-abstraction") ? document.getElementById("oca-mse-abstraction").value.trim() : "";
+        if (abstVal && abstVal.toLowerCase() !== "intact" && abstVal.toLowerCase() !== "normal" && abstVal !== "-") {
+            mseHighlights.push(`abstraction issues (${abstVal})`);
+        }
+        const visVal = document.getElementById("oca-mse-visuospatial") ? document.getElementById("oca-mse-visuospatial").value.trim() : "";
+        if (visVal && visVal.toLowerCase() !== "intact" && visVal.toLowerCase() !== "normal" && visVal !== "-") {
+            mseHighlights.push(`visuospatial issues (${visVal})`);
+        }
+
+        // Insight & Judgment
+        let insightLevel = "";
+        const insightRadios = ["oca-mse-insight-good", "oca-mse-insight-partial", "oca-mse-insight-poor", "oca-mse-insight-absent"];
+        insightRadios.forEach(rId => {
+            const rEl = document.getElementById(rId);
+            if (rEl && rEl.checked) {
+                insightLevel = rId.replace("oca-mse-insight-", "");
+            }
+        });
+        if (insightLevel && insightLevel !== "good") {
+            mseHighlights.push(`${insightLevel} insight into condition`);
+        }
+
+        const judgeEl = document.getElementById("oca-mse-judgement");
+        const judgeVal = judgeEl ? judgeEl.value.trim() : "";
+        if (judgeVal && judgeVal.toLowerCase() !== "intact" && judgeVal.toLowerCase() !== "good" && judgeVal !== "-") {
+            mseHighlights.push(`impaired judgment (${judgeVal.toLowerCase()})`);
+        }
+
+        if (mseHighlights.length > 0) {
+            salientBullets.push(`- **MSE & Cognition Highlights**: ${mseHighlights.join("; ")}.`);
+        } else {
+            salientBullets.push(`- **MSE & Cognition Highlights**: MSE is grossly unremarkable; oriented with intact insight and judgment.`);
+        }
+
+        // 2. Acute Self-Harm / Suicide Risk
+        const activeRisks = [];
+        const siSelect = document.getElementById("oca-mse-si");
+        const siVal = siSelect ? siSelect.value : "Denied";
+        if (siVal && siVal !== "Denied" && siVal !== "None") {
+            const siDescVal = document.getElementById("oca-mse-si-desc") ? document.getElementById("oca-mse-si-desc").value.trim() : "";
+            activeRisks.push(`active suicidal ideation (${siVal.toLowerCase()}${siDescVal ? ': ' + siDescVal : ''})`);
+        }
+        if (shiVal && shiVal.toLowerCase() !== "denied" && shiVal.toLowerCase() !== "no" && shiVal.toLowerCase() !== "none" && shiVal !== "-") {
+            activeRisks.push(`self-harm history/ideation (${shiVal})`);
+        }
+        if (activeRisks.length > 0) {
+            salientBullets.push(`- **Acute Self-Harm Risk**: ${activeRisks.join(", ")}.`);
+        } else {
+            salientBullets.push(`- **Acute Self-Harm Risk**: Denies active suicidal ideation or self-harm.`);
+        }
+
+        // 3. Violence Risk Assessment (HCR-20)
+        const violenceRisks = [];
+        if (thoVal && thoVal.toLowerCase() !== "denied" && thoVal.toLowerCase() !== "no" && thoVal.toLowerCase() !== "none" && thoVal !== "-") {
+            violenceRisks.push(`active threat/aggression indicators (${thoVal})`);
+        }
+        if (checkedHcrItems.length > 0) {
+            violenceRisks.push(`HCR-20 risk factors identified [${checkedHcrItems.join(", ")}]`);
+        }
+        if (violenceRisks.length > 0) {
+            salientBullets.push(`- **Violence Risk Assessment**: ${violenceRisks.join("; ")}.`);
+        } else {
+            salientBullets.push(`- **Violence Risk Assessment**: Denies aggression/violence history; no active HCR-20 violence risk flags.`);
+        }
+
+        const salientText = salientBullets.join("\n");
+
         const compiledFormulation = `Integrative Formulation:
 # Presentation and Context:
 ${section1Text || 'N/A'}
+
+# Salient Features of Case:
+${salientText}
 
 # Biopsychosocial Considerations:
 ${section2Text || 'N/A'}
@@ -4150,7 +4324,7 @@ ${section2Text || 'N/A'}
 ${section3Text || 'No theoretical frameworks selected.'}`;
 
         const startRegex = /^Integrative Formulation:/m;
-        const endRegex = /^Barriers to implementation:/m;
+        const endRegex = /^Diagnosis/m;
 
         const startMatch = text.match(startRegex);
         const endMatch = text.match(endRegex);
@@ -4405,12 +4579,14 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         "oca-form-dyn-defenses", "oca-form-dyn-conflict", "oca-form-dyn-ego",
         "oca-form-self-needs", "oca-form-self-cohesion",
         "oca-form-erikson-current", "oca-form-erikson-past",
-        "oca-form-attach-style", "oca-form-attach-dynamics"
+        "oca-form-attach-style", "oca-form-attach-dynamics",
+        "oca-form-cult-identity", "oca-form-cult-supports"
     ];
 
     const ocaFormulationCheckboxes = [
         "oca-form-framework-cbt", "oca-form-framework-psychodynamic",
-        "oca-form-framework-selfpsych", "oca-form-framework-erikson", "oca-form-framework-attachment"
+        "oca-form-framework-selfpsych", "oca-form-framework-erikson", "oca-form-framework-attachment",
+        "oca-form-framework-cultural"
     ];
 
     ocaFormulationCheckboxes.forEach(fwId => {
