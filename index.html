@@ -77,12 +77,15 @@
             <div id="oca-assessment-page" class="page" data-title="Patient Review Workspace (OCA)">
                 <div class="oca-header-bar">
                     <div class="oca-header-left">
-                        <button id="oca-connect-btn" class="btn-primary">📁 Connect Desktop File</button>
+                        <button id="oca-connect-btn" class="btn-primary">📁 Connect File</button>
+                        <button id="oca-load-btn" class="btn-secondary">📂 Load File</button>
                         <span id="oca-save-status" class="oca-save-status-idle">
                             <span class="status-dot"></span> <span id="oca-status-text">Not connected (Auto-save offline)</span>
                         </span>
                     </div>
                     <div class="oca-header-right">
+                        <span id="oca-session-timer" class="oca-session-timer" title="Session duration">⏱ 00:00</span>
+                        <button id="oca-undo-btn" class="btn-secondary" title="Undo last auto-insertion by MSE or Formulation builder" disabled>↩ Undo Insertion</button>
                         <button id="oca-key-btn" class="btn-primary" style="background-color: var(--accent-color);">🔑 Gemini API Key</button>
                         <button id="oca-reset-btn" class="reset-btn">🔄 Reset Session</button>
                     </div>

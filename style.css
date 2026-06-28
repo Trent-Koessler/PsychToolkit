@@ -1801,6 +1801,53 @@ button.btn-primary:hover,
     gap: 12px;
 }
 
+/* Secondary button — neutral outlined style for Load/Undo */
+.btn-secondary {
+    padding: 8px 14px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1.5px solid var(--border-color);
+    background: var(--card-bg);
+    color: var(--text-secondary);
+    transition: background 0.2s, border-color 0.2s, color 0.2s;
+    white-space: nowrap;
+}
+
+.btn-secondary:hover:not(:disabled) {
+    background: var(--tab-hover-bg, rgba(100,100,255,0.08));
+    border-color: var(--primary);
+    color: var(--text-primary);
+}
+
+.btn-secondary:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+}
+
+/* Session timer badge */
+.oca-session-timer {
+    font-size: 13px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-muted);
+    padding: 5px 10px;
+    border-radius: 20px;
+    background: rgba(0, 0, 0, 0.04);
+    letter-spacing: 0.03em;
+    white-space: nowrap;
+}
+
+[data-theme="dark"] .oca-session-timer {
+    background: rgba(255, 255, 255, 0.06);
+}
+
+.oca-session-timer.timer-warning {
+    color: var(--warning-color, #f59e0b);
+    background: rgba(245, 158, 11, 0.12);
+}
+
 #oca-save-status {
     display: flex;
     align-items: center;

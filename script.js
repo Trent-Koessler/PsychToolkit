@@ -2525,7 +2525,6 @@ Pets -
 Work - 
 Finances -  
 GP - 
-Pharmacy - 
 Previous Diagnoses -
 Ethnicity - 
 Religion - 
@@ -2537,15 +2536,18 @@ On review:
 
 
 Diagnostic screen:
-- Organic
-- Substance
-- Cognitive and developmental
+- Sleep
+- Appetite and oral intake
+- Organic and somatic - pain
+- Cognitive - difficulties thinking, confusion, memory
 - Psychotic
-- Manic
-- Depressive
-- Anxiety
-- Personality
-- Trauma
+- Mood right now
+- Suicidality
+Manic
+- Depressive (anhedonia / guild / energy / concentration / slowing)
+- Anxiety and panic attacks - worry difficult to control? Difficulty concentrating? Keyed up, on edge / restless?
+- Personality (difficulty making or keeping friends? Loner? Trust other people generally? Lose temper easily? Impulsive? Worrier? Depend on others a lot? Perfectionist?)
+- Trauma - nightmares, dissociation, and flashbacks
 
 Functional screen:
 ADLs:
@@ -2596,10 +2598,13 @@ Past Mental Health History:
 
 Past Medical History: 
 
-[Blood-Borne Viruses (BBVs): Hepatitis C/B, HIV status, testing dates.
+[Neurological: Head injuries; Seizures, peripheral neuropathy, cognitive impairment
+Endocrinological: Thyroid or hormonal issues
+Blood-Borne Viruses (BBVs)
+Surgical history or history of ECT
 Liver disease: Cirrhosis, abnormal LFTs.
 Cardiovascular: Endocarditis, cardiomyopathy.
-Neurological: Thyroid issues; Seizures, peripheral neuropathy, cognitive impairment.
+.
 Trauma/Injuries.]
 
 Current Medications:
@@ -3381,7 +3386,7 @@ Psychiatry Registrar`
             const success = await writeToFile(ocaFileHandle, ocaEditor.value);
             if (success) {
                 ocaSaveStatus.className = "oca-save-status-success";
-                ocaStatusText.textContent = "Auto-saved to Desktop";
+                ocaStatusText.textContent = "Auto-saved";
             } else {
                 ocaSaveStatus.className = "oca-save-status-error";
                 ocaStatusText.textContent = "Error auto-saving";
@@ -3389,15 +3394,13 @@ Psychiatry Registrar`
         }, 500);
     }
 
+    // Connect new file (save picker)
     if (ocaConnectBtn) {
         ocaConnectBtn.addEventListener("click", async () => {
             try {
                 const opts = {
                     suggestedName: 'patient_review_assessment.txt',
-                    types: [{
-                        description: 'Text Files',
-                        accept: { 'text/plain': ['.txt'] },
-                    }],
+                    types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
                 };
                 ocaFileHandle = await window.showSaveFilePicker(opts);
                 ocaSaveStatus.className = "oca-save-status-success";
@@ -3411,8 +3414,88 @@ Psychiatry Registrar`
         });
     }
 
+    // Load existing file (open picker)
+    const ocaLoadBtn = document.getElementById("oca-load-btn");
+    if (ocaLoadBtn) {
+        ocaLoadBtn.addEventListener("click", async () => {
+            try {
+                const [fileHandle] = await window.showOpenFilePicker({
+                    types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
+                    multiple: false
+                });
+                const file = await fileHandle.getFile();
+                const contents = await file.text();
+                if (ocaEditor) {
+                    // Store undo snapshot before loading
+                    ocaUndoSnapshot = ocaEditor.value;
+                    ocaUndoBtn.disabled = false;
+                    ocaEditor.value = contents;
+                    // Re-use this handle for auto-saving too
+                    ocaFileHandle = fileHandle;
+                    ocaSaveStatus.className = "oca-save-status-success";
+                    ocaStatusText.textContent = `Loaded: ${file.name}`;
+                }
+            } catch (err) {
+                console.warn("File open cancelled", err);
+            }
+        });
+    }
+
+    // Undo Last Insertion
+    let ocaUndoSnapshot = null;
+    const ocaUndoBtn = document.getElementById("oca-undo-btn");
+
+    function saveUndoSnapshot() {
+        if (ocaEditor) {
+            ocaUndoSnapshot = ocaEditor.value;
+            if (ocaUndoBtn) ocaUndoBtn.disabled = false;
+        }
+    }
+
+    if (ocaUndoBtn) {
+        ocaUndoBtn.addEventListener("click", () => {
+            if (ocaUndoSnapshot !== null && ocaEditor) {
+                ocaEditor.value = ocaUndoSnapshot;
+                ocaUndoSnapshot = null;
+                ocaUndoBtn.disabled = true;
+                triggerAutoSave();
+            }
+        });
+    }
+
     if (ocaEditor) {
         ocaEditor.addEventListener("input", triggerAutoSave);
+    }
+
+    // Session Timer
+    const ocaTimerEl = document.getElementById("oca-session-timer");
+    let ocaSessionStart = null;
+    let ocaTimerInterval = null;
+
+    function startSessionTimer() {
+        if (ocaTimerInterval) return; // already running
+        ocaSessionStart = Date.now();
+        ocaTimerInterval = setInterval(() => {
+            const elapsed = Math.floor((Date.now() - ocaSessionStart) / 1000);
+            const mins = Math.floor(elapsed / 60);
+            const secs = elapsed % 60;
+            const display = `⏱ ${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+            if (ocaTimerEl) {
+                ocaTimerEl.textContent = display;
+                // Warn after 60 mins (yellow tint) — useful for billing awareness
+                ocaTimerEl.classList.toggle("timer-warning", mins >= 60);
+            }
+        }, 1000);
+    }
+
+    // Start timer when OCA page is navigated to
+    document.querySelectorAll(".big-button[data-page='oca-assessment-page']").forEach(btn => {
+        btn.addEventListener("click", () => startSessionTimer());
+    });
+    // Also start if already on the page on load
+    const ocaPage = document.getElementById("oca-assessment-page");
+    if (ocaPage && ocaPage.classList.contains("active")) {
+        startSessionTimer();
     }
 
     // 4. Live-updating MSE Generator Sidebar
@@ -3615,6 +3698,7 @@ Psychiatry Registrar`
         if (startMatch && endMatch && startMatch.index < endMatch.index) {
             const beforeMse = text.substring(0, startMatch.index);
             const afterMse = text.substring(endMatch.index);
+            saveUndoSnapshot();
             ocaEditor.value = beforeMse + compiledMse + "\n\n" + fixedOcaMseDetails + "\n\n\n" + afterMse;
         }
     }
@@ -4048,6 +4132,7 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         if (startMatch && endMatch && startMatch.index < endMatch.index) {
             const beforeForm = text.substring(0, startMatch.index);
             const afterForm = text.substring(endMatch.index);
+            saveUndoSnapshot();
             ocaEditor.value = beforeForm + compiledFormulation + "\n\n\n" + afterForm;
         }
     }
