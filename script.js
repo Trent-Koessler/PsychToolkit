@@ -2527,7 +2527,6 @@ Finances -
 GP - 
 Previous Diagnoses -
 Ethnicity - 
-Religion - 
 Relevant other services / professionals - 
 
 On review:
@@ -2603,7 +2602,6 @@ Blood-Borne Viruses (BBVs)
 Surgical history or history of ECT
 Liver disease: Cirrhosis, abnormal LFTs.
 Cardiovascular: Endocarditis, cardiomyopathy.
-.
 Trauma/Injuries.]
 
 Current Medications:
@@ -2754,7 +2752,7 @@ Integrative Formulation:
 
 Barriers to implementation:
 Rapport/alliance:
-Alliance:
+Static and dynamic risk factors:
 
 
 Prognosis:
@@ -2762,7 +2760,7 @@ Short-term:
 Long-term:
 Anticipated response to treatment:
 
-Risks
+Risk Formulation
 Abs - 
 Agg - 
 DSH - 
@@ -3699,6 +3697,7 @@ Psychiatry Registrar`
             const afterMse = text.substring(endMatch.index);
             saveUndoSnapshot();
             ocaEditor.value = beforeMse + compiledMse + "\n\n" + fixedOcaMseDetails + "\n\n\n" + afterMse;
+            updateWardRiskFormulationInOcaText(true);
         }
     }
 
@@ -4133,8 +4132,158 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
             const afterForm = text.substring(endMatch.index);
             saveUndoSnapshot();
             ocaEditor.value = beforeForm + compiledFormulation + "\n\n\n" + afterForm;
+            updateWardRiskFormulationInOcaText(true);
         }
     }
+
+    // Ward Risk Formulation compiler
+    function updateWardRiskFormulationInOcaText(skipUndo = false) {
+        if (!ocaEditor) return;
+        let text = ocaEditor.value;
+
+        const startRegex = /^Ward Risk Formulation/m;
+        const endRegex = /^N\.B\.:/m;
+
+        const startMatch = text.match(startRegex);
+        const endMatch = text.match(endRegex);
+
+        if (!startMatch || !endMatch || startMatch.index >= endMatch.index) return;
+
+        const sectionText = text.substring(startMatch.index, endMatch.index);
+
+        function getExistingValue(field) {
+            const regex = new RegExp(`^${field} - (.*)$`, "m");
+            const match = sectionText.match(regex);
+            if (match) {
+                const val = match[1].trim();
+                // If it is completely empty or just holds space, return null so we can populate it
+                if (val === "" || val.toLowerCase() === "n/a" || val === "-") {
+                    return null;
+                }
+                return val;
+            }
+            return null;
+        }
+
+        // Parse existing values to prevent overwriting started inputs
+        let absVal = getExistingValue("Abs");
+        let aggVal = getExistingValue("Agg");
+        let dshVal = getExistingValue("DSH");
+        let srVal = getExistingValue("SR");
+        let ssVal = getExistingValue("SS");
+        let vulVal = getExistingValue("Vul");
+
+        // Fetch inputs from MSE
+        const siEl = document.getElementById("oca-mse-si");
+        const siDescEl = document.getElementById("oca-mse-si-desc");
+        const shiEl = document.getElementById("oca-mse-shi");
+        const thoEl = document.getElementById("oca-mse-tho");
+        const orientEl = document.getElementById("oca-mse-orientation");
+        const activityEl = document.getElementById("oca-mse-activity");
+        
+        // Fetch inputs from Formulation / Perpetuating / Presenting Problem
+        const perpSubstanceEl = document.getElementById("oca-Perpetuating_Biological_Ongoing_substance_use");
+        const ppCopingEl = document.getElementById("oca-form-pp-coping");
+
+        // 1. Suicide Risk (SR)
+        if (srVal === null) {
+            const si = siEl ? siEl.value : "Denied";
+            const siDesc = (siDescEl && siDescEl.value.trim()) ? ` (${siDescEl.value.trim()})` : "";
+            if (si === "Present with plan") {
+                srVal = `Elevated risk - active suicidal ideation with plan${siDesc}.`;
+            } else if (si === "Present with intent") {
+                srVal = `Elevated risk - active suicidal ideation with intent${siDesc}.`;
+            } else if (si === "Fleeting thoughts, no intent/plan") {
+                srVal = `Low/Moderate risk - passive or fleeting suicidal thoughts, denies intent/plan${siDesc}.`;
+            } else {
+                srVal = "Low risk - denies suicidal ideation.";
+            }
+        }
+
+        // 2. Deliberate Self-Harm (DSH)
+        if (dshVal === null) {
+            const shi = shiEl ? shiEl.value.trim() : "";
+            if (shi && shi.toLowerCase() !== "denied" && shi.toLowerCase() !== "no" && shi.toLowerCase() !== "none") {
+                dshVal = `Intermittent risk - self-harm ideation/behaviors noted: ${shi}.`;
+            } else if (shi) {
+                dshVal = `Low risk - ${shi.toLowerCase().startsWith("deni") ? shi : "denies self-harm"}.`;
+            } else {
+                dshVal = "Low risk - denies deliberate self-harm.";
+            }
+        }
+
+        // 3. Aggression (Agg)
+        if (aggVal === null) {
+            const tho = thoEl ? thoEl.value.trim() : "";
+            if (tho && tho.toLowerCase() !== "denied" && tho.toLowerCase() !== "no" && tho.toLowerCase() !== "none") {
+                aggVal = `Risk present - homicidal/violent ideation or history: ${tho}.`;
+            } else if (tho) {
+                aggVal = `Low risk - ${tho.toLowerCase().startsWith("deni") ? tho : "denies violence/homicidal thoughts"}.`;
+            } else {
+                aggVal = "Low risk - denies homicidal/violent ideation.";
+            }
+        }
+
+        // 4. Absconding (Abs)
+        if (absVal === null) {
+            const orient = orientEl ? orientEl.value : "Oriented to time, place, and person";
+            const activity = activityEl ? activityEl.value.toLowerCase() : "normal";
+            if (orient !== "Oriented to time, place, and person") {
+                absVal = `Increased risk due to cognitive disorientation (${orient}).`;
+            } else if (activity.includes("agitated") || activity.includes("restless") || activity.includes("hyperactive")) {
+                absVal = `Low/Moderate risk - alert and oriented but shows ${activity} psychomotor activity.`;
+            } else {
+                absVal = "Low risk - alert, oriented, and cooperative.";
+            }
+        }
+
+        // 5. Substance/Self-Sabotage (SS)
+        if (ssVal === null) {
+            const perpSub = perpSubstanceEl ? perpSubstanceEl.value.trim() : "";
+            const ppCoping = ppCopingEl ? ppCopingEl.value.trim() : "";
+            
+            if (perpSub) {
+                ssVal = `Risk present - ongoing substance use: ${perpSub}.`;
+            } else if (ppCoping && (ppCoping.toLowerCase().includes("alcohol") || ppCoping.toLowerCase().includes("drug") || ppCoping.toLowerCase().includes("substance") || ppCoping.toLowerCase().includes("smoke") || ppCoping.toLowerCase().includes("drink") || ppCoping.toLowerCase().includes("weed"))) {
+                ssVal = `Potential risk - history indicates coping via substance: ${ppCoping}.`;
+            } else {
+                ssVal = "Low risk - no acute substance concerns or self-sabotage behaviors identified.";
+            }
+        }
+
+        // 6. Vulnerability (Vul)
+        if (vulVal === null) {
+            const orient = orientEl ? orientEl.value : "Oriented to time, place, and person";
+            const deniesHal = document.getElementById("oca-mse-hallucination-denies");
+            const deniesDel = document.getElementById("oca-mse-delusion-none");
+            
+            const hasHallucinations = deniesHal ? !deniesHal.checked : false;
+            const hasDelusions = deniesDel ? !deniesDel.checked : false;
+
+            if (orient !== "Oriented to time, place, and person") {
+                vulVal = "Vulnerable due to cognitive disorientation.";
+            } else if (hasHallucinations || hasDelusions) {
+                vulVal = "Vulnerable due to active psychotic symptoms (hallucinations/delusions).";
+            } else {
+                vulVal = "Low risk of vulnerability identified at present.";
+            }
+        }
+
+        const compiledRisk = `Ward Risk Formulation
+Abs - ${absVal}
+Agg - ${aggVal}
+DSH - ${dshVal}
+SR - ${srVal}
+SS - ${ssVal}
+Vul - ${vulVal}`;
+
+        const beforeRisk = text.substring(0, startMatch.index);
+        const afterRisk = text.substring(endMatch.index);
+
+        if (!skipUndo) saveUndoSnapshot();
+        ocaEditor.value = beforeRisk + compiledRisk + "\n\n" + afterRisk;
+    }
+
 
     const ocaFormulationInputIds = [
         "oca-form-pp-name", "oca-form-pp-age", "oca-form-pp-gender",
