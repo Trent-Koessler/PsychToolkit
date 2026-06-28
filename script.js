@@ -2533,18 +2533,17 @@ Relevant other services / professionals -
 On review:
 
 
-
-
-Diagnostic screen:
 - Mood right now - 
 - Suicidality - 
 - Sleep - 
 - Appetite and oral intake - 
-- Manic
+
+Diagnostic screen:
+- Manic experiences - 
 - Depressive (anhedonia / guild / energy / concentration / slowing)
 - Organic and somatic - pain
 - Cognitive - difficulties thinking, confusion, memory
-- Psychotic - 
+- Psychotic experiences - 
 - Anxiety and panic attacks - worry difficult to control? Difficulty concentrating? Keyed up, on edge / restless?
 - Personality (difficulty making or keeping friends? Loner? Trust other people generally? Lose temper easily? Impulsive? Worrier? Depend on others a lot? Perfectionist?)
 - Trauma - nightmares, dissociation, and flashbacks
