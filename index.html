@@ -96,8 +96,6 @@
                         <button id="oca-undo-btn" class="btn-secondary"
                             title="Undo last auto-insertion by MSE or Formulation builder" disabled>↩ Undo
                             Insertion</button>
-                        <button id="oca-key-btn" class="btn-primary" style="background-color: var(--accent-color);">🔑
-                            Gemini API Key</button>
                         <button id="oca-reset-btn" class="reset-btn">🔄 Reset Session</button>
                     </div>
                 </div>
@@ -564,12 +562,8 @@
 
                         <!-- Formulation builder panel -->
                         <div id="oca-formulation-panel" class="oca-panel-content">
-                            <div class="oca-panel-subheader"
-                                style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <div class="oca-panel-subheader" style="margin-bottom:10px;">
                                 <h5>Formulation Live Builder</h5>
-                                <button id="oca-gemini-fill-btn" class="btn-primary"
-                                    style="background-color: var(--accent-color); padding: 6px 12px; font-size:12px;">🪄
-                                    Auto-Fill with Gemini</button>
                             </div>
                             <div class="oca-drawer-scrollable">
                                 <!-- Section 1: Presenting Problem -->
@@ -899,25 +893,7 @@
                     </div>
                 </div>
 
-                <!-- API Key Config Modal -->
-                <div id="oca-key-modal" class="modal">
-                    <div class="modal-content">
-                        <span class="close-button" id="oca-key-close">&times;</span>
-                        <h4>Gemini API Configuration</h4>
-                        <p style="font-size: 13.5px; color: var(--text-muted); margin-bottom: 15px;">
-                            Enter your Gemini API key below. It is stored securely in your browser's local storage and
-                            is only sent directly to Google's Gemini API endpoints.
-                        </p>
-                        <div class="form-grid" style="grid-template-columns: 1fr; gap:10px; margin-bottom:15px;">
-                            <label for="oca-gemini-key" style="font-weight:600;">Gemini API Key:</label>
-                            <input type="password" id="oca-gemini-key" placeholder="AIzaSy...">
-                        </div>
-                        <div class="button-group">
-                            <button id="oca-key-save-btn" class="btn-primary">Save Key</button>
-                            <button id="oca-key-clear-btn" class="reset-btn">Clear Key</button>
-                        </div>
-                    </div>
-                </div>
+
             </div>
 
             <!-- Clinical Scales Page (Option A Navigation) -->

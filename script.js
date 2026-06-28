@@ -3401,23 +3401,29 @@ Psychiatry Registrar`
         return `Assessment_Date[${dd}-${mm}-${yy}]_${hh}${min}.txt`;
     }
 
+    async function connectNewFile() {
+        try {
+            const opts = {
+                suggestedName: getOcaSuggestedFilename(),
+                types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
+            };
+            ocaFileHandle = await window.showSaveFilePicker(opts);
+            ocaSaveStatus.className = "oca-save-status-success";
+            ocaStatusText.textContent = "Connected to file";
+            triggerAutoSave();
+            return true;
+        } catch (err) {
+            console.warn("User cancelled or file access denied", err);
+            ocaSaveStatus.className = "oca-save-status-idle";
+            ocaStatusText.textContent = "Not connected (Auto-save offline)";
+            return false;
+        }
+    }
+
     // Connect new file (save picker)
     if (ocaConnectBtn) {
         ocaConnectBtn.addEventListener("click", async () => {
-            try {
-                const opts = {
-                    suggestedName: getOcaSuggestedFilename(),
-                    types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
-                };
-                ocaFileHandle = await window.showSaveFilePicker(opts);
-                ocaSaveStatus.className = "oca-save-status-success";
-                ocaStatusText.textContent = "Connected to file";
-                triggerAutoSave();
-            } catch (err) {
-                console.warn("User cancelled or file access denied", err);
-                ocaSaveStatus.className = "oca-save-status-idle";
-                ocaStatusText.textContent = "Not connected (Auto-save offline)";
-            }
+            await connectNewFile();
         });
     }
 
@@ -4672,8 +4678,13 @@ If a category lacks information in the notes, use a blank string "". Set the fra
     // 8. Reset Session
     const ocaResetBtn = document.getElementById("oca-reset-btn");
     if (ocaResetBtn) {
-        ocaResetBtn.addEventListener("click", () => {
+        ocaResetBtn.addEventListener("click", async () => {
             if (confirm("Are you sure you want to reset the current patient review session? This will clear all changes.")) {
+                // Clear the current file handle first, so we do not overwrite the current file when fields are reset
+                ocaFileHandle = null;
+                ocaSaveStatus.className = "oca-save-status-idle";
+                ocaStatusText.textContent = "Not connected (Auto-save offline)";
+
                 if (ocaEditor) ocaEditor.value = templates.oca || "";
 
                 // Reset HCR-20 checkboxes
@@ -4737,7 +4748,8 @@ If a category lacks information in the notes, use a blank string "". Set the fra
                 const delDescCont = document.getElementById("oca-mse-delusion-desc-container");
                 if (delDescCont) delDescCont.style.display = "none";
 
-                triggerAutoSave();
+                // Prompt user to save/connect a new file
+                await connectNewFile();
             }
         });
     }
