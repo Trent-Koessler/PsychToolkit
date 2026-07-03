@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
-
 /* Base Styles and Theme Variables */
 :root {
     --font-sans: 'Outfit', sans-serif;
@@ -75,6 +73,7 @@ body.modal-open>#app-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    visibility: visible;
 }
 
 /* Header Styles */

@@ -12,6 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function checkPassword() {
         if (passInput.value.toLowerCase() === "psych123") {
             lockScreen.classList.remove("active");
+            document.documentElement.classList.add("app-unlocked");
             // Optional: store in sessionStorage to prevent locking on refresh
             sessionStorage.setItem("unlocked", "true");
         } else {
@@ -21,6 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (sessionStorage.getItem("unlocked") === "true") {
         lockScreen.classList.remove("active");
+        document.documentElement.classList.add("app-unlocked");
     }
 
     if (unlockBtn) unlockBtn.addEventListener("click", checkPassword);

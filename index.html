@@ -6,16 +6,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PsychToolkit</title>
     <script>
-        // Apply theme immediately before rendering to prevent flashing
+        // Apply theme and check lock status immediately before rendering to prevent flashing
         (function () {
             const savedTheme = localStorage.getItem('theme');
             if (savedTheme === 'dark') {
                 document.documentElement.setAttribute('data-theme', 'dark');
             }
+            const unlocked = sessionStorage.getItem('unlocked') === 'true';
+            if (unlocked) {
+                document.documentElement.classList.add('app-unlocked');
+            }
         })();
     </script>
+    <style>
+        /* Critical inline CSS to prevent Flash of Unstyled Content (FOUC) */
+        body {
+            background-color: #f8fafc;
+        }
+        [data-theme="dark"] body {
+            background-color: #0b0f19;
+        }
+        .lock-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #f8fafc;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        [data-theme="dark"] .lock-screen {
+            background-color: #0b0f19;
+            color: #f8fafc;
+        }
+        .lock-screen.active {
+            display: flex;
+        }
+        .app-unlocked .lock-screen {
+            display: none !important;
+        }
+        #app-container {
+            visibility: hidden;
+        }
+    </style>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
     <link rel="manifest" href="manifest.json">
     <meta name="description"
         content="A clinical decision support PWA for mental health professionals, featuring diagnostic screening scales, psychiatric dose converters, and interactive monitoring checklists.">
