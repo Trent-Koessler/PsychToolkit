@@ -73,7 +73,6 @@ body.modal-open>#app-container {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    visibility: visible;
 }
 
 /* Header Styles */
@@ -433,6 +432,16 @@ button.btn-primary:hover,
     background-color: #475569;
 }
 
+/* Disabled state must also neutralise the :hover rules above. */
+.button-group button:disabled,
+.button-group button:disabled:hover {
+    background-color: var(--text-muted);
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
 /* Calculator Specific Styles */
 .calculator-item {
     border: 1px solid var(--border-color);
@@ -504,6 +513,13 @@ button.btn-primary:hover,
 
 .severity {
     color: var(--text-color);
+}
+
+/* An unfinished scale must not read like a completed result. */
+.severity.severity-incomplete,
+.total-score.severity-incomplete {
+    color: var(--text-muted);
+    font-style: italic;
 }
 
 .emr-summary {
