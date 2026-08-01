@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-    const APP_VERSION = "1.0.0";
+    // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
+    const APP_VERSION = "1.1.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -29,6 +30,21 @@ document.addEventListener("DOMContentLoaded", () => {
     if (passInput) passInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter") checkPassword();
     });
+
+    // --- CLIPBOARD --- //
+    // navigator.clipboard is undefined on insecure origins and can reject when the
+    // document is not focused, so callers must be told whether the copy succeeded
+    // rather than being shown an unconditional "Copied!".
+    async function copyToClipboard(text) {
+        try {
+            if (!navigator.clipboard) return false;
+            await navigator.clipboard.writeText(text);
+            return true;
+        } catch (err) {
+            console.warn("Clipboard write failed", err);
+            return false;
+        }
+    }
 
     // --- DATE HELPERS --- //
     function parseDate(str) {
@@ -219,12 +235,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (item.instruction) {
                 itemsHtml += `<p class="calculator-item-instruction">${item.instruction}</p>`;
             }
-            item.options.forEach((opt, optIdx) => {
-                const isChecked = optIdx === 0 ? "checked" : "";
+            // Items start unanswered. Pre-selecting the first option would make an
+            // untouched scale look like a completed assessment scoring zero.
+            item.options.forEach((opt) => {
                 itemsHtml += `
                     <div class="radio-option">
                         <label>
-                            <input type="radio" name="${radioName}" value="${opt.value}" ${isChecked}>
+                            <input type="radio" name="${radioName}" value="${opt.value}">
                             ${opt.label}
                         </label>
                     </div>`;
@@ -235,11 +252,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         function updateState() {
             let total = 0;
+            let answered = 0;
             let breakdown = "";
             config.items.forEach((item, itemIdx) => {
                 const radioName = `${config.id}-q-${itemIdx}`;
                 const checkedRadio = itemsContainer.querySelector(`input[name="${radioName}"]:checked`);
                 if (checkedRadio) {
+                    answered++;
                     const scoreVal = parseInt(checkedRadio.value, 10);
                     total += scoreVal;
                     const optText = checkedRadio.parentElement.textContent.trim();
@@ -247,11 +266,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             });
 
+            // An unanswered item is not a score of zero. Until every item is answered
+            // the scale reports as incomplete and cannot be copied into a record.
+            const totalItems = config.items.length;
+            if (answered < totalItems) {
+                const remaining = totalItems - answered;
+                totalScoreEl.textContent = `— (${answered}/${totalItems})`;
+                severityEl.textContent = `Incomplete — ${remaining} item${remaining === 1 ? "" : "s"} unanswered`;
+                emrSummaryEl.value = `${config.name}: INCOMPLETE — ${answered} of ${totalItems} items answered. No score calculated.`;
+                totalScoreEl.classList.add("severity-incomplete");
+                severityEl.classList.add("severity-incomplete");
+                copyBtn.disabled = true;
+                return;
+            }
+
+            totalScoreEl.classList.remove("severity-incomplete");
+            severityEl.classList.remove("severity-incomplete");
+            copyBtn.disabled = false;
             const severity = config.severityLogic(total, itemsContainer);
-            totalScoreEl.textContent = total;
+            // Some instruments (e.g. MDQ) are not simple additive scales, so a summed
+            // total is meaningless and is deliberately not reported.
+            totalScoreEl.textContent = config.suppressTotal ? "n/a" : total;
             severityEl.textContent = severity;
 
-            let summary = `${config.name} assessed. Total score: ${total} (${severity}).\nBreakdown:\n${breakdown}`;
+            let summary = config.suppressTotal
+                ? `${config.name} assessed. Result: ${severity}.\nBreakdown:\n${breakdown}`
+                : `${config.name} assessed. Total score: ${total} (${severity}).\nBreakdown:\n${breakdown}`;
 
             // Special alerts for specific scales
             if (config.id === "epds") {
@@ -273,18 +313,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
         copyBtn.addEventListener("click", () => {
             emrSummaryEl.select();
-            navigator.clipboard.writeText(emrSummaryEl.value);
             const origText = copyBtn.textContent;
-            copyBtn.textContent = "Copied!";
-            setTimeout(() => { copyBtn.textContent = origText; }, 2000);
+            copyToClipboard(emrSummaryEl.value).then(ok => {
+                copyBtn.textContent = ok ? "Copied!" : "Copy failed — select and copy manually";
+                setTimeout(() => { copyBtn.textContent = origText; }, 2000);
+            });
         });
 
         resetBtn.addEventListener("click", () => {
-            itemsContainer.querySelectorAll("fieldset").forEach(fieldset => {
-                const radios = fieldset.querySelectorAll('input[type="radio"]');
-                if (radios.length > 0) {
-                    radios[0].checked = true;
-                }
+            itemsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
+                radio.checked = false;
             });
             updateState();
         });
@@ -480,6 +518,9 @@ document.addEventListener("DOMContentLoaded", () => {
     setupScaleCalculator({
         id: "mdq",
         name: "MDQ (Mood Disorder Questionnaire)",
+        // Not an additive scale: the screen is positive on a three-part rule, so a
+        // summed total would be clinically meaningless.
+        suppressTotal: true,
         note: "Screening tool for Bipolar Spectrum Disorder. A positive screen requires YES to 7/13 symptoms in Q1, co-occurrence in Q2, and moderate/serious impairment in Q3.",
         reference: "Hirschfeld RM, Williams JB, Spitzer RL, et al. Development and validation of a screening instrument for bipolar spectrum disorder: the Mood Disorder Questionnaire. Am J Psychiatry. 2000;157(11):1873-1875.",
         items: [
@@ -1182,7 +1223,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("meth-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("meth-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1224,7 +1265,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("bup-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("bup-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1268,7 +1309,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("lai-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("lai-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1311,7 +1352,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("diz-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("diz-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1348,7 +1389,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("nrt-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("nrt-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1390,7 +1431,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         document.getElementById("wid-copy-btn").addEventListener("click", () => {
             const outEl = document.getElementById("wid-schedule-out");
-            navigator.clipboard.writeText(outEl.value);
+            copyToClipboard(outEl.value);
         });
     }
 
@@ -1840,7 +1881,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (mseCopyBtn) {
             mseCopyBtn.addEventListener("click", () => {
                 mseNoteOut.select();
-                navigator.clipboard.writeText(mseNoteOut.value);
+                copyToClipboard(mseNoteOut.value);
             });
         }
 
@@ -2490,7 +2531,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const outEl = document.getElementById("form-note-out");
                 if (outEl) {
                     outEl.select();
-                    navigator.clipboard.writeText(outEl.value);
+                    copyToClipboard(outEl.value);
                 }
             });
         }
@@ -2827,7 +2868,7 @@ Psychiatry Registrar`
 
         document.getElementById("template-copy-btn").addEventListener("click", () => {
             templateNoteOut.select();
-            navigator.clipboard.writeText(templateNoteOut.value);
+            copyToClipboard(templateNoteOut.value);
         });
 
         // Load default
@@ -3093,18 +3134,20 @@ Psychiatry Registrar`
                 return;
             }
 
-            // Support range input (e.g. "24-36") → take midpoint
+            // Support range input (e.g. "24-36") → take midpoint.
+            // Matched explicitly rather than split on "-": a bare includes("-") test
+            // also fires on negative numbers, so "-5" parsed as the range 0 to 5 and
+            // silently produced a 2.5 h half-life.
+            const INVALID_HALF_LIFE = "⚠️ Invalid half-life format. Use a number (e.g. 30) or a range (e.g. 24-36).";
+            const rangeMatch = halfLifeStr.match(/^(\d*\.?\d+)\s*-\s*(\d*\.?\d+)$/);
             let halfLife;
-            if (halfLifeStr.includes("-")) {
-                const parts = halfLifeStr.split("-").map(Number);
-                if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
-                    halfLife = (parts[0] + parts[1]) / 2;
-                } else {
-                    showPkError("⚠️ Invalid half-life format. Use a number (e.g. 30) or a range (e.g. 24-36).");
-                    return;
-                }
-            } else {
+            if (rangeMatch) {
+                halfLife = (parseFloat(rangeMatch[1]) + parseFloat(rangeMatch[2])) / 2;
+            } else if (/^\d*\.?\d+$/.test(halfLifeStr)) {
                 halfLife = parseFloat(halfLifeStr);
+            } else {
+                showPkError(INVALID_HALF_LIFE);
+                return;
             }
 
             if (isNaN(halfLife) || halfLife <= 0) {
@@ -3408,7 +3451,22 @@ Psychiatry Registrar`
         return `Assessment_Date[${dd}-${mm}-${yy}]_${hh}${min}.txt`;
     }
 
+    // The File System Access API is Chromium-only. Without this check the missing
+    // global throws a TypeError that the catch below reports as "user cancelled",
+    // which tells a Firefox/Safari user nothing about why auto-save is unavailable.
+    const supportsFileSystemAccess = typeof window.showSaveFilePicker === "function" &&
+        typeof window.showOpenFilePicker === "function";
+
+    function reportFileSystemUnsupported() {
+        ocaSaveStatus.className = "oca-save-status-error";
+        ocaStatusText.textContent = "Auto-save unsupported in this browser (use Chrome or Edge)";
+    }
+
     async function connectNewFile() {
+        if (!supportsFileSystemAccess) {
+            reportFileSystemUnsupported();
+            return false;
+        }
         try {
             const opts = {
                 suggestedName: getOcaSuggestedFilename(),
@@ -3438,6 +3496,10 @@ Psychiatry Registrar`
     const ocaLoadBtn = document.getElementById("oca-load-btn");
     if (ocaLoadBtn) {
         ocaLoadBtn.addEventListener("click", async () => {
+            if (!supportsFileSystemAccess) {
+                reportFileSystemUnsupported();
+                return;
+            }
             try {
                 const [fileHandle] = await window.showOpenFilePicker({
                     types: [{ description: 'Text Files', accept: { 'text/plain': ['.txt'] } }],
@@ -3526,7 +3588,7 @@ Psychiatry Registrar`
     });
     // Also start if already on the page on load
     const ocaPage = document.getElementById("oca-assessment-page");
-    if (ocaPage && ocaPage.classList.contains("active")) {
+    if (ocaPage && ocaPage.classList.contains("active-page")) {
         startSessionTimer();
     }
 
@@ -3898,7 +3960,7 @@ Psychiatry Registrar`
         }
     });
 
-    // 5. Formulation Builder & Gemini AI
+    // 5. Formulation Builder
     function updateFormulationInOcaText() {
         if (!ocaEditor) return;
         let text = ocaEditor.value;
@@ -4616,224 +4678,6 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         }
     });
 
-    // 6. API Configuration Modal and Storage
-    const ocaKeyBtn = document.getElementById("oca-key-btn");
-    const ocaKeyModal = document.getElementById("oca-key-modal");
-    const ocaKeyClose = document.getElementById("oca-key-close");
-    const ocaKeySaveBtn = document.getElementById("oca-key-save-btn");
-    const ocaKeyClearBtn = document.getElementById("oca-key-clear-btn");
-    const ocaGeminiKeyInput = document.getElementById("oca-gemini-key");
-
-    if (ocaKeyBtn && ocaKeyModal) {
-        ocaKeyBtn.addEventListener("click", () => {
-            const savedKey = localStorage.getItem("oca_gemini_api_key") || "";
-            if (ocaGeminiKeyInput) ocaGeminiKeyInput.value = savedKey;
-            ocaKeyModal.style.display = "block";
-        });
-    }
-    if (ocaKeyClose) {
-        ocaKeyClose.addEventListener("click", () => {
-            ocaKeyModal.style.display = "none";
-        });
-    }
-    if (ocaKeySaveBtn) {
-        ocaKeySaveBtn.addEventListener("click", () => {
-            const key = ocaGeminiKeyInput.value.trim();
-            if (key) {
-                localStorage.setItem("oca_gemini_api_key", key);
-                alert("Gemini API key saved locally.");
-            }
-            ocaKeyModal.style.display = "none";
-        });
-    }
-    if (ocaKeyClearBtn) {
-        ocaKeyClearBtn.addEventListener("click", () => {
-            localStorage.removeItem("oca_gemini_api_key");
-            if (ocaGeminiKeyInput) ocaGeminiKeyInput.value = "";
-            alert("Gemini API key cleared.");
-            ocaKeyModal.style.display = "none";
-        });
-    }
-    window.addEventListener("click", (e) => {
-        if (e.target === ocaKeyModal) {
-            ocaKeyModal.style.display = "none";
-        }
-    });
-
-    // 7. Gemini AI call to auto-fill
-    const ocaGeminiFillBtn = document.getElementById("oca-gemini-fill-btn");
-    if (ocaGeminiFillBtn) {
-        ocaGeminiFillBtn.addEventListener("click", async () => {
-            const apiKey = localStorage.getItem("oca_gemini_api_key");
-            if (!apiKey) {
-                alert("Please enter a Gemini API Key under settings first.");
-                if (ocaKeyModal) ocaKeyModal.style.display = "block";
-                return;
-            }
-
-            const btn = ocaGeminiFillBtn;
-            btn.disabled = true;
-            btn.textContent = "🪄 Analyzing...";
-
-            try {
-                const notesText = ocaEditor.value;
-                const prompt = `You are an expert clinical psychiatry assistant.
-Read the following clinician notes from a patient review:
----
-${notesText}
----
-Extract the predisposing, precipitating, perpetuating, and protective factors under the Biopsychosocial (Biological, Psychological, Social) framework.
-Also extract presenting problem context (name, age, gender, symptoms, duration, context, coping mechanisms), diagnostic impressions (primary, differentials, and contributing), and any applicable theoretical frameworks (CBT, psychodynamic, self psychology, Erikson's stages, or attachment dynamics).
-
-Return the result strictly as a JSON object matching this schema:
-{
-  "name": "Patient's name",
-  "age": "Patient's age",
-  "gender": "Patient's gender",
-  "duration": "Duration of symptoms",
-  "symptoms": "Primary presenting symptoms",
-  "context": "Stressors or context of onset",
-  "coping": "Coping mechanisms or impairment",
-  "primary": "Primary diagnosis",
-  "diff": "Differential diagnoses",
-  "contrib": "Contributing factors",
-  "Predisposing_Biological_Family_history": "Biological family history factors",
-  "Predisposing_Biological_Medical_illness": "Predisposing medical illness",
-  "Predisposing_Psychological_Development_history": "Predisposing developmental history",
-  "Predisposing_Psychological_Trauma_history": "Predisposing trauma history",
-  "Predisposing_Psychological_Personality_traits_structure": "Predisposing personality traits",
-  "Predisposing_Social_Accommodation": "Predisposing accommodation factors",
-  "Predisposing_Social_Finance_vocation": "Predisposing financial/vocational factors",
-  "Predisposing_Social_Migration_Cultural_factors": "Predisposing migration/cultural factors",
-  "Precipitating_Biological_Medication_change": "Precipitating medication changes",
-  "Precipitating_Biological_New_medical_illness": "Precipitating new medical illnesses",
-  "Precipitating_Psychological_Interpersonal_conflict": "Precipitating interpersonal conflicts",
-  "Precipitating_Psychological_Loss_or_grief": "Precipitating loss/grief",
-  "Precipitating_Social_Changes_to_social_supports": "Precipitating changes to supports",
-  "Precipitating_Social_Legal_issues": "Precipitating legal issues",
-  "Perpetuating_Biological_Ongoing_substance_use": "Perpetuating substance use",
-  "Perpetuating_Biological_Poor_sleep_nutrition": "Perpetuating sleep/nutrition issues",
-  "Perpetuating_Psychological_Cognitive_distortions": "Perpetuating cognitive distortions",
-  "Perpetuating_Psychological_Poor_insight": "Perpetuating poor insight",
-  "Perpetuating_Psychological_Avoidant_coping": "Perpetuating avoidant coping",
-  "Perpetuating_Social_Stigma": "Perpetuating stigma",
-  "Perpetuating_Social_Lack_of_access_to_services": "Perpetuating access issues",
-  "Protective_Biological_Good_physical_health": "Protective physical health",
-  "Protective_Biological_Medication_adherence": "Protective medication adherence",
-  "Protective_Psychological_Good_insight": "Protective insight",
-  "Protective_Psychological_History_of_resilience": "Protective history of resilience",
-  "Protective_Social_Strong_support_networks": "Protective social networks",
-  "Protective_Social_Stable_accommodation": "Protective accommodation",
-  "framework_cbt": false,
-  "cbt_core": "CBT core beliefs if any",
-  "cbt_intermediate": "CBT intermediate beliefs if any",
-  "cbt_thoughts": "CBT automatic thoughts if any",
-  "framework_psychodynamic": false,
-  "dyn_defenses": "Defense mechanisms if any",
-  "dyn_conflict": "Central conflicts if any",
-  "dyn_ego": "Ego functioning if any",
-  "framework_selfpsych": false,
-  "self_needs": "Unmet selfobject needs if any",
-  "self_cohesion": "Self cohesion details if any",
-  "framework_erikson": false,
-  "erikson_current": "Current Erikson stage conflict if any",
-  "erikson_past": "Unresolved past stage conflict if any",
-  "framework_attachment": false,
-  "attach_style": "Attachment style if any",
-  "attach_dynamics": "Attachment dynamics if any"
-}
-If a category lacks information in the notes, use a blank string "". Set the framework boolean fields to true if there is relevant theoretical material, otherwise false. Do not include any formatting or other text, just the raw JSON.`;
-
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [{ text: prompt }]
-                        }],
-                        generationConfig: {
-                            responseMimeType: "application/json"
-                        }
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`API returned status ${response.status}`);
-                }
-
-                const data = await response.json();
-                const jsonText = data.candidates[0].content.parts[0].text;
-                const parsed = JSON.parse(jsonText);
-
-                const keyMap = {
-                    "oca-form-pp-name": "name",
-                    "oca-form-pp-age": "age",
-                    "oca-form-pp-gender": "gender",
-                    "oca-form-pp-duration": "duration",
-                    "oca-form-pp-symptoms": "symptoms",
-                    "oca-form-pp-context": "context",
-                    "oca-form-pp-coping": "coping",
-                    "oca-form-diag-primary": "primary",
-                    "oca-form-diag-diff": "diff",
-                    "oca-form-diag-contrib": "contrib",
-                    "oca-form-cbt-core": "cbt_core",
-                    "oca-form-cbt-intermediate": "cbt_intermediate",
-                    "oca-form-cbt-thoughts": "cbt_thoughts",
-                    "oca-form-dyn-defenses": "dyn_defenses",
-                    "oca-form-dyn-conflict": "dyn_conflict",
-                    "oca-form-dyn-ego": "dyn_ego",
-                    "oca-form-self-needs": "self_needs",
-                    "oca-form-self-cohesion": "self_cohesion",
-                    "oca-form-erikson-current": "erikson_current",
-                    "oca-form-erikson-past": "erikson_past",
-                    "oca-form-attach-style": "attach_style",
-                    "oca-form-attach-dynamics": "attach_dynamics"
-                };
-
-                // Populate text fields
-                ocaFormulationInputIds.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (!el) return;
-                    let jsonKey = keyMap[id];
-                    if (!jsonKey) {
-                        jsonKey = id.replace("oca-", "");
-                    }
-                    if (parsed[jsonKey] !== undefined) {
-                        el.value = parsed[jsonKey] || "";
-                    }
-                });
-
-                // Populate checkboxes
-                ocaFormulationCheckboxes.forEach(id => {
-                    const cb = document.getElementById(id);
-                    if (!cb) return;
-                    const jsonKey = id.replace("oca-form-", "").replace(/-/g, "_");
-                    if (parsed[jsonKey] !== undefined) {
-                        cb.checked = !!parsed[jsonKey];
-                        const shortName = id.replace("oca-form-framework-", "");
-                        const fieldsDiv = document.getElementById(`oca-framework-fields-${shortName}`);
-                        if (fieldsDiv) {
-                            fieldsDiv.style.display = cb.checked ? "block" : "none";
-                        }
-                    }
-                });
-
-                // Update editor text
-                updateFormulationInOcaText();
-                triggerAutoSave();
-                alert("Formulation successfully populated with detailed cohesive narrative!");
-            } catch (err) {
-                console.error("Gemini autofill error", err);
-                alert("Failed to parse and autofill: " + err.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "🪄 Auto-Fill with Gemini";
-            }
-        });
-    }
-
     // HCR-20 Checkbox bindings
     const ocaHcrInputIds = [
         "oca-hcr-h1", "oca-hcr-h2", "oca-hcr-h3", "oca-hcr-h4", "oca-hcr-h5", "oca-hcr-h6", "oca-hcr-h7", "oca-hcr-h8", "oca-hcr-h9", "oca-hcr-h10",
@@ -4853,7 +4697,7 @@ If a category lacks information in the notes, use a blank string "". Set the fra
         }
     });
 
-    // 8. Reset Session
+    // 6. Reset Session
     const ocaResetBtn = document.getElementById("oca-reset-btn");
     if (ocaResetBtn) {
         ocaResetBtn.addEventListener("click", async () => {
