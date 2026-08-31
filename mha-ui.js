@@ -82,6 +82,39 @@
         return wrap;
     }
 
+    /* Pulls one defined term out of a definitions section (s 4, s 98, ...) so a
+       single definition can be quoted without the whole dictionary around it. */
+    function definitionLines(sectionNo, term) {
+        var s = SECTIONS[sectionNo];
+        if (!s) return [];
+        var out = [];
+        var startDepth = null;
+        for (var i = 0; i < s.lines.length; i++) {
+            var depth = s.lines[i][0];
+            var text = s.lines[i][1];
+            if (startDepth === null) {
+                if (text.indexOf(term + " means") === 0 || text.indexOf(term + "—") === 0) {
+                    startDepth = depth;
+                    out.push(s.lines[i]);
+                }
+            } else if (depth > startDepth) {
+                out.push(s.lines[i]);
+            } else {
+                break;
+            }
+        }
+        return out;
+    }
+
+    function quoteBlock(lines, cite) {
+        var wrap = el("div", "mha-quote");
+        lines.forEach(function (line) {
+            wrap.appendChild(el("p", "mha-quote-line mha-indent-" + line[0], line[1]));
+        });
+        if (cite) wrap.appendChild(el("p", "mha-section-foot", cite));
+        return wrap;
+    }
+
     function bulletList(items, cls) {
         var ul = el("ul", cls || "mha-list");
         items.forEach(function (t) { ul.appendChild(el("li", null, t)); });
@@ -904,6 +937,80 @@
         clocks.appendChild(scroller);
     }
 
+    /* The criteria, up front. These are the definitions every other decision on
+       this page turns on, so they sit above the wizard rather than inside it. */
+    function renderDefinitions() {
+        var host = document.getElementById("mha-definitions");
+        if (!host) return;
+        clear(host);
+
+        var card = el("details", "mha-card mha-definitions-card");
+        card.open = true;
+        var sum = el("summary", "mha-definitions-summary");
+        sum.appendChild(el("span", null, "The criteria — mental illness, mentally ill person, mentally disordered person"));
+        card.appendChild(sum);
+
+        var body = el("div", "mha-definitions-body");
+
+        /* --- mental illness: the symptom criteria --- */
+        body.appendChild(el("h5", "mha-subhead", "Mental illness — the symptom criteria (s 4)"));
+        body.appendChild(el("p", "mha-gloss", "A condition that seriously impairs mental functioning, temporarily or permanently, AND is characterised by at least one of these five symptoms. Both halves are required."));
+        var symptomLines = definitionLines("4", "mental illness");
+        if (symptomLines.length) {
+            body.appendChild(quoteBlock(symptomLines, "Mental Health Act 2007 (NSW) s 4(1), " + (META.currency || "")));
+        }
+
+        /* --- the two limbs, side by side --- */
+        body.appendChild(el("h5", "mha-subhead", "The two limbs compared"));
+        var rows = [
+            ["", "Mentally ill person (s 14)", "Mentally disordered person (s 15)"],
+            ["Mental illness required?", "Yes — the s 4 definition must be met", "No — applies whether or not the person is mentally ill"],
+            ["The trigger", "Owing to that illness, reasonable grounds for believing care, treatment or control is necessary", "Behaviour for the time being so irrational as to justify a conclusion on reasonable grounds that TEMPORARY care, treatment or control is necessary"],
+            ["Harm threshold", "Protection from serious harm (the person's own, or others')", "Protection from serious PHYSICAL harm (the person's own, or others') — narrower"],
+            ["Continuing condition", "Likely deterioration and its effects are taken into account (s 14(2))", "Not part of the test — it is about behaviour for the time being"],
+            ["Mental health inquiry", "Yes — the person is an assessable person and goes before the Tribunal", "No inquiry for a person detained only on this limb"],
+            ["Detention limit", "Up to the inquiry, then up to 3 months on a Tribunal order (s 35(5)(c))", "3 days NOT including weekends and public holidays, examined at least every 24 hours (s 31)"],
+            ["Schedule 1 validity", "5 days after it is given (s 19(4)(a))", "1 day after it is given (s 19(4)(b))"],
+            ["Frequency cap", "None", "No more than 3 such admissions in any 1 calendar month (s 31(5))"]
+        ];
+        var table = el("table", "mha-def-table");
+        var thead = el("thead");
+        var hr = el("tr");
+        rows[0].forEach(function (h) { hr.appendChild(el("th", null, h)); });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+        var tbody = el("tbody");
+        rows.slice(1).forEach(function (r) {
+            var tr = el("tr");
+            tr.appendChild(el("th", "mha-def-rowhead", r[0]));
+            tr.appendChild(el("td", null, r[1]));
+            tr.appendChild(el("td", null, r[2]));
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        var scroll = el("div", "mha-table-scroll");
+        scroll.appendChild(table);
+        body.appendChild(scroll);
+
+        /* --- what cannot establish either limb --- */
+        body.appendChild(el("h5", "mha-subhead", "What cannot, by itself, make a person mentally ill or mentally disordered (s 16)"));
+        body.appendChild(el("p", "mha-gloss", "Section 16 rules these out on their own. They may still be relevant as part of a wider picture, but none of them is a criterion."));
+        var s16 = SECTIONS["16"];
+        if (s16) {
+            var excl = el("div", "mha-quote");
+            s16.lines.forEach(function (line) {
+                excl.appendChild(el("p", "mha-quote-line mha-indent-" + line[0], line[1]));
+            });
+            body.appendChild(excl);
+        }
+
+        body.appendChild(el("h5", "mha-subhead", "The sections in full"));
+        body.appendChild(sectionList(["4", "13", "14", "15", "16", "12"]));
+
+        card.appendChild(body);
+        host.appendChild(card);
+    }
+
     function renderCapacityTab() {
         var host = document.getElementById("mha-capacity-body");
         if (!host) return;
@@ -1111,6 +1218,7 @@
         if (!document.getElementById("mha-page")) return;
 
         renderCurrencyBanners();
+        renderDefinitions();
         renderWizard();
         renderLibrary();
         renderForms();

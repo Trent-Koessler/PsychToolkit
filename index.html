@@ -2726,6 +2726,7 @@
                         <p class="mha-intro">One question at a time. Each answer narrows to a disposition card telling
                             you what to do, which section authorises it, what paperwork it needs and what clock starts.
                         </p>
+                        <div id="mha-definitions"></div>
                         <div id="mha-wizard"></div>
                     </section>
 
@@ -2914,6 +2915,66 @@
                                 <input type="number" id="pk-duration" placeholder="e.g. 14" min="1" max="365"
                                     value="14">
                             </div>
+                            <label class="pk-check pk-check-block">
+                                <input type="checkbox" id="pk-steady-start">
+                                <span><strong>Start at steady state</strong> — model the patient as already established
+                                    on this regimen, so the curve begins at the steady-state trough instead of from
+                                    zero. Needs a regular interval.</span>
+                            </label>
+                        </div>
+
+                        <!-- Regimen builder: writes dose lines into the textarea below,
+                             so a frequency and a number of days can be used instead of
+                             typing every hour by hand. The textarea stays editable. -->
+                        <div class="pk-input-section">
+                            <h4>Regimen Builder</h4>
+                            <p class="pk-input-hint">Pick a dose, a frequency and a number of days, and this writes the
+                                hour lines into the regimen below. Doses are spaced evenly across the interval; real
+                                administration times (e.g. TDS at 08:00/14:00/20:00) differ, so edit the lines directly
+                                if that matters.</p>
+                            <div class="pk-param-grid">
+                                <label for="pk-build-dose">Dose amount:</label>
+                                <input type="number" id="pk-build-dose" value="30" min="0" step="any">
+
+                                <label for="pk-build-freq">Frequency:</label>
+                                <select id="pk-build-freq">
+                                    <optgroup label="Daily and more often">
+                                        <option value="24" selected>Once daily — daily / mane / nocte (q24h)</option>
+                                        <option value="12">Twice daily — BD (q12h)</option>
+                                        <option value="8">Three times daily — TDS (q8h)</option>
+                                        <option value="6">Four times daily — QID (q6h)</option>
+                                        <option value="4">Every 4 hours (q4h)</option>
+                                        <option value="3">Every 3 hours (q3h)</option>
+                                        <option value="2">Every 2 hours (q2h)</option>
+                                    </optgroup>
+                                    <optgroup label="Less often than daily">
+                                        <option value="48">Alternate days (q48h)</option>
+                                        <option value="72">Every 3 days (q72h)</option>
+                                        <option value="168">Weekly</option>
+                                        <option value="336">Fortnightly</option>
+                                        <option value="672">4-weekly / monthly LAI (28 days)</option>
+                                        <option value="2016">3-monthly LAI (84 days)</option>
+                                    </optgroup>
+                                    <option value="custom">Custom interval…</option>
+                                </select>
+
+                                <label for="pk-build-custom" id="pk-build-custom-label">Custom interval (hours):</label>
+                                <input type="number" id="pk-build-custom" value="24" min="0.25" step="any">
+
+                                <label for="pk-build-days">Number of days:</label>
+                                <input type="number" id="pk-build-days" value="14" min="1" max="730">
+
+                                <label for="pk-build-start">First dose at hour:</label>
+                                <input type="number" id="pk-build-start" value="0" min="0" step="any">
+                            </div>
+                            <div class="pk-build-actions">
+                                <button id="pk-build-btn" class="pk-build-btn">↓ Write into regimen</button>
+                                <label class="pk-check"><input type="checkbox" id="pk-build-append"> Append to existing
+                                    lines</label>
+                                <label class="pk-check"><input type="checkbox" id="pk-build-sync" checked> Match
+                                    simulation duration</label>
+                            </div>
+                            <p id="pk-build-summary" class="pk-build-summary"></p>
                         </div>
 
                         <div class="pk-input-section">

@@ -2958,3 +2958,134 @@ button.btn-primary:hover,
     font-size: 11px;
     fill: var(--primary-color);
 }
+
+/* Criteria panel above the guided pathway. */
+.mha-definitions-card {
+    border-left: 4px solid var(--accent-color);
+}
+
+.mha-definitions-summary {
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    list-style: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.mha-definitions-summary::-webkit-details-marker {
+    display: none;
+}
+
+.mha-definitions-summary::before {
+    content: "\25B8";
+    color: var(--text-muted);
+    font-size: 12px;
+}
+
+.mha-definitions-card[open] .mha-definitions-summary::before {
+    content: "\25BE";
+}
+
+.mha-definitions-body {
+    padding-top: 4px;
+}
+
+.mha-def-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12.5px;
+    min-width: 640px;
+}
+
+.mha-def-table th,
+.mha-def-table td {
+    text-align: left;
+    vertical-align: top;
+    padding: 9px 11px;
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.5;
+}
+
+.mha-def-table thead th {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.mha-def-table thead th:nth-child(2) {
+    color: var(--primary-color);
+}
+
+.mha-def-table thead th:nth-child(3) {
+    color: var(--warning-color);
+}
+
+.mha-def-rowhead {
+    font-weight: 600;
+    white-space: nowrap;
+    color: var(--text-muted);
+}
+
+/* PK regimen builder and steady-state toggle. */
+.pk-check {
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-muted);
+    cursor: pointer;
+}
+
+.pk-check input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+    accent-color: var(--primary-color);
+}
+
+.pk-check-block {
+    margin-top: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--footer-bg);
+}
+
+.pk-check-block strong {
+    color: var(--text-color);
+}
+
+.pk-build-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+}
+
+.pk-build-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: var(--accent-color);
+    color: #fff;
+    cursor: pointer;
+}
+
+.pk-build-btn:hover {
+    background: var(--accent-hover);
+}
+
+.pk-build-summary {
+    margin-top: 10px;
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--accent-color);
+    min-height: 1em;
+}

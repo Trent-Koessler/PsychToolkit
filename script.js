@@ -2965,6 +2965,55 @@ Psychiatry Registrar`
     }
 
     /**
+     * Residual from an infinite series of prior doses, expressed as one extra
+     * dose placed at the time of the first real dose.
+     *
+     * Prior doses at t1-i, t1-2i, ... contribute, for t >= t1:
+     *   sum(n=1..inf) D*exp(-k*(t - t1 + n*i))
+     *     = D*exp(-k*(t - t1)) * e^-ki/(1 - e^-ki)
+     *
+     * so a single virtual dose of D * e^-ki/(1 - e^-ki) at t1 reproduces an
+     * infinite prior dosing history exactly. Cheaper and more accurate than
+     * simulating hundreds of leading doses.
+     */
+    function steadyStateResidualDose(doseAmount, intervalHours, halfLife) {
+        const k = Math.LN2 / halfLife;
+        const decay = Math.exp(-k * intervalHours);
+        const denominator = 1 - decay;
+        if (!isFinite(decay) || denominator < 1e-12) return 0;
+        return doseAmount * (decay / denominator);
+    }
+
+    /**
+     * Is this a genuinely uniform regimen — same dose, evenly spaced?
+     *
+     * detectInterval() returns the MODAL gap, so it yields a number even for a
+     * ragged regimen. The steady-state start extrapolates an infinite dosing
+     * history from a single interval and dose, which is only meaningful if the
+     * regimen really is regular, so that needs this stricter test.
+     *
+     * Returns the interval, or null if the regimen is not uniform.
+     */
+    function uniformInterval(doseTimes, doseAmounts) {
+        if (doseTimes.length < 2) return null;
+
+        const sorted = doseTimes
+            .map((t, i) => ({ t, d: doseAmounts[i] }))
+            .sort((a, b) => a.t - b.t);
+
+        const interval = sorted[1].t - sorted[0].t;
+        if (!(interval > 0)) return null;
+
+        // Allow a little slack for hand-typed times (and the builder's rounding).
+        const tolerance = Math.max(0.05, interval * 0.02);
+        for (let i = 1; i < sorted.length; i++) {
+            if (Math.abs((sorted[i].t - sorted[i - 1].t) - interval) > tolerance) return null;
+            if (Math.abs(sorted[i].d - sorted[0].d) > 1e-9) return null;
+        }
+        return interval;
+    }
+
+    /**
      * Detect whether the regimen has a consistent dosing interval.
      * Returns the modal (most common) interval or null.
      */
@@ -3173,11 +3222,36 @@ Psychiatry Registrar`
                 return;
             }
 
-            // 4. Run PK model
-            const { times, concentrations } = calculatePkCurve(halfLife, durationDays, doseTimes, doseAmounts);
-
-            // 5. Detect interval and compute steady-state
+            // 4. Detect the dosing interval (also needed for the steady-state start)
             const interval = detectInterval(doseTimes);
+
+            // 5. Optionally start the curve already at steady state, by adding a
+            //    single virtual dose representing an infinite prior dosing history.
+            let modelTimes = doseTimes;
+            let modelAmounts = doseAmounts;
+            const steadyStartEl = document.getElementById("pk-steady-start");
+            const wantSteadyStart = steadyStartEl ? steadyStartEl.checked : false;
+            let steadyStartApplied = false;
+
+            if (wantSteadyStart) {
+                const regular = uniformInterval(doseTimes, doseAmounts);
+                if (!regular) {
+                    showPkError("⚠️ 'Start at steady state' needs a uniform regimen — the same dose at evenly spaced times. Build one with the Regimen Builder, or uncheck the option.");
+                    return;
+                }
+                const firstTime = Math.min.apply(null, doseTimes);
+                const residual = steadyStateResidualDose(doseAmounts[0], regular, halfLife);
+                if (residual > 0) {
+                    modelTimes = [firstTime].concat(doseTimes);
+                    modelAmounts = [residual].concat(doseAmounts);
+                    steadyStartApplied = true;
+                }
+            }
+
+            // 6. Run PK model
+            const { times, concentrations } = calculatePkCurve(halfLife, durationDays, modelTimes, modelAmounts);
+
+            // 7. Steady-state estimates
             let ssData = null;
             if (interval && interval > 0 && doseAmounts.length >= 2) {
                 // Use the first dose amount as reference (assumes uniform dosing)
@@ -3213,8 +3287,119 @@ Psychiatry Registrar`
             if (pkPlaceholder) pkPlaceholder.style.display = "none";
 
             let chartTitle = drugLabel;
+            if (steadyStartApplied) chartTitle += " — from steady state";
             if (isLAI) chartTitle += " ⚠️ (Approx. – complex absorption PK)";
             renderPkChart(times, concentrations, ssData, chartTitle, halfLife);
+        });
+    }
+
+    // ----------------------------------------------------------------
+    // REGIMEN BUILDER
+    // Turns a dose + frequency + number of days into the "hour, dose" lines the
+    // model reads. The textarea stays the source of truth and stays editable.
+    // ----------------------------------------------------------------
+
+    const pkBuildBtn = document.getElementById("pk-build-btn");
+    const pkBuildFreq = document.getElementById("pk-build-freq");
+    const pkBuildCustom = document.getElementById("pk-build-custom");
+    const pkBuildCustomLabel = document.getElementById("pk-build-custom-label");
+    const pkBuildSummary = document.getElementById("pk-build-summary");
+
+    // Cap on generated lines, so a q2h regimen over 2 years cannot lock the tab up.
+    const PK_MAX_DOSES = 2000;
+
+    function toggleCustomInterval() {
+        const isCustom = pkBuildFreq && pkBuildFreq.value === "custom";
+        [pkBuildCustom, pkBuildCustomLabel].forEach(el => {
+            if (el) el.style.display = isCustom ? "" : "none";
+        });
+    }
+
+    if (pkBuildFreq) {
+        pkBuildFreq.addEventListener("change", toggleCustomInterval);
+        toggleCustomInterval();
+    }
+
+    function describeInterval(hours) {
+        const named = {
+            2: "q2h", 3: "q3h", 4: "q4h", 6: "QID (q6h)", 8: "TDS (q8h)",
+            12: "BD (q12h)", 24: "once daily", 48: "alternate days", 72: "every 3 days",
+            168: "weekly", 336: "fortnightly", 672: "4-weekly", 2016: "3-monthly"
+        };
+        return named[hours] || ("every " + hours + " h");
+    }
+
+    if (pkBuildBtn) {
+        pkBuildBtn.addEventListener("click", () => {
+            clearPkError();
+
+            const dose = parseFloat(document.getElementById("pk-build-dose").value);
+            const days = parseInt(document.getElementById("pk-build-days").value, 10);
+            const startHour = parseFloat(document.getElementById("pk-build-start").value) || 0;
+            const freqValue = pkBuildFreq ? pkBuildFreq.value : "24";
+            const interval = freqValue === "custom"
+                ? parseFloat(pkBuildCustom ? pkBuildCustom.value : "")
+                : parseFloat(freqValue);
+
+            if (isNaN(dose) || dose <= 0) {
+                showPkError("⚠️ Enter a dose amount greater than zero.");
+                return;
+            }
+            if (isNaN(interval) || interval <= 0) {
+                showPkError("⚠️ Enter a dosing interval greater than zero hours.");
+                return;
+            }
+            if (isNaN(days) || days < 1 || days > 730) {
+                showPkError("⚠️ Number of days must be between 1 and 730.");
+                return;
+            }
+            if (startHour < 0) {
+                showPkError("⚠️ The first dose hour cannot be negative.");
+                return;
+            }
+
+            const totalHours = days * 24;
+            const lines = [];
+            let truncated = false;
+            for (let t = startHour; t < totalHours; t += interval) {
+                if (lines.length >= PK_MAX_DOSES) { truncated = true; break; }
+                // Trim floating point drift from repeated addition (e.g. 0.1 steps).
+                const hour = Math.round(t * 1000) / 1000;
+                lines.push(hour + ", " + dose);
+            }
+
+            if (!lines.length) {
+                showPkError("⚠️ That produced no doses — check the first dose hour against the number of days.");
+                return;
+            }
+
+            const header = "# " + dose + " units, " + describeInterval(interval) +
+                ", " + days + (days === 1 ? " day" : " days") +
+                (startHour ? ", first dose at hour " + startHour : "");
+
+            const regimenEl = document.getElementById("pk-regimen");
+            const appendEl = document.getElementById("pk-build-append");
+            const block = header + "\n" + lines.join("\n");
+            if (regimenEl) {
+                const existing = regimenEl.value.trim();
+                regimenEl.value = (appendEl && appendEl.checked && existing)
+                    ? existing + "\n" + block
+                    : block;
+            }
+
+            // Keep the simulation window at least as long as the regimen.
+            const syncEl = document.getElementById("pk-build-sync");
+            const durationEl = document.getElementById("pk-duration");
+            if (syncEl && syncEl.checked && durationEl) {
+                durationEl.value = Math.min(days, 730);
+            }
+
+            if (pkBuildSummary) {
+                pkBuildSummary.textContent = lines.length + " dose" + (lines.length === 1 ? "" : "s") +
+                    " written — " + describeInterval(interval) + " over " + days +
+                    (days === 1 ? " day" : " days") +
+                    (truncated ? ". Capped at " + PK_MAX_DOSES + " doses; shorten the run or lengthen the interval." : ".");
+            }
         });
     }
 
@@ -3230,6 +3415,9 @@ Psychiatry Registrar`
             if (durationEl) durationEl.value = 14;
             const regimenEl = document.getElementById("pk-regimen");
             if (regimenEl) regimenEl.value = "# Example: 30mg Methadone daily\n0, 30\n24, 30\n48, 30\n72, 30\n96, 30\n120, 30\n144, 30";
+            const steadyEl = document.getElementById("pk-steady-start");
+            if (steadyEl) steadyEl.checked = false;
+            if (pkBuildSummary) pkBuildSummary.textContent = "";
         });
     }
 
