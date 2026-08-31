@@ -1,0 +1,400 @@
+<title>PsychToolkit Mark Studies</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #e9ecf1;
+    --card: #ffffff;
+    --card-2: #f4f6f9;
+    --ink: #121623;
+    --muted: #5c6577;
+    --line: #d2d8e2;
+    --indigo: #4f46e5;
+    --indigo-soft: #eceafd;
+    --teal: #0d9488;
+    --grid: rgba(79, 70, 229, 0.28);
+    --shadow: 0 1px 2px rgba(18, 22, 35, .06), 0 8px 24px -12px rgba(18, 22, 35, .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0a0e17;
+      --card: #141a28;
+      --card-2: #1b2233;
+      --ink: #e7ebf3;
+      --muted: #949eb4;
+      --line: #262f42;
+      --indigo: #7c76ee;
+      --indigo-soft: #221f47;
+      --teal: #2dd4bf;
+      --grid: rgba(124, 118, 238, 0.32);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0a0e17;
+    --card: #141a28;
+    --card-2: #1b2233;
+    --ink: #e7ebf3;
+    --muted: #949eb4;
+    --line: #262f42;
+    --indigo: #7c76ee;
+    --indigo-soft: #221f47;
+    --teal: #2dd4bf;
+    --grid: rgba(124, 118, 238, 0.32);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  /* ---------- masthead ---------- */
+  header.masthead { padding: 56px 0 32px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace;
+    font-size: 11px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--muted); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Public Sans", sans-serif;
+    font-weight: 700; font-size: clamp(34px, 5.4vw, 58px);
+    line-height: 1.02; letter-spacing: -0.028em;
+    margin: 0 0 18px; text-wrap: balance;
+  }
+  .lede { max-width: 62ch; color: var(--muted); font-size: 17px; margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- controls ---------- */
+  .controls {
+    position: sticky; top: 0; z-index: 20;
+    display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center;
+    padding: 12px 0; margin: 28px 0 8px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .ctl-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .segmented { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--card); }
+  .segmented button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font: 500 13px/1 "Public Sans", sans-serif; color: var(--muted);
+    padding: 9px 16px;
+  }
+  .segmented button + button { border-left: 1px solid var(--line); }
+  .segmented button[aria-pressed="true"] { background: var(--indigo); color: #fff; }
+  .segmented button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .toggle input { accent-color: var(--indigo); width: 15px; height: 15px; }
+
+  /* ---------- baseline strip ---------- */
+  .baseline {
+    display: grid; grid-template-columns: auto 1fr; gap: 26px; align-items: center;
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 20px 24px; margin: 26px 0 8px; box-shadow: var(--shadow);
+  }
+  .baseline img { width: 76px; height: 76px; border-radius: 18px; display: block; }
+  .baseline h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 17px; margin: 0 0 4px; letter-spacing: -0.01em; }
+  .baseline p { margin: 0; color: var(--muted); font-size: 14px; max-width: 70ch; }
+
+  /* ---------- sections ---------- */
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 8px; }
+  .sec-head h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 24px; letter-spacing: -0.02em; margin: 0; }
+  .sec-head .count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
+  .sec-note { color: var(--muted); font-size: 14px; margin: 12px 0 26px; max-width: 68ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 22px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .card-top { display: flex; gap: 18px; align-items: flex-start; }
+  .card-id {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em;
+    color: var(--muted); text-transform: uppercase;
+  }
+  .card h3 { font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; letter-spacing: -0.015em; margin: 2px 0 6px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+  /* ---------- tiles ---------- */
+  .tile { border-radius: 22%; display: grid; place-items: center; flex: none; position: relative; overflow: hidden; }
+  .tile svg { display: block; width: 100%; height: 100%; }
+  .hero-tile { width: 116px; height: 116px; }
+
+  .mode-gradient .tile { background: linear-gradient(145deg, #6366f1 0%, #4f46e5 42%, #0d9488 100%); }
+  .mode-gradient .tile .sym { color: #ffffff; }
+  .mode-flat .tile { background: var(--indigo); }
+  .mode-flat .tile .sym { color: #ffffff; }
+  .mode-mono .tile { background: var(--card-2); border: 1px solid var(--line); }
+  .mode-mono .tile .sym { color: var(--ink); }
+
+  .knockout-bg { fill: currentColor; }
+  .mode-gradient .tile .knockout-bg,
+  .mode-flat .tile .knockout-bg { fill: #ffffff; }
+
+  /* construction grid overlay */
+  .tile::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 100% 12.5%,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 12.5% 100%;
+  }
+  .show-grid .hero-tile::after { opacity: 1; }
+
+  .ladder { display: flex; align-items: flex-end; gap: 16px; padding-top: 4px; border-top: 1px solid var(--line); }
+  .rung { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-top: 14px; }
+  .rung .cap { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--muted); }
+  .s48 { width: 48px; height: 48px; }
+  .s32 { width: 32px; height: 32px; }
+  .s24 { width: 24px; height: 24px; }
+  .s16 { width: 16px; height: 16px; }
+
+  .notes { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+  .note { display: grid; grid-template-columns: 62px 1fr; gap: 10px; align-items: baseline; }
+  .note .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); padding-top: 2px;
+  }
+  .note .v { color: var(--ink); }
+  .note.risk .v { color: var(--muted); }
+
+  .tag {
+    display: inline-block; font-family: "IBM Plex Mono", monospace; font-size: 10px;
+    letter-spacing: .08em; text-transform: uppercase; padding: 3px 8px; border-radius: 999px;
+    background: var(--indigo-soft); color: var(--indigo); border: 1px solid color-mix(in srgb, var(--indigo) 22%, transparent);
+  }
+
+  footer.sheet-foot {
+    margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line);
+    color: var(--muted); font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 8px 28px;
+    font-family: "IBM Plex Mono", monospace;
+  }
+
+  @media (max-width: 620px) {
+    .baseline { grid-template-columns: 1fr; }
+    .ladder { gap: 12px; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap" id="root">
+  <header class="masthead">
+    <p class="eyebrow">PsychToolkit / identity study / 12 directions</p>
+    <h1>A mark that survives 16&nbsp;pixels</h1>
+    <p class="lede">Twelve candidate app symbols for the toolkit, split into marks that carry a <strong>psi</strong> and marks that don't. Every psi here keeps its <strong>full stem</strong> — the vertical runs the whole height and descends past the bowl to a foot, which is what the current icon loses. Switch the render mode and check each one down the size ladder before picking.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Render controls">
+    <span class="ctl-label">Render</span>
+    <div class="segmented" id="modes">
+      <button type="button" data-mode="gradient" aria-pressed="true">Gradient tile</button>
+      <button type="button" data-mode="flat" aria-pressed="false">Solid tile</button>
+      <button type="button" data-mode="mono" aria-pressed="false">Mono line</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="gridToggle"> 8&times;8 construction grid</label>
+    <label class="toggle"><input type="checkbox" id="themeToggle"> Force dark sheet</label>
+  </div>
+
+  <div class="baseline">
+    <img src="data:image/png;base64,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" alt="The current PsychToolkit app icon: a white psi-like glyph on a teal-to-blue radial gradient circle">
+    <div>
+      <h2>Where it stands today</h2>
+      <p>The shipping icon reads as a cup on a stick. The bowl swallows the stem instead of crossing it, there are no prongs above the bowl, the foot is a wide slab, and a radial gradient inside a circle inside a maskable square wastes most of the tile. Each study below fixes at least one of those.</p>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>With psi</h2>
+      <span class="tag">stem required</span>
+      <span class="count">01&ndash;06</span>
+    </div>
+    <p class="sec-note">Construction rule held across all six: stem from the cap line to the foot, two prongs rising above the bowl to the same cap line, bowl joined at the stem's midpoint. The letter stays a letter.</p>
+    <div class="grid" id="grid-psi"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>Without psi</h2>
+      <span class="tag">clinical objects</span>
+      <span class="count">07&ndash;12</span>
+    </div>
+    <p class="sec-note">Psi is heavily used across psychology apps and reads as academic. These pull from what the toolkit actually does — scoring scales, severity thresholds, monitoring, dose math — and from the instruments in the room.</p>
+    <div class="grid" id="grid-nopsi"></div>
+  </section>
+
+  <footer class="sheet-foot">
+    <span>Canvas 64 &times; 64</span>
+    <span>Stroke 5 / round caps</span>
+    <span>Safe margin 10</span>
+    <span>Maskable padding 12.5%</span>
+  </footer>
+</div>
+
+<script>
+  // Every symbol is authored on a 64x64 canvas with a 10-unit safe margin,
+  // stroked in currentColor so one path set serves all three render modes.
+  var S = 'stroke="currentColor" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"';
+
+  var CONCEPTS = [
+    {
+      id: "01", name: "Trident", group: "psi",
+      idea: "The letter, drawn honestly. Monoline psi with prongs, a crossing stem and a serif foot.",
+      why: "Nothing to misread. The foot bar gives it a base so it sits on the tile instead of floating.",
+      risk: "Least distinctive of the six — it competes with every other psi in the store.",
+      svg: '<g ' + S + '><path d="M32 10 V 55"/><path d="M15 23 V 32 a17 17 0 0 0 34 0 V 23"/><path d="M22 55 H 42"/></g>'
+    },
+    {
+      id: "02", name: "Chalice", group: "psi",
+      idea: "Solid-drawn psi with a weighted bowl and a slab foot — a logotype letter, not an icon of one.",
+      why: "Mass survives shrinking better than hairlines; still legible at 16px on a dark tile.",
+      risk: "The filled bowl is the shape that read as a cup before. Keep the prongs tall.",
+      svg: '<g fill="currentColor"><path d="M14 21 V32 a18 18 0 0 0 36 0 V21 h-8 v11 a10 10 0 0 1 -20 0 V21 Z"/><rect x="29" y="9" width="6" height="47" rx="2"/><rect x="20" y="50" width="24" height="6" rx="3"/></g>'
+    },
+    {
+      id: "03", name: "Caliper", group: "psi",
+      idea: "Psi with measurement points: the prongs terminate in dots, like the tips of a caliper.",
+      why: "Says assessment without adding a second object. Reads as a mark, not just a Greek letter.",
+      risk: "The dots merge into the strokes below ~20px; drop them in the 16px build.",
+      svg: '<g ' + S + '><path d="M32 10 V 55"/><path d="M15 25 V 32 a17 17 0 0 0 34 0 V 25"/><path d="M22 55 H 42"/></g><g fill="currentColor"><circle cx="15" cy="21" r="4"/><circle cx="49" cy="21" r="4"/></g>'
+    },
+    {
+      id: "04", name: "Tick", group: "psi",
+      idea: "The right prong keeps going and flicks up into a checkmark — one stroke doing both jobs.",
+      why: "Closest to what the app is, scales you fill in and finish, without adding a second object.",
+      risk: "Deliberately asymmetric, so it needs optical centring on the tile rather than geometric.",
+      svg: '<g ' + S + '><path d="M32 10 V 55"/><path d="M17 24 V 32 a15 15 0 0 0 30 0 L 55 15"/><path d="M22 55 H 42"/></g>'
+    },
+    {
+      id: "05", name: "Counterform", group: "psi",
+      idea: "Psi knocked out of a filled squircle, so the letter is made of the tile's own background.",
+      why: "Maximum contrast at every size, and it looks deliberate on a home screen full of glyphs.",
+      risk: "Needs a mask, not a stroke — a knocked-out mark cannot sit on a photo or a busy wallpaper.",
+      knockout: true,
+      svg: '<mask id="ko__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+           '<rect x="2" y="2" width="60" height="60" rx="17" fill="#fff"/>' +
+           '<g stroke="#000" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">' +
+           '<path d="M32 14 V 51"/><path d="M18 25 V 31 a14 14 0 0 0 28 0 V 25"/><path d="M24 51 H 40"/></g></mask>' +
+           '<rect class="knockout-bg" x="2" y="2" width="60" height="60" rx="17" mask="url(#ko__UID__)"/>'
+    },
+    {
+      id: "06", name: "Trace", group: "psi",
+      idea: "The foot of the psi becomes a single monitoring trace running the width of the tile.",
+      why: "Ties the letter to the monitoring side of the toolkit — bloods, weights, side effects over time.",
+      risk: "The trace is fine detail. Below 24px it flattens to a line, which still works, but test it.",
+      svg: '<g ' + S + '><path d="M32 9 V 51"/><path d="M16 22 V 29 a16 16 0 0 0 32 0 V 22"/><path d="M9 51 h6 l4 -7 l4 13 l4 -6 h27" stroke-width="4.5"/></g>'
+    },
+
+    {
+      id: "07", name: "Threshold", group: "nopsi",
+      idea: "Three rungs of a rating scale with the marker landing on the top band.",
+      why: "Every instrument in the app ends in a score against a cut-off. This is that, and nothing else.",
+      risk: "Abstract enough to read as a generic bar chart or a menu icon. Keep the marker.",
+      svg: '<g ' + S + '><path d="M14 47 H 50"/><path d="M14 32 H 44"/><path d="M14 17 H 34"/></g><circle cx="46" cy="17" r="6" fill="currentColor"/>'
+    },
+    {
+      id: "08", name: "Pulse Cross", group: "nopsi",
+      idea: "A care cross whose horizontal arm is drawn as a waveform.",
+      why: "Instantly legible as clinical at any size, and the wave keeps it out of first-aid-kit territory.",
+      risk: "Crosses are crowded and carry emergency-medicine baggage this app doesn't want.",
+      svg: '<g ' + S + '><path d="M32 11 V 53"/><path d="M11 32 h 27 l 4 -8 l 4 13 l 4 -5 h 4"/></g>'
+    },
+    {
+      id: "09", name: "Dial", group: "nopsi",
+      idea: "A severity gauge: half-arc, needle sitting in the upper band, solid hub.",
+      why: "Reads as a reading — mild / moderate / severe — which is the shape of most of the content.",
+      risk: "Gauges are the default dashboard icon. Needs the arc weight to carry the personality.",
+      svg: '<g ' + S + '><path d="M13 44 a19 19 0 0 1 38 0"/><path d="M32 44 L 43 27"/></g><circle cx="32" cy="44" r="5.5" fill="currentColor"/>'
+    },
+    {
+      id: "10", name: "Fold", group: "nopsi",
+      idea: "A single sulcus drawn inside a circle — a hemisphere reduced to one fold.",
+      why: "Says brain without drawing a walnut. Holds up as a favicon because it's two shapes.",
+      risk: "Brain-adjacent marks are everywhere, and at a glance the fold can read as a letter S.",
+      svg: '<g ' + S + '><circle cx="32" cy="32" r="21"/><path d="M30 19 c -8 4 -8 10 0 13 c 8 4 8 10 0 13"/></g>'
+    },
+    {
+      id: "11", name: "Fork", group: "nopsi",
+      idea: "A tuning fork: two prongs, a stem, a foot. A psi's silhouette without being the letter.",
+      why: "A real instrument from the neuro exam, and it inherits the psi's balance for free.",
+      risk: "Close enough to psi that some will read it as one — which may be exactly what you want.",
+      svg: '<g ' + S + '><path d="M22 12 V 30 a10 10 0 0 0 20 0 V 12"/><path d="M32 40 V 52"/><path d="M26 52 H 38"/></g>'
+    },
+    {
+      id: "12", name: "Titration", group: "nopsi",
+      idea: "A dose staircase: three steps up, with the marker sitting on the target step.",
+      why: "The one thing every calculator here describes — changing a dose in controlled steps.",
+      risk: "Steps read as growth charts in a business app. The medical context has to carry it.",
+      svg: '<g ' + S + '><path d="M11 50 H 23 V 38 H 35 V 26 H 45"/></g><circle cx="49" cy="26" r="6" fill="currentColor"/>'
+    }
+  ];
+
+  var uid = 0;
+  function symbol(c, cls) {
+    uid += 1;
+    var body = c.svg.replace(/__UID__/g, String(uid));
+    return '<svg class="sym ' + (cls || '') + '" viewBox="0 0 64 64" role="img" aria-label="' +
+      c.name + ' mark">' + body + '</svg>';
+  }
+  function tile(c, size) {
+    return '<div class="tile ' + size + '">' + symbol(c) + '</div>';
+  }
+
+  function card(c) {
+    return '<article class="card">' +
+      '<div class="card-top">' +
+        '<div class="tile hero-tile">' + symbol(c) + '</div>' +
+        '<div><div class="card-id">' + c.id + '</div><h3>' + c.name + '</h3><p>' + c.idea + '</p></div>' +
+      '</div>' +
+      '<div class="ladder">' +
+        '<div class="rung">' + tile(c, "s48") + '<span class="cap">48</span></div>' +
+        '<div class="rung">' + tile(c, "s32") + '<span class="cap">32</span></div>' +
+        '<div class="rung">' + tile(c, "s24") + '<span class="cap">24</span></div>' +
+        '<div class="rung">' + tile(c, "s16") + '<span class="cap">16</span></div>' +
+      '</div>' +
+      '<div class="notes">' +
+        '<div class="note"><span class="k">Works</span><span class="v">' + c.why + '</span></div>' +
+        '<div class="note risk"><span class="k">Watch</span><span class="v">' + c.risk + '</span></div>' +
+      '</div>' +
+    '</article>';
+  }
+
+  document.getElementById("grid-psi").innerHTML =
+    CONCEPTS.filter(function (c) { return c.group === "psi"; }).map(card).join("");
+  document.getElementById("grid-nopsi").innerHTML =
+    CONCEPTS.filter(function (c) { return c.group === "nopsi"; }).map(card).join("");
+
+  var root = document.getElementById("root");
+  function setMode(m) {
+    root.classList.remove("mode-gradient", "mode-flat", "mode-mono");
+    root.classList.add("mode-" + m);
+    Array.prototype.forEach.call(document.querySelectorAll("#modes button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+    });
+  }
+  setMode("gradient");
+  document.getElementById("modes").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b) { setMode(b.dataset.mode); }
+  });
+  document.getElementById("gridToggle").addEventListener("change", function (e) {
+    root.classList.toggle("show-grid", e.target.checked);
+  });
+  document.getElementById("themeToggle").addEventListener("change", function (e) {
+    document.documentElement.setAttribute("data-theme", e.target.checked ? "dark" : "light");
+  });
+</script>
