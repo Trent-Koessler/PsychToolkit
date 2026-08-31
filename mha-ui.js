@@ -14,6 +14,13 @@
     var META = (C.ACT && C.ACT.meta) || {};
 
     var CHENG_CITE = "Cheng K, Wand A, Ryan C, Callaghan S. An algorithm for managing adults who refuse medical treatment in New South Wales. Australas Psychiatry 2018; 26(5): 464-468.";
+    var HUBER_CITE = "Huber J, Aguirrebarrena G, Ryan CJ. Algorithm for the use of the Guardianship Act, the Mental Health Act and the Public Health Act in emergency departments in New South Wales. Emerg Med Australas 2022; 34(1): 34-38.";
+
+    var SOURCE_CITE = { cheng: CHENG_CITE, huber: HUBER_CITE };
+
+    /* The warning shown wherever this tool relies on an Act whose text was not
+       available to quote from. Kept in one place so it cannot drift. */
+    var UNVERIFIED_WARNING = "Guardianship Act 1987 (NSW) and Public Health Act 2010 (NSW) provisions are summarised from the published algorithms, not quoted from those Acts. Unlike the Mental Health Act text in this app, they have not been checked against the legislation itself — verify before relying on the detail.";
 
     /* --------------------------------------------------------------- utils */
 
@@ -72,6 +79,39 @@
     function sectionList(nums) {
         var wrap = el("div", "mha-sections");
         nums.forEach(function (n) { wrap.appendChild(sectionDetails(n)); });
+        return wrap;
+    }
+
+    /* Pulls one defined term out of a definitions section (s 4, s 98, ...) so a
+       single definition can be quoted without the whole dictionary around it. */
+    function definitionLines(sectionNo, term) {
+        var s = SECTIONS[sectionNo];
+        if (!s) return [];
+        var out = [];
+        var startDepth = null;
+        for (var i = 0; i < s.lines.length; i++) {
+            var depth = s.lines[i][0];
+            var text = s.lines[i][1];
+            if (startDepth === null) {
+                if (text.indexOf(term + " means") === 0 || text.indexOf(term + "—") === 0) {
+                    startDepth = depth;
+                    out.push(s.lines[i]);
+                }
+            } else if (depth > startDepth) {
+                out.push(s.lines[i]);
+            } else {
+                break;
+            }
+        }
+        return out;
+    }
+
+    function quoteBlock(lines, cite) {
+        var wrap = el("div", "mha-quote");
+        lines.forEach(function (line) {
+            wrap.appendChild(el("p", "mha-quote-line mha-indent-" + line[0], line[1]));
+        });
+        if (cite) wrap.appendChild(el("p", "mha-section-foot", cite));
         return wrap;
     }
 
@@ -191,7 +231,8 @@
         var card = el("div", "mha-card mha-question");
         card.appendChild(el("h4", null, node.title));
         if (node.help) card.appendChild(el("p", "mha-help", node.help));
-        if (node.source === "cheng") card.appendChild(chengNote());
+        if (node.unverified) card.appendChild(unverifiedNote());
+        if (node.source) card.appendChild(sourceNote(node.source));
 
         var opts = el("div", "mha-options");
         node.options.forEach(function (o) {
@@ -211,10 +252,14 @@
         return card;
     }
 
-    function chengNote() {
+    function sourceNote(source) {
         var p = el("p", "mha-provenance");
-        p.textContent = "This step follows the published algorithm: " + CHENG_CITE;
+        p.textContent = "This step follows the published algorithm: " + (SOURCE_CITE[source] || source);
         return p;
+    }
+
+    function unverifiedNote() {
+        return el("p", "mha-caution mha-unverified", UNVERIFIED_WARNING);
     }
 
     function capacityAid() {
@@ -255,11 +300,7 @@
             });
         }
 
-        if (node.unverified) {
-            var w = el("p", "mha-caution mha-unverified");
-            w.textContent = "Guardianship Act 1987 (NSW) provisions are summarised from Cheng et al. (2018), not quoted from the Act. Check the current text of that Act before relying on the detail.";
-            card.appendChild(w);
-        }
+        if (node.unverified) card.appendChild(unverifiedNote());
 
         if (node.actions) {
             card.appendChild(el("h5", "mha-subhead", "Do this"));
@@ -296,8 +337,8 @@
         if (node.authority) {
             card.appendChild(el("p", "mha-provenance", "Authority: " + node.authority));
         }
-        if (node.source === "cheng" && !node.authority) {
-            card.appendChild(chengNote());
+        if (node.source && !node.authority) {
+            card.appendChild(sourceNote(node.source));
         }
 
         if (node.contacts) {
@@ -424,8 +465,12 @@
         if (node.authority) {
             lines.push("  - " + node.authority);
         }
-        if (node.source === "cheng") {
-            lines.push("  - " + CHENG_CITE);
+        if (node.source && SOURCE_CITE[node.source]) {
+            lines.push("  - " + SOURCE_CITE[node.source]);
+        }
+        if (node.unverified) {
+            lines.push("");
+            lines.push("NOTE: " + UNVERIFIED_WARNING);
         }
         lines.push("");
         lines.push("This is a decision-support aid, not legal advice and not a legal record. The clinical decision, the statutory criteria and the documentation remain the responsibility of the treating clinician.");
@@ -542,7 +587,11 @@
             if (!from || !to) return;
             var fs = e.fromSide || "b";
             var ts = e.toSide || "t";
-            var pts = routePoints(anchor(from, fs), anchor(to, ts), fs, ts);
+            // `via` gives an explicit orthogonal corridor where the automatic
+            // route would run through an unrelated box.
+            var pts = e.via
+                ? [anchor(from, fs)].concat(e.via).concat([anchor(to, ts)])
+                : routePoints(anchor(from, fs), anchor(to, ts), fs, ts);
             var poly = svgEl("polyline", {
                 points: pts.map(function (p) { return p[0] + "," + p[1]; }).join(" "),
                 class: "mha-flow-edge",
@@ -679,7 +728,7 @@
 
             { id: "L1", kind: "decision", x: 190, y: 282, w: 320, h: 52, title: "Has capacity — status under the Act?", node: "r_status_cap" },
             { id: "L2", kind: "stop", x: 20, y: 372, w: 270, h: 78, title: "Not subject to the Act, or voluntary", sub: "Refusal must be respected — Hunter and New England AHS v A", node: "out_competent_refusal" },
-            { id: "L3", kind: "stop", x: 310, y: 372, w: 280, h: 78, title: "Assessable / mentally disordered", sub: "ss 84 and 190(2) are not clear authority to override — legal advice", node: "out_competent_assessable" },
+            { id: "L3", kind: "stop", x: 430, y: 372, w: 280, h: 78, title: "Assessable / mentally disordered", sub: "ss 84 and 190(2) are not clear authority to override — legal advice", node: "out_competent_assessable" },
             { id: "L4", kind: "decision", x: 190, y: 480, w: 320, h: 52, title: "Involuntary patient — 'surgical operation' (s 98)?", node: "r_cap_surgical" },
             { id: "L5", kind: "stop", x: 20, y: 570, w: 250, h: 74, title: "No — medical treatment", sub: "Same uncertainty; seek legal advice", node: "out_competent_involuntary_medical" },
             { id: "L6", kind: "decision", x: 300, y: 570, w: 250, h: 52, title: "Yes — urgent on the s 99 test?", node: "r_cap_surg_urgency" },
@@ -714,11 +763,101 @@
             { from: "R2", to: "R4", label: "Yes" },
             { from: "R2", to: "R5", label: "No" },
             { from: "R3", to: "R6", label: "Yes" },
-            { from: "R3", to: "R9", fromSide: "b", toSide: "t", label: "No" },
+            { from: "R3", to: "R9", fromSide: "b", toSide: "t", label: "No", via: [[1210, 470], [1100, 470], [1100, 660], [1030, 660]] },
             { from: "R6", to: "R7", label: "Yes" },
             { from: "R6", to: "R8", label: "No" }
         ]
     };
+
+    /* The ED algorithm: three lanes, one per Act, after Huber et al. (2021). */
+    var FLOW_ED = {
+        id: "flowC",
+        title: "Use of the Guardianship Act, the Mental Health Act and the Public Health Act in the emergency department in NSW",
+        width: 1760,
+        height: 960,
+        nodes: [
+            { id: "e1", kind: "decision", x: 560, y: 14, w: 420, h: 46, title: "Is the patient declining testing or treatment?", node: "ed_start" },
+
+            /* ---- Mental Health Act lane ---- */
+            { id: "m0", kind: "lane", x: 30, y: 14, w: 300, h: 28, title: "MENTAL HEALTH ACT" },
+            { id: "m1", kind: "decision", x: 30, y: 52, w: 300, h: 76, title: "Does the patient have symptoms needing mental health assessment or treatment?", node: "ed_mha_q1" },
+            { id: "m2", kind: "decision", x: 30, y: 160, w: 300, h: 54, title: "Currently detained under the MHA?", node: "ed_mha_detained" },
+            { id: "m3", kind: "decision", x: 20, y: 246, w: 470, h: 84, title: "Hallucinations, delusions, serious disorder of thought form, severe mood disturbance, or sustained irrational behaviour indicating any of these?", sub: "s 4 definition of mental illness", node: "ed_mha_symptoms" },
+            { id: "m4", kind: "decision", x: 20, y: 364, w: 225, h: 104, title: "Reasonable grounds that care, treatment or control is necessary to protect the patient or others from serious harm?", sub: "s 14", node: "ed_mi_risk" },
+            { id: "m5", kind: "decision", x: 265, y: 364, w: 225, h: 104, title: "Behaviour so irrational as to justify care, treatment or control for protection from serious PHYSICAL harm?", sub: "s 15", node: "ed_md_risk" },
+            { id: "m6", kind: "decision", x: 20, y: 504, w: 470, h: 68, title: "Other than the MHA, is there a less restrictive avenue, consistent with safe and effective care, appropriate and reasonably available?", sub: "s 12(1)(b)", node: "ed_less_restrictive" },
+            { id: "m7", kind: "action", x: 20, y: 610, w: 225, h: 54, title: "Write a Schedule 1 (s 19)", node: "out_ed_schedule1" },
+            { id: "m8", kind: "stop", x: 265, y: 610, w: 225, h: 54, title: "Do not utilise the MHA", node: "out_ed_no_mha" },
+            { id: "m9", kind: "action", x: 20, y: 700, w: 470, h: 86, title: "Refer for review by an AMO — detained until this occurs, which must be within 12 hours", sub: "Psychiatric treatment may be given, including sedation if necessary, despite refusal. Does NOT authorise other medical treatment.", node: "out_ed_amo_review" },
+
+            /* ---- Guardianship Act lane ---- */
+            { id: "g0", kind: "lane", x: 520, y: 150, w: 240, h: 28, title: "GUARDIANSHIP ACT" },
+            { id: "g1", kind: "decision", x: 520, y: 186, w: 340, h: 54, title: "Does the patient have decision-making capacity for this treatment?", node: "ed_ga_q1" },
+            { id: "g2", kind: "stop", x: 900, y: 96, w: 250, h: 68, title: "A patient with capacity can refuse — even lifesaving treatment", node: "out_ed_dmc_refusal" },
+            { id: "g3", kind: "decision", x: 520, y: 272, w: 340, h: 78, title: "Is there an ACD made when the patient had capacity, clear and unambiguous, extending to the situation at hand?", node: "ed_acd" },
+            { id: "g4", kind: "stop", x: 900, y: 280, w: 220, h: 54, title: "Respect the ACD", node: "out_ed_acd" },
+            { id: "g5", kind: "decision", x: 520, y: 382, w: 340, h: 82, title: "Is the procedure urgent and necessary to save life, prevent serious damage to health, or prevent significant pain or distress?", node: "ed_urgent" },
+            { id: "g6", kind: "action", x: 900, y: 384, w: 280, h: 76, title: "Treat the urgent issue under GA s 37, and apply to NCAT ASAP about ongoing treatment", node: "out_ed_ga37" },
+            { id: "g7", kind: "decision", x: 520, y: 496, w: 340, h: 60, title: "Is the mental state likely to improve very soon (e.g. intoxication)?", node: "ed_improve" },
+            { id: "g8", kind: "caution", x: 900, y: 498, w: 240, h: 54, title: "Wait and reassess capacity", node: "out_ed_wait" },
+            { id: "g9", kind: "decision", x: 520, y: 596, w: 300, h: 54, title: "Is there a guardian appointed by NCAT?", node: "ed_guardian" },
+            { id: "g10", kind: "decision", x: 870, y: 596, w: 270, h: 60, title: "Does the guardian have power to override decisions?", node: "ed_guardian_powers" },
+            { id: "g11", kind: "action", x: 1190, y: 596, w: 190, h: 60, title: "Guardian can consent", node: "out_ed_guardian_consent" },
+            { id: "g12", kind: "decision", x: 520, y: 696, w: 400, h: 76, title: "No or minimal understanding of what the treatment entails, AND no lasting distress?", node: "ed_minimal" },
+            { id: "g13", kind: "action", x: 520, y: 816, w: 190, h: 76, title: "Application to NCAT must be made", node: "out_ed_ncat" },
+            { id: "g14", kind: "action", x: 730, y: 816, w: 420, h: 76, title: "Objection may be disregarded (GA s 46(4)); person responsible can consent (GA s 36)", sub: "If no person responsible, some 'minor' treatments may still be given", node: "out_ed_person_responsible" },
+
+            /* ---- Public Health Act lane, and the negotiate step ---- */
+            { id: "p4", kind: "action", x: 1250, y: 96, w: 170, h: 84, title: "Attempt to negotiate a mutually agreed decision", sub: "If still objecting, go to the Guardianship Act", node: "ed_negotiate" },
+            { id: "cg", kind: "connector", x: 1250, y: 196, w: 170, h: 40, title: "Go to Guardianship Act", node: "ed_ga_q1" },
+            { id: "p0", kind: "lane", x: 1470, y: 14, w: 250, h: 28, title: "PUBLIC HEALTH ACT" },
+            { id: "p1", kind: "decision", x: 1470, y: 52, w: 250, h: 64, title: "Category 4 or 5 illness under the PHA?", node: "ed_pha_q1" },
+            { id: "p2", kind: "decision", x: 1470, y: 148, w: 250, h: 90, title: "Behaving in a way that may, as a consequence of their decision, be a risk to public health?", node: "ed_pha_q2" },
+            { id: "p3", kind: "caution", x: 1460, y: 274, w: 270, h: 120, title: "Notify the AMP under the PHA and discuss a collaborative clinical approach", sub: "You have no power to detain or treat until an order is enacted by the AMP and served in writing", node: "out_pha_amp" },
+
+            /* Minor treatments legend */
+            { id: "leg", kind: "note", x: 1190, y: 700, w: 300, h: 192, title: "'Minor treatments' include:", sub: "Sedation for fracture/dislocation management; sedation for endoscopy NOT through skin or mucous membrane; catheterisation; analgesia; antipyretics; anti-Parkinsonian medication; anticonvulsants; antiemetics; antihistamines; blood tests EXCEPT HIV" }
+        ],
+        edges: [
+            { from: "e1", to: "m1", fromSide: "l", toSide: "r", label: "No" },
+            { from: "e1", to: "p1", fromSide: "r", toSide: "l", label: "Yes" },
+
+            { from: "m1", to: "m2", label: "Yes" },
+            { from: "m2", to: "m3", label: "No" },
+            { from: "m3", to: "m4", label: "Yes" },
+            { from: "m3", to: "m5", label: "No" },
+            { from: "m4", to: "m6", label: "Yes" },
+            { from: "m5", to: "m6", label: "Yes" },
+            { from: "m6", to: "m7", label: "No" },
+            { from: "m6", to: "m8", label: "Yes" },
+            { from: "m7", to: "m9" },
+
+            { from: "p1", to: "p2", label: "Yes" },
+            { from: "p1", to: "p4", fromSide: "l", toSide: "r", label: "No" },
+            { from: "p2", to: "p3", label: "Yes" },
+            { from: "p2", to: "cg", fromSide: "l", toSide: "r", label: "No" },
+            { from: "p4", to: "cg", label: "Still objecting" },
+            { from: "cg", to: "g1", fromSide: "l", toSide: "r" },
+
+            { from: "g1", to: "g2", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g1", to: "g3", label: "No" },
+            { from: "g3", to: "g4", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g3", to: "g5", label: "No / unsure" },
+            { from: "g5", to: "g6", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g5", to: "g7", label: "No" },
+            { from: "g7", to: "g8", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g7", to: "g9", label: "No" },
+            { from: "g9", to: "g10", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g10", to: "g11", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "g9", to: "g12", label: "No" },
+            { from: "g10", to: "g12", fromSide: "b", toSide: "r", label: "No" },
+            { from: "g12", to: "g13", label: "No" },
+            { from: "g12", to: "g14", label: "Yes" }
+        ]
+    };
+
+    /* Exposed so the layouts can be checked for overlapping boxes offline. */
+    window.MHA_FLOWS = { involuntary: FLOW_INVOLUNTARY, refusal: FLOW_REFUSAL, ed: FLOW_ED };
 
     /* =====================================================================
      * STATIC PANELS
@@ -798,6 +937,80 @@
         clocks.appendChild(scroller);
     }
 
+    /* The criteria, up front. These are the definitions every other decision on
+       this page turns on, so they sit above the wizard rather than inside it. */
+    function renderDefinitions() {
+        var host = document.getElementById("mha-definitions");
+        if (!host) return;
+        clear(host);
+
+        var card = el("details", "mha-card mha-definitions-card");
+        card.open = true;
+        var sum = el("summary", "mha-definitions-summary");
+        sum.appendChild(el("span", null, "The criteria — mental illness, mentally ill person, mentally disordered person"));
+        card.appendChild(sum);
+
+        var body = el("div", "mha-definitions-body");
+
+        /* --- mental illness: the symptom criteria --- */
+        body.appendChild(el("h5", "mha-subhead", "Mental illness — the symptom criteria (s 4)"));
+        body.appendChild(el("p", "mha-gloss", "A condition that seriously impairs mental functioning, temporarily or permanently, AND is characterised by at least one of these five symptoms. Both halves are required."));
+        var symptomLines = definitionLines("4", "mental illness");
+        if (symptomLines.length) {
+            body.appendChild(quoteBlock(symptomLines, "Mental Health Act 2007 (NSW) s 4(1), " + (META.currency || "")));
+        }
+
+        /* --- the two limbs, side by side --- */
+        body.appendChild(el("h5", "mha-subhead", "The two limbs compared"));
+        var rows = [
+            ["", "Mentally ill person (s 14)", "Mentally disordered person (s 15)"],
+            ["Mental illness required?", "Yes — the s 4 definition must be met", "No — applies whether or not the person is mentally ill"],
+            ["The trigger", "Owing to that illness, reasonable grounds for believing care, treatment or control is necessary", "Behaviour for the time being so irrational as to justify a conclusion on reasonable grounds that TEMPORARY care, treatment or control is necessary"],
+            ["Harm threshold", "Protection from serious harm (the person's own, or others')", "Protection from serious PHYSICAL harm (the person's own, or others') — narrower"],
+            ["Continuing condition", "Likely deterioration and its effects are taken into account (s 14(2))", "Not part of the test — it is about behaviour for the time being"],
+            ["Mental health inquiry", "Yes — the person is an assessable person and goes before the Tribunal", "No inquiry for a person detained only on this limb"],
+            ["Detention limit", "Up to the inquiry, then up to 3 months on a Tribunal order (s 35(5)(c))", "3 days NOT including weekends and public holidays, examined at least every 24 hours (s 31)"],
+            ["Schedule 1 validity", "5 days after it is given (s 19(4)(a))", "1 day after it is given (s 19(4)(b))"],
+            ["Frequency cap", "None", "No more than 3 such admissions in any 1 calendar month (s 31(5))"]
+        ];
+        var table = el("table", "mha-def-table");
+        var thead = el("thead");
+        var hr = el("tr");
+        rows[0].forEach(function (h) { hr.appendChild(el("th", null, h)); });
+        thead.appendChild(hr);
+        table.appendChild(thead);
+        var tbody = el("tbody");
+        rows.slice(1).forEach(function (r) {
+            var tr = el("tr");
+            tr.appendChild(el("th", "mha-def-rowhead", r[0]));
+            tr.appendChild(el("td", null, r[1]));
+            tr.appendChild(el("td", null, r[2]));
+            tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        var scroll = el("div", "mha-table-scroll");
+        scroll.appendChild(table);
+        body.appendChild(scroll);
+
+        /* --- what cannot establish either limb --- */
+        body.appendChild(el("h5", "mha-subhead", "What cannot, by itself, make a person mentally ill or mentally disordered (s 16)"));
+        body.appendChild(el("p", "mha-gloss", "Section 16 rules these out on their own. They may still be relevant as part of a wider picture, but none of them is a criterion."));
+        var s16 = SECTIONS["16"];
+        if (s16) {
+            var excl = el("div", "mha-quote");
+            s16.lines.forEach(function (line) {
+                excl.appendChild(el("p", "mha-quote-line mha-indent-" + line[0], line[1]));
+            });
+            body.appendChild(excl);
+        }
+
+        body.appendChild(el("h5", "mha-subhead", "The sections in full"));
+        body.appendChild(sectionList(["4", "13", "14", "15", "16", "12"]));
+
+        card.appendChild(body);
+        host.appendChild(card);
+    }
+
     function renderCapacityTab() {
         var host = document.getElementById("mha-capacity-body");
         if (!host) return;
@@ -833,19 +1046,73 @@
         ]));
         host.appendChild(traps);
 
+        var duty = el("div", "mha-card");
+        duty.appendChild(el("h4", null, "'Duty of care' is not a power to treat"));
+        duty.appendChild(el("p", null, "'Duty of care' refers to the expectation that a clinician will provide reasonable care and treatment to the standard widely accepted as competent professional practice. It is not a legal authority to do anything to anyone."));
+        duty.appendChild(el("p", null, "When clinicians say they are treating a patient 'under duty of care', what they are actually reaching for is the power to treat a patient who lacks decision-making capacity — and that power is codified in s 37 of the Guardianship Act. Document the real basis: that the patient is detained and treated under s 37 of the Guardianship Act, not 'under duty of care'."));
+        duty.appendChild(el("p", "mha-provenance", "Huber et al. (2021), drawing on Lamont S, Stewart C, Chiarella M. The misuse of 'duty of care' as justification for non-consensual coercive treatment. Int J Law Psychiatry 2020; 71: 101598."));
+        host.appendChild(duty);
+
         var guardianship = el("div", "mha-card");
         guardianship.appendChild(el("h4", null, "When capacity is absent: the guardianship routes"));
-        var warn = el("p", "mha-caution mha-unverified");
-        warn.textContent = "The Guardianship Act 1987 (NSW) provisions below are summarised from Cheng et al. (2018). Unlike the Mental Health Act text in this app, they are not quoted from the Act itself — check the current text before relying on the detail.";
-        guardianship.appendChild(warn);
+        guardianship.appendChild(unverifiedNote());
         guardianship.appendChild(bulletList([
-            "Emergency (s 37): treatment may be given without consent where the person lacks capacity, urgently required treatment is needed to save life or prevent significant pain or serious damage to health, it is not practicable to obtain substitute consent, and there is no reason to believe the person would have refused if competent.",
-            "Person responsible: may consent to treatment for a person who lacks capacity in the ordinary case.",
-            "Minimal understanding exception (s 46(4)): where the person refuses with minimal or no understanding of what the treatment entails and it will cause no more than reasonably tolerable and transient distress, the person responsible may consent.",
-            "Objection by a person lacking capacity: an application must be made to the Guardianship Division of NCAT to authorise a guardian to override the objection (s 46A), or to seek consent directly from the Tribunal (ss 44 and 45)."
+            "Emergency (s 37): treatment may be given without consent where the person lacks capacity, urgently required treatment is needed to save life or prevent significant pain or serious damage to health, it is not practicable to obtain substitute consent, and there is no reason to believe the person would have refused if competent. Huber et al. state this pathway applies to patients aged 16 and over.",
+            "Person responsible (s 36): may consent to treatment for a person who lacks capacity and is NOT objecting.",
+            "A person responsible cannot override a patient's refusal, even one made without capacity — except through the narrow exception below.",
+            "Minimal understanding exception (s 46(4)): where the person refuses with minimal or no understanding of what the treatment entails, and the treatment will cause no distress or only distress that is reasonably tolerable and transitory, the person responsible may consent.",
+            "Guardian appointed by NCAT: may consent over the patient's objection only where they hold the healthcare function AND are explicitly authorised to override objections. Read the order before relying on it.",
+            "Otherwise, objection by a person lacking capacity means an application must be made to the Guardianship Division of NCAT — to authorise a guardian to override the objection (s 46A), or to seek consent directly from the Tribunal (ss 44 and 45).",
+            "Detention under the Guardianship Act has no form, unlike a Schedule 1. Security staff may be unfamiliar with it, so state the legal basis explicitly in the notes and at handover.",
+            "Where incapacity is suspected but not confirmed and the patient needs protection, there is a basis at common law to restrain — only for as long as the necessity prevails, or until consent can be otherwise obtained, weighing the harm of restraint against the harm of an incapacitous decision."
         ]));
         guardianship.appendChild(contactBlock(["NCAT Guardianship Division"]));
         host.appendChild(guardianship);
+
+        var minor = el("div", "mha-card");
+        minor.appendChild(el("h4", null, "'Minor treatments' that may be given where there is no person responsible"));
+        minor.appendChild(el("p", "mha-gloss", "The list given in the published ED algorithm:"));
+        minor.appendChild(bulletList([
+            "Sedation for management of a fracture or dislocation",
+            "Sedation for endoscopy NOT through skin or mucous membrane",
+            "Catheterisation",
+            "Analgesia",
+            "Antipyretics",
+            "Anti-Parkinsonian medication",
+            "Anticonvulsants",
+            "Antiemetics",
+            "Antihistamines",
+            "Blood tests, EXCEPT HIV"
+        ]));
+        minor.appendChild(el("p", "mha-provenance", HUBER_CITE));
+        host.appendChild(minor);
+
+        var pha = el("div", "mha-card");
+        pha.appendChild(el("h4", null, "Public Health Act 2010 (NSW): what it can and cannot do for you"));
+        pha.appendChild(unverifiedNote());
+        pha.appendChild(bulletList([
+            "The Public Health Act is concerned with risk to public health, not with the individual patient's best interests. It divides illnesses into categories in Schedule 1, with different rules for each. COVID-19 was classified across Categories 2-4.",
+            "A notifiable diagnosis should be recorded in the notes; the laboratory notifies the Public Health Unit (s 54).",
+            "Where a person has been exposed and behaves in a way that presents a possible risk to the public, a medical practitioner or hospital may inform an Authorised Medical Practitioner (AMP) through the local Public Health Unit, who may make a public health order.",
+            "A public health order must be served in writing on the person before it comes into effect.",
+            "An order may require the person to refrain from specified conduct, undergo a specified medical examination, be detained at a specified place for the duration of the order, or undergo treatment (s 62).",
+            "Until the order is made and served you have NO power under this Act to detain or treat. In practice, drafting takes time, and the patient may lawfully leave before the order exists unless they independently meet the Mental Health Act or Guardianship Act criteria.",
+            "An order usually works only where there is a clinical structure to scaffold it — plan the supports at the same time as the order."
+        ]));
+        pha.appendChild(contactBlock(["Local Public Health Unit"]));
+        pha.appendChild(el("p", "mha-provenance", HUBER_CITE));
+        host.appendChild(pha);
+
+        var choosing = el("div", "mha-card");
+        choosing.appendChild(el("h4", null, "Which Act, in one line each"));
+        choosing.appendChild(bulletList([
+            "Mental Health Act — the patient needs psychiatric assessment or treatment and meets the mentally ill or mentally disordered criteria. Authorises psychiatric treatment without consent. Does NOT authorise other medical treatment.",
+            "Guardianship Act — the patient lacks decision-making capacity and is refusing medical treatment. This is the Act for treating the body, whether or not a schedule exists.",
+            "Public Health Act — the risk is to the public, not primarily to the patient. Nothing happens until an AMP makes and serves a written order.",
+            "A patient with decision-making capacity can refuse treatment, even lifesaving treatment, and none of these Acts changes that except in extremely limited circumstances."
+        ]));
+        choosing.appendChild(el("p", "mha-provenance", HUBER_CITE));
+        host.appendChild(choosing);
 
         var mha = el("div", "mha-card");
         mha.appendChild(el("h4", null, "The Mental Health Act provisions that come up in these discussions"));
@@ -899,14 +1166,19 @@
         li3.appendChild(document.createTextNode("An algorithm for managing adults who refuse medical treatment in New South Wales. Australas Psychiatry 26(5): 464-468. The treatment-refusal pathway, and the reading of the Guardianship Act provisions cited there."));
         ul.appendChild(li3);
 
+        var li3b = el("li");
+        li3b.appendChild(el("strong", null, "Huber J, Aguirrebarrena G, Ryan CJ (2022). "));
+        li3b.appendChild(document.createTextNode("Algorithm for the use of the Guardianship Act, the Mental Health Act and the Public Health Act in emergency departments in New South Wales. Emerg Med Australas 34(1): 34-38. The ED pathway across all three Acts, the 'duty of care' correction, the minor-treatments list, and the Public Health Act material."));
+        ul.appendChild(li3b);
+
         var li4 = el("li");
         li4.appendChild(el("strong", null, "Hunter and New England Area Health Service v A [2009] NSWSC 761. "));
         li4.appendChild(document.createTextNode("The capacity test and the standing of a competent refusal."));
         ul.appendChild(li4);
 
         var li5 = el("li");
-        li5.appendChild(el("strong", null, "Guardianship Act 1987 (NSW). "));
-        li5.appendChild(document.createTextNode("Summarised from Cheng et al., NOT quoted — every place this app relies on it is marked."));
+        li5.appendChild(el("strong", null, "Guardianship Act 1987 (NSW) and Public Health Act 2010 (NSW). "));
+        li5.appendChild(document.createTextNode("Summarised from Cheng et al. and Huber et al., NOT quoted — every place this app relies on them is marked with a warning."));
         ul.appendChild(li5);
 
         src.appendChild(ul);
@@ -915,7 +1187,8 @@
         var scope = el("div", "mha-card");
         scope.appendChild(el("h4", null, "Scope and limits"));
         scope.appendChild(bulletList([
-            "Adults only. The treatment-refusal pathway follows a published algorithm that excludes people under 18 years.",
+            "Adults only. The treatment-refusal pathway follows a published algorithm that excludes people under 18 years. Note the ED algorithm's Guardianship Act s 37 pathway is described as applying from age 16 — the two papers draw their age lines differently.",
+            "Only the Mental Health Act is quoted. The Guardianship Act and Public Health Act material is paraphrased from the published algorithms and is flagged wherever it appears.",
             "Excluded treatments, which have their own legal frameworks: termination of pregnancy, treatments likely to cause infertility, treatment in the context of research, compulsory treatment of some infectious diseases, treatment in forensic settings, and end-of-life treatment that does not contribute to the person's health and well-being.",
             "Forensic and correctional patients are referred to only where the quoted sections mention them; the forensic provisions Act is not covered.",
             "Form numbers change by regulation. Statutory sources are given instead; print current forms from NSW Health.",
@@ -945,6 +1218,7 @@
         if (!document.getElementById("mha-page")) return;
 
         renderCurrencyBanners();
+        renderDefinitions();
         renderWizard();
         renderLibrary();
         renderForms();
@@ -955,6 +1229,8 @@
         if (flowA) renderFlow(flowA, FLOW_INVOLUNTARY);
         var flowB = document.getElementById("mha-flow-refusal");
         if (flowB) renderFlow(flowB, FLOW_REFUSAL);
+        var flowC = document.getElementById("mha-flow-ed");
+        if (flowC) renderFlow(flowC, FLOW_ED);
 
         var printBtn = document.getElementById("mha-print-flow");
         if (printBtn) printBtn.addEventListener("click", function () { window.print(); });

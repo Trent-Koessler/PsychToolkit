@@ -160,8 +160,8 @@
                         <span>⚖️ Mental Health Act 2007 (NSW)</span>
                         <span
                             style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Point-of-care
-                            decision support: scheduling, examinations, treatment refusal, with the sections
-                            quoted.</span>
+                            decision support across the Mental Health, Guardianship and Public Health Acts &mdash;
+                            scheduling, examinations and treatment refusal, with the sections quoted.</span>
                     </button>
                     <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
                     <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
@@ -2746,17 +2746,18 @@
             <div id="mha-page" class="page" data-title="Mental Health Act 2007 (NSW)">
 
                 <div class="mha-disclaimer">
-                    <strong>Decision support, not legal advice.</strong> This tool summarises pathways under the
-                    Mental Health Act 2007 (NSW) and quotes the Act directly. It does not replace your local health
-                    district's legal advice, NSW Health policy directives, or your own clinical judgement. Adults only.
-                    <span class="mha-currency-text"></span>
+                    <strong>Decision support, not legal advice.</strong> This tool covers the Mental Health Act 2007
+                    (NSW), which it quotes directly, and the Guardianship Act 1987 (NSW) and Public Health Act 2010
+                    (NSW), which are summarised from published algorithms rather than quoted. It does not replace your
+                    local health district's legal advice, NSW Health policy directives, or your own clinical judgement.
+                    Adults only. <span class="mha-currency-text"></span>
                 </div>
 
                 <div class="tab-container mha-tabs">
                     <div class="tab-buttons">
                         <button class="tab-button active" data-tab="mha-guided">Guided pathway</button>
                         <button class="tab-button" data-tab="mha-map">Pathway maps</button>
-                        <button class="tab-button" data-tab="mha-refusal-info">Capacity &amp; guardianship</button>
+                        <button class="tab-button" data-tab="mha-refusal-info">Capacity, GA &amp; PHA</button>
                         <button class="tab-button" data-tab="mha-library">Section library</button>
                         <button class="tab-button" data-tab="mha-forms">Forms &amp; clocks</button>
                         <button class="tab-button" data-tab="mha-sources">Sources &amp; scope</button>
@@ -2768,6 +2769,7 @@
                         <p class="mha-intro">One question at a time. Each answer narrows to a disposition card telling
                             you what to do, which section authorises it, what paperwork it needs and what clock starts.
                         </p>
+                        <div id="mha-definitions"></div>
                         <div id="mha-wizard"></div>
                     </section>
 
@@ -2777,6 +2779,13 @@
                         <p class="mha-intro">The whole picture in two diagrams. Click any box to open that step in the
                             guided pathway. <button id="mha-print-flow" class="mha-print-btn">Print these
                                 maps</button></p>
+
+                        <h4 class="mha-flow-heading">Which Act applies — in the emergency department</h4>
+                        <p class="mha-flow-caption">After Huber J, Aguirrebarrena G, Ryan CJ. Algorithm for the use of the
+                            Guardianship Act, the Mental Health Act and the Public Health Act in emergency departments in
+                            New South Wales. <em>Emerg Med Australas</em> 2022; 34(1): 34-38. Guardianship Act and Public
+                            Health Act content is paraphrased from that paper, not quoted from those Acts.</p>
+                        <div class="mha-flow-scroll" id="mha-flow-ed"></div>
 
                         <h4 class="mha-flow-heading">Involuntary admission and detention</h4>
                         <div class="mha-flow-scroll" id="mha-flow-involuntary"></div>
@@ -2790,9 +2799,11 @@
 
                     <!-- Capacity and guardianship -->
                     <section id="mha-refusal-info" class="tab-content">
-                        <h3>Capacity &amp; guardianship</h3>
+                        <h3>Capacity, Guardianship Act &amp; Public Health Act</h3>
                         <p class="mha-intro">The capacity test, what has to happen before a person is deemed to lack
-                            capacity, and the substitute-consent routes when they do.</p>
+                            capacity, the substitute-consent routes when they do, and what the Public Health Act can and
+                            cannot do for you. Guardianship Act and Public Health Act content is paraphrased from the
+                            published algorithms, not quoted from those Acts.</p>
                         <div id="mha-capacity-body"></div>
                     </section>
 
@@ -2947,6 +2958,66 @@
                                 <input type="number" id="pk-duration" placeholder="e.g. 14" min="1" max="365"
                                     value="14">
                             </div>
+                            <label class="pk-check pk-check-block">
+                                <input type="checkbox" id="pk-steady-start">
+                                <span><strong>Start at steady state</strong> — model the patient as already established
+                                    on this regimen, so the curve begins at the steady-state trough instead of from
+                                    zero. Needs a regular interval.</span>
+                            </label>
+                        </div>
+
+                        <!-- Regimen builder: writes dose lines into the textarea below,
+                             so a frequency and a number of days can be used instead of
+                             typing every hour by hand. The textarea stays editable. -->
+                        <div class="pk-input-section">
+                            <h4>Regimen Builder</h4>
+                            <p class="pk-input-hint">Pick a dose, a frequency and a number of days, and this writes the
+                                hour lines into the regimen below. Doses are spaced evenly across the interval; real
+                                administration times (e.g. TDS at 08:00/14:00/20:00) differ, so edit the lines directly
+                                if that matters.</p>
+                            <div class="pk-param-grid">
+                                <label for="pk-build-dose">Dose amount:</label>
+                                <input type="number" id="pk-build-dose" value="30" min="0" step="any">
+
+                                <label for="pk-build-freq">Frequency:</label>
+                                <select id="pk-build-freq">
+                                    <optgroup label="Daily and more often">
+                                        <option value="24" selected>Once daily — daily / mane / nocte (q24h)</option>
+                                        <option value="12">Twice daily — BD (q12h)</option>
+                                        <option value="8">Three times daily — TDS (q8h)</option>
+                                        <option value="6">Four times daily — QID (q6h)</option>
+                                        <option value="4">Every 4 hours (q4h)</option>
+                                        <option value="3">Every 3 hours (q3h)</option>
+                                        <option value="2">Every 2 hours (q2h)</option>
+                                    </optgroup>
+                                    <optgroup label="Less often than daily">
+                                        <option value="48">Alternate days (q48h)</option>
+                                        <option value="72">Every 3 days (q72h)</option>
+                                        <option value="168">Weekly</option>
+                                        <option value="336">Fortnightly</option>
+                                        <option value="672">4-weekly / monthly LAI (28 days)</option>
+                                        <option value="2016">3-monthly LAI (84 days)</option>
+                                    </optgroup>
+                                    <option value="custom">Custom interval…</option>
+                                </select>
+
+                                <label for="pk-build-custom" id="pk-build-custom-label">Custom interval (hours):</label>
+                                <input type="number" id="pk-build-custom" value="24" min="0.25" step="any">
+
+                                <label for="pk-build-days">Number of days:</label>
+                                <input type="number" id="pk-build-days" value="14" min="1" max="730">
+
+                                <label for="pk-build-start">First dose at hour:</label>
+                                <input type="number" id="pk-build-start" value="0" min="0" step="any">
+                            </div>
+                            <div class="pk-build-actions">
+                                <button id="pk-build-btn" class="pk-build-btn">↓ Write into regimen</button>
+                                <label class="pk-check"><input type="checkbox" id="pk-build-append"> Append to existing
+                                    lines</label>
+                                <label class="pk-check"><input type="checkbox" id="pk-build-sync" checked> Match
+                                    simulation duration</label>
+                            </div>
+                            <p id="pk-build-summary" class="pk-build-summary"></p>
                         </div>
 
                         <div class="pk-input-section">
