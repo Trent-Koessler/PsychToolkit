@@ -1,0 +1,409 @@
+<title>Psi, Rebuilt</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #e9ecf1;
+    --card: #ffffff;
+    --card-2: #f4f6f9;
+    --ink: #121623;
+    --muted: #5c6577;
+    --line: #d2d8e2;
+    --indigo: #4f46e5;
+    --indigo-soft: #eceafd;
+    --teal: #0d9488;
+    --flag: #b45309;
+    --grid: rgba(79, 70, 229, 0.26);
+    --shadow: 0 1px 2px rgba(18, 22, 35, .06), 0 8px 24px -12px rgba(18, 22, 35, .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0a0e17; --card: #141a28; --card-2: #1b2233;
+      --ink: #e7ebf3; --muted: #949eb4; --line: #262f42;
+      --indigo: #7c76ee; --indigo-soft: #221f47; --teal: #2dd4bf; --flag: #e0a458;
+      --grid: rgba(124, 118, 238, 0.3);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0a0e17; --card: #141a28; --card-2: #1b2233;
+    --ink: #e7ebf3; --muted: #949eb4; --line: #262f42;
+    --indigo: #7c76ee; --indigo-soft: #221f47; --teal: #2dd4bf; --flag: #e0a458;
+    --grid: rgba(124, 118, 238, 0.3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header.masthead { padding: 56px 0 8px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Public Sans", sans-serif; font-weight: 700;
+    font-size: clamp(34px, 5.4vw, 58px); line-height: 1.02; letter-spacing: -0.028em;
+    margin: 0 0 18px; text-wrap: balance;
+  }
+  .lede { max-width: 62ch; color: var(--muted); font-size: 17px; margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .controls {
+    position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap;
+    gap: 10px 22px; align-items: center; padding: 12px 0; margin: 28px 0 8px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
+  }
+  .ctl-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .segmented { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--card); }
+  .segmented button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font: 500 13px/1 "Public Sans", sans-serif; color: var(--muted); padding: 9px 16px;
+  }
+  .segmented button + button { border-left: 1px solid var(--line); }
+  .segmented button[aria-pressed="true"] { background: var(--indigo); color: #fff; }
+  .segmented button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .toggle input { accent-color: var(--indigo); width: 15px; height: 15px; }
+
+  /* ---------- the fix panel ---------- */
+  .fix { display: grid; grid-template-columns: 250px 1fr; gap: 34px; align-items: start;
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px;
+    padding: 26px 28px; margin: 30px 0 0; box-shadow: var(--shadow); }
+  .fix h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 22px; letter-spacing: -0.018em; margin: 0 0 10px; }
+  .fix p { margin: 0 0 14px; color: var(--muted); max-width: 62ch; }
+  .skeleton { width: 250px; height: 250px; display: block; }
+  .metrics { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; list-style: none; padding: 0; }
+  .metrics li {
+    font-family: "IBM Plex Mono", monospace; font-size: 11.5px; color: var(--ink);
+    background: var(--card-2); border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px;
+  }
+  .metrics li span { color: var(--muted); }
+
+  .compare { display: flex; gap: 26px; align-items: flex-end; margin-top: 22px; padding-top: 20px; border-top: 1px solid var(--line); }
+  .compare figure { margin: 0; display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+  .compare figcaption { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); }
+  .compare .then figcaption { color: var(--flag); }
+  .compare .tile { width: 96px; height: 96px; }
+
+  section { margin-top: 56px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+  .sec-head h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 24px; letter-spacing: -0.02em; margin: 0; }
+  .sec-head .count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
+  .sec-note { color: var(--muted); font-size: 14px; margin: 14px 0 26px; max-width: 68ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px;
+  }
+  .card-top { display: flex; gap: 18px; align-items: flex-start; }
+  .card-id { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+  .card h3 { font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; letter-spacing: -0.015em; margin: 2px 0 6px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+  .tile { border-radius: 22%; display: grid; place-items: center; flex: none; position: relative; overflow: hidden; }
+  .tile svg { display: block; width: 100%; height: 100%; }
+  .hero-tile { width: 116px; height: 116px; }
+
+  .mode-gradient .tile { background: linear-gradient(145deg, #6366f1 0%, #4f46e5 42%, #0d9488 100%); }
+  .mode-gradient .tile .sym { color: #ffffff; }
+  .mode-flat .tile { background: var(--indigo); }
+  .mode-flat .tile .sym { color: #ffffff; }
+  .mode-mono .tile { background: var(--card-2); border: 1px solid var(--line); }
+  .mode-mono .tile .sym { color: var(--ink); }
+  .knockout-bg { fill: currentColor; }
+  .mode-gradient .tile .knockout-bg, .mode-flat .tile .knockout-bg { fill: #ffffff; }
+
+  .tile::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 100% 12.5%,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 12.5% 100%;
+  }
+  .show-grid .hero-tile::after, .show-grid .compare .tile::after { opacity: 1; }
+
+  .ladder { display: flex; align-items: flex-end; gap: 16px; padding-top: 4px; border-top: 1px solid var(--line); }
+  .rung { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-top: 14px; }
+  .rung .cap { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--muted); }
+  .s48 { width: 48px; height: 48px; }
+  .s32 { width: 32px; height: 32px; }
+  .s24 { width: 24px; height: 24px; }
+  .s16 { width: 16px; height: 16px; }
+
+  .notes { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+  .note { display: grid; grid-template-columns: 62px 1fr; gap: 10px; align-items: baseline; }
+  .note .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); padding-top: 2px;
+  }
+  .note .v { color: var(--ink); }
+  .note.risk .v { color: var(--muted); }
+  .stat { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  footer.sheet-foot {
+    margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted);
+    font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: "IBM Plex Mono", monospace;
+  }
+
+  @media (max-width: 720px) { .fix { grid-template-columns: 1fr; } .skeleton { width: 100%; height: auto; } }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap" id="root">
+  <header class="masthead">
+    <p class="eyebrow">PsychToolkit / psi, take two / 12 directions</p>
+    <h1>The stem is the letter</h1>
+    <p class="lede">The first set drew the descender at <strong>6 units of 64</strong> — the stem stopped almost as soon as it left the bowl, so the mark read as a cup on a stub. Every study here is rebuilt on one skeleton with a <strong>16-unit descender</strong> and a stem spanning <strong>81% of the canvas</strong>. The vertical is now the dominant stroke, which is what makes a Ψ a Ψ.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Render controls">
+    <span class="ctl-label">Render</span>
+    <div class="segmented" id="modes">
+      <button type="button" data-mode="gradient" aria-pressed="true">Gradient tile</button>
+      <button type="button" data-mode="flat" aria-pressed="false">Solid tile</button>
+      <button type="button" data-mode="mono" aria-pressed="false">Mono line</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="gridToggle"> 8&times;8 construction grid</label>
+    <label class="toggle"><input type="checkbox" id="themeToggle"> Force dark sheet</label>
+  </div>
+
+  <div class="fix">
+    <svg class="skeleton" viewBox="-19 -3 102 70" role="img" aria-label="Construction diagram: cap line at 6, baseline at 42, foot at 58, stem spanning 52 units with a 16-unit descender">
+      <g stroke="var(--line)" stroke-width="0.5" stroke-dasharray="2 2">
+        <line x1="-18" y1="6" x2="70" y2="6"/>
+        <line x1="-18" y1="42" x2="70" y2="42"/>
+        <line x1="-18" y1="58" x2="70" y2="58"/>
+      </g>
+      <g stroke="var(--ink)" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M32 6 V 58"/>
+        <path d="M13 6 V 23 a19 19 0 0 0 38 0 V 6"/>
+        <path d="M22 58 H 42"/>
+      </g>
+      <g stroke="var(--indigo)" stroke-width="0.9">
+        <line x1="62" y1="6" x2="62" y2="42"/>
+        <line x1="62" y1="42" x2="62" y2="58"/>
+        <line x1="59.5" y1="6" x2="64.5" y2="6"/>
+        <line x1="59.5" y1="42" x2="64.5" y2="42"/>
+        <line x1="59.5" y1="58" x2="64.5" y2="58"/>
+      </g>
+      <g fill="var(--muted)" font-family="IBM Plex Mono, monospace" font-size="3.4">
+        <text x="-18" y="4.6">cap 6</text>
+        <text x="-18" y="40.6">baseline 42</text>
+        <text x="-18" y="56.6">foot 58</text>
+      </g>
+      <g fill="var(--indigo)" font-family="IBM Plex Mono, monospace" font-size="3.4">
+        <text x="66" y="25.5">36</text>
+        <text x="66" y="51.5">16</text>
+      </g>
+    </svg>
+    <div>
+      <h2>What changed</h2>
+      <p>The bowl now closes on the baseline at 42 rather than sinking to 49, which frees 16 units below it for a real descender. The prongs rise the full way to the cap line, so the bowl reads as a crossing stroke on a long vertical instead of a container the stem is standing in. Same skeleton under all twelve — only the treatment changes.</p>
+      <ul class="metrics">
+        <li>stem <span>52 / 64 &middot; 81%</span></li>
+        <li>descender <span>16 &middot; 25%</span></li>
+        <li>bowl width <span>38</span></li>
+        <li>stroke <span>5.5</span></li>
+        <li>safe margin <span>6</span></li>
+      </ul>
+      <div class="compare">
+        <figure class="then">
+          <div class="tile"><svg class="sym" viewBox="0 0 64 64" role="img" aria-label="Previous psi with a short descender"><g stroke="currentColor" fill="none" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 10 V 55"/><path d="M15 23 V 32 a17 17 0 0 0 34 0 V 23"/><path d="M22 55 H 42"/></g></svg></div>
+          <figcaption>before &middot; descender 6</figcaption>
+        </figure>
+        <figure>
+          <div class="tile"><svg class="sym" viewBox="0 0 64 64" role="img" aria-label="Rebuilt psi with a long descender"><g stroke="currentColor" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"><path d="M32 6 V 58"/><path d="M13 6 V 23 a19 19 0 0 0 38 0 V 6"/><path d="M22 58 H 42"/></g></svg></div>
+          <figcaption>after &middot; descender 16</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>Twelve psi</h2>
+      <span class="count">01&ndash;12</span>
+    </div>
+    <p class="sec-note">Each card reports its own stem length and descender so you can check the rule holds. The 48 / 32 / 24 / 16 ladder is where a long stem earns its keep — the vertical is the last thing to survive when the mark gets small.</p>
+    <div class="grid" id="grid"></div>
+  </section>
+
+  <footer class="sheet-foot">
+    <span>Canvas 64 &times; 64</span>
+    <span>Cap 6 / baseline 42 / foot 58</span>
+    <span>Stroke 5.5, round caps</span>
+    <span>Maskable padding 12.5%</span>
+  </footer>
+</div>
+
+<script>
+  // One skeleton, twelve treatments. Cap line 6, bowl closes on the baseline at 42,
+  // stem carries on to a foot at 58 -- a 16-unit descender on a 64-unit canvas.
+  var S  = 'stroke="currentColor" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round"';
+  var STEM = '<path d="M32 6 V 58"/>';
+  var BOWL = '<path d="M13 6 V 23 a19 19 0 0 0 38 0 V 6"/>';
+  var FOOT = '<path d="M22 58 H 42"/>';
+
+  var CONCEPTS = [
+    {
+      id: "01", name: "Column", stem: "52", desc: "16",
+      idea: "The skeleton itself: prongs to the cap line, bowl closing on the baseline, stem carrying on to a footed descender.",
+      why: "The vertical dominates, so it reads as a letter at a glance and as a mark at 16px.",
+      risk: "Deliberately plain. If nothing here beats it, it is the safe pick rather than the interesting one.",
+      svg: '<g ' + S + '>' + STEM + BOWL + FOOT + '</g>'
+    },
+    {
+      id: "02", name: "Drop", stem: "54", desc: "18",
+      idea: "No foot serif. The stem simply runs longer and stops on a round terminal near the tile edge.",
+      why: "The longest vertical in the set — unmistakably a descender rather than a stub.",
+      risk: "The terminal sits at 60, past the maskable safe zone \u2014 an Android adaptive icon would crop it. Scale the mark down 8% for that build.",
+      svg: '<g ' + S + '><path d="M32 6 V 60"/>' + BOWL + '</g>'
+    },
+    {
+      id: "03", name: "Wedge", stem: "52", desc: "16",
+      idea: "A tapering stem, broad at the cap line and drawn down to a point below the bowl.",
+      why: "The taper puts weight at the top and speed at the bottom, so the descender reads as long even at 24px.",
+      risk: "The tip thins below 24px and can drop out entirely on a light tile.",
+      svg: '<path d="M28.6 6 h6.8 l-1.9 52 h-3 Z" fill="currentColor"/>' +
+           '<g ' + S + ' stroke-width="5">' + BOWL + '</g>'
+    },
+    {
+      id: "04", name: "Flare", stem: "52", desc: "16",
+      idea: "The prongs splay outward as they rise, opening the bowl like a receiving shape.",
+      why: "Widens the top without widening the bowl, which keeps the stem the tallest thing on the tile.",
+      risk: "The splay eats the safe margin; at 16px the prong tips sit close to the corner radius.",
+      svg: '<g ' + S + '>' + STEM + '<path d="M9 7 L14 24 a18 18 0 0 0 36 0 L55 7"/>' + FOOT + '</g>'
+    },
+    {
+      id: "05", name: "Slab", stem: "52", desc: "16",
+      idea: "A typographic Ψ: slab serifs on both prongs and the descender, cut at the same weight as the strokes.",
+      why: "Reads as set type rather than an icon of a letter — the most editorial option on the sheet.",
+      risk: "Four horizontal terminals is a lot of detail; the top serifs blur together below 24px.",
+      svg: '<g ' + S + '>' + STEM + BOWL + FOOT +
+           '<path d="M8 7 H18"/><path d="M46 7 H56"/></g>'
+    },
+    {
+      id: "06", name: "Chalice", stem: "52", desc: "16",
+      idea: "Solid-drawn: a weighted bowl and a rectangular stem with a slab foot.",
+      why: "Mass survives shrinking better than any hairline, and the long stem stops it reading as a cup.",
+      risk: "The heaviest mark here. On a solid tile it can overwhelm the padding.",
+      svg: '<g fill="currentColor">' +
+           '<path d="M12 6 V23 a20 20 0 0 0 40 0 V6 h-8 v17 a12 12 0 0 1 -24 0 V6 Z"/>' +
+           '<rect x="28.7" y="6" width="6.6" height="52" rx="2.4"/>' +
+           '<rect x="21" y="52.5" width="22" height="6" rx="3"/></g>'
+    },
+    {
+      id: "07", name: "Counterform", stem: "48", desc: "15",
+      idea: "The rebuilt psi knocked out of a filled squircle, so the letter is the tile's own background.",
+      why: "Maximum contrast at every size, and the descender is unmistakable as a void running down the tile.",
+      risk: "A knocked-out mark cannot sit on a photo or a busy wallpaper — it needs its own field.",
+      knockout: true,
+      svg: '<mask id="ko__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+           '<rect x="2" y="2" width="60" height="60" rx="17" fill="#fff"/>' +
+           '<g stroke="#000" fill="none" stroke-width="5.5" stroke-linecap="round" stroke-linejoin="round">' +
+           '<path d="M32 9 V 57"/><path d="M17 9 V 24 a15 15 0 0 0 30 0 V 9"/><path d="M24 57 H 40"/></g></mask>' +
+           '<rect class="knockout-bg" x="2" y="2" width="60" height="60" rx="17" mask="url(#ko__UID__)"/>'
+    },
+    {
+      id: "08", name: "Tick", stem: "52", desc: "18",
+      idea: "The right prong leaves the bowl and keeps going as a checkmark. One stroke, two readings.",
+      why: "Says completed assessment without adding a second object, and the long stem anchors the asymmetry.",
+      risk: "Needs optical rather than geometric centring, and the flick pushes the right margin.",
+      svg: '<g ' + S + '>' + STEM + '<path d="M17 7 V 24 a15 15 0 0 0 30 0 L 56 9"/>' + FOOT + '</g>'
+    },
+    {
+      id: "09", name: "Caliper", stem: "50", desc: "16",
+      idea: "Measurement points at the prong tips, like the jaws of a caliper closing on the bowl.",
+      why: "Turns the letter into a mark about assessment while leaving the skeleton untouched.",
+      risk: "The dots fuse with the strokes below 20px; ship the 16px build without them.",
+      svg: '<g ' + S + '>' + STEM + '<path d="M13 10 V 23 a19 19 0 0 0 38 0 V 10"/>' + FOOT + '</g>' +
+           '<g fill="currentColor"><circle cx="13" cy="9" r="4.4"/><circle cx="51" cy="9" r="4.4"/></g>'
+    },
+    {
+      id: "10", name: "Trace", stem: "46", desc: "10",
+      idea: "The descender lands on a monitoring trace instead of a foot serif, and the trace runs the tile.",
+      why: "Ties the letter to the tracking side of the toolkit — bloods, weights, side effects over time.",
+      risk: "The shortest descender in the set, since the trace has to sit low. Fine detail at 16px.",
+      svg: '<g ' + S + '>' + '<path d="M32 6 V 52"/>' + BOWL +
+           '<path d="M7 52 h7 l4 -8 l4 14 l4 -6 h31" stroke-width="4.5"/></g>'
+    },
+    {
+      id: "11", name: "Soft", stem: "50", desc: "14",
+      idea: "Heavier weight, deeper bowl, fully rounded terminals and no foot. A friendlier letter.",
+      why: "The warmest option, and the thick stroke makes the stem legible at the smallest sizes.",
+      risk: "Rounded and heavy is the house style of a hundred wellness apps. It softens the clinical tone.",
+      svg: '<g stroke="currentColor" fill="none" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">' +
+           '<path d="M32 8 V 58"/><path d="M16 8 V 26 a16 16 0 0 0 32 0 V 8"/></g>'
+    },
+    {
+      id: "12", name: "Stencil", stem: "52", desc: "16",
+      idea: "The bowl breaks either side of the stem, stencil-cut, so the vertical passes through untouched.",
+      why: "The gaps make the stem read as one continuous stroke from cap line to foot — the clearest descender here.",
+      risk: "Stencil cuts close up at small sizes; below 24px the gaps need widening or the bowl rejoins.",
+      svg: '<g ' + S + '>' + STEM +
+           '<path d="M13 6 V 23 A19 19 0 0 0 25.5 40.9"/>' +
+           '<path d="M51 6 V 23 A19 19 0 0 1 38.5 40.9"/>' + FOOT + '</g>'
+    }
+  ];
+
+  var uid = 0;
+  function symbol(c) {
+    uid += 1;
+    return '<svg class="sym" viewBox="0 0 64 64" role="img" aria-label="' + c.name +
+      ' psi mark">' + c.svg.replace(/__UID__/g, String(uid)) + '</svg>';
+  }
+  function tile(c, size) { return '<div class="tile ' + size + '">' + symbol(c) + '</div>'; }
+
+  function card(c) {
+    return '<article class="card">' +
+      '<div class="card-top">' +
+        '<div class="tile hero-tile">' + symbol(c) + '</div>' +
+        '<div><div class="card-id">' + c.id + '</div><h3>' + c.name + '</h3><p>' + c.idea + '</p></div>' +
+      '</div>' +
+      '<div class="ladder">' +
+        '<div class="rung">' + tile(c, "s48") + '<span class="cap">48</span></div>' +
+        '<div class="rung">' + tile(c, "s32") + '<span class="cap">32</span></div>' +
+        '<div class="rung">' + tile(c, "s24") + '<span class="cap">24</span></div>' +
+        '<div class="rung">' + tile(c, "s16") + '<span class="cap">16</span></div>' +
+      '</div>' +
+      '<div class="notes">' +
+        '<div class="note"><span class="k">Works</span><span class="v">' + c.why + '</span></div>' +
+        '<div class="note risk"><span class="k">Watch</span><span class="v">' + c.risk + '</span></div>' +
+      '</div>' +
+      '<div class="stat">stem ' + c.stem + ' &middot; descender ' + c.desc + '</div>' +
+    '</article>';
+  }
+
+  document.getElementById("grid").innerHTML = CONCEPTS.map(card).join("");
+
+  var root = document.getElementById("root");
+  function setMode(m) {
+    root.classList.remove("mode-gradient", "mode-flat", "mode-mono");
+    root.classList.add("mode-" + m);
+    Array.prototype.forEach.call(document.querySelectorAll("#modes button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+    });
+  }
+  setMode("gradient");
+  document.getElementById("modes").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b) { setMode(b.dataset.mode); }
+  });
+  document.getElementById("gridToggle").addEventListener("change", function (e) {
+    root.classList.toggle("show-grid", e.target.checked);
+  });
+  document.getElementById("themeToggle").addEventListener("change", function (e) {
+    document.documentElement.setAttribute("data-theme", e.target.checked ? "dark" : "light");
+  });
+</script>
