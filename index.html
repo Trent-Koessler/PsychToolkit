@@ -113,6 +113,13 @@
                     <button class="big-button" data-page="withdrawal-page">Withdrawal & NRT Tools</button>
                     <button class="big-button" data-page="qtc-page">QTc Prolongation Guide</button>
                     <button class="big-button" data-page="generators-page">Assessment Note Generators</button>
+                    <button class="big-button" data-page="mha-page">
+                        <span>⚖️ Mental Health Act 2007 (NSW)</span>
+                        <span
+                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Point-of-care
+                            decision support: scheduling, examinations, treatment refusal, with the sections
+                            quoted.</span>
+                    </button>
                     <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
                     <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
                 </nav>
@@ -2689,6 +2696,94 @@
                 </ul>
             </div>
 
+            <!-- ============================================================ -->
+            <!-- MENTAL HEALTH ACT 2007 (NSW) DECISION SUPPORT                -->
+            <!-- Content is rendered by mha-ui.js from mha.js and mha-data.js -->
+            <!-- ============================================================ -->
+            <div id="mha-page" class="page" data-title="Mental Health Act 2007 (NSW)">
+
+                <div class="mha-disclaimer">
+                    <strong>Decision support, not legal advice.</strong> This tool summarises pathways under the
+                    Mental Health Act 2007 (NSW) and quotes the Act directly. It does not replace your local health
+                    district's legal advice, NSW Health policy directives, or your own clinical judgement. Adults only.
+                    <span class="mha-currency-text"></span>
+                </div>
+
+                <div class="tab-container mha-tabs">
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="mha-guided">Guided pathway</button>
+                        <button class="tab-button" data-tab="mha-map">Pathway maps</button>
+                        <button class="tab-button" data-tab="mha-refusal-info">Capacity &amp; guardianship</button>
+                        <button class="tab-button" data-tab="mha-library">Section library</button>
+                        <button class="tab-button" data-tab="mha-forms">Forms &amp; clocks</button>
+                        <button class="tab-button" data-tab="mha-sources">Sources &amp; scope</button>
+                    </div>
+
+                    <!-- Guided decision pathway -->
+                    <section id="mha-guided" class="tab-content active">
+                        <h3>Guided pathway</h3>
+                        <p class="mha-intro">One question at a time. Each answer narrows to a disposition card telling
+                            you what to do, which section authorises it, what paperwork it needs and what clock starts.
+                        </p>
+                        <div id="mha-wizard"></div>
+                    </section>
+
+                    <!-- Flowcharts -->
+                    <section id="mha-map" class="tab-content">
+                        <h3>Pathway maps</h3>
+                        <p class="mha-intro">The whole picture in two diagrams. Click any box to open that step in the
+                            guided pathway. <button id="mha-print-flow" class="mha-print-btn">Print these
+                                maps</button></p>
+
+                        <h4 class="mha-flow-heading">Involuntary admission and detention</h4>
+                        <div class="mha-flow-scroll" id="mha-flow-involuntary"></div>
+
+                        <h4 class="mha-flow-heading">Refusal of medical treatment</h4>
+                        <p class="mha-flow-caption">After Cheng K, Wand A, Ryan C, Callaghan S. An algorithm for
+                            managing adults who refuse medical treatment in New South Wales. <em>Australas
+                                Psychiatry</em> 2018; 26(5): 464-468.</p>
+                        <div class="mha-flow-scroll" id="mha-flow-refusal"></div>
+                    </section>
+
+                    <!-- Capacity and guardianship -->
+                    <section id="mha-refusal-info" class="tab-content">
+                        <h3>Capacity &amp; guardianship</h3>
+                        <p class="mha-intro">The capacity test, what has to happen before a person is deemed to lack
+                            capacity, and the substitute-consent routes when they do.</p>
+                        <div id="mha-capacity-body"></div>
+                    </section>
+
+                    <!-- Section library -->
+                    <section id="mha-library" class="tab-content">
+                        <h3>Section library</h3>
+                        <p class="mha-intro">Every section this tool relies on, quoted from the current consolidation.
+                            Search by number, heading or any words in the text.</p>
+                        <input type="text" id="mha-library-search" placeholder="Search sections, e.g. 'surgical', 'carer', '27'..."
+                            style="max-width:420px; margin-bottom:16px;">
+                        <div id="mha-library-list"></div>
+                    </section>
+
+                    <!-- Forms and timeframes -->
+                    <section id="mha-forms" class="tab-content">
+                        <h3>Forms &amp; clocks</h3>
+                        <p class="mha-intro">What to complete, who completes it, and every statutory time limit in one
+                            place.</p>
+                        <h4 class="mha-flow-heading">Paperwork</h4>
+                        <div id="mha-forms-list"></div>
+                        <h4 class="mha-flow-heading">Statutory clocks</h4>
+                        <div id="mha-timeframes-list"></div>
+                    </section>
+
+                    <!-- Sources -->
+                    <section id="mha-sources" class="tab-content">
+                        <h3>Sources &amp; scope</h3>
+                        <p class="mha-intro">What this tool is built from, how current it is, and what it deliberately
+                            does not cover.</p>
+                        <div id="mha-sources-body"></div>
+                    </section>
+                </div>
+            </div>
+
             <!-- About Page -->
             <div id="about-page" class="page" data-title="About PsychToolkit">
                 <h3>About PsychToolkit</h3>
@@ -2897,6 +2992,10 @@
          CDN script cannot be precached by the service worker, so the PK visualiser
          used to fail silently offline. -->
     <script src="vendor/chart.umd.js"></script>
+    <!-- Mental Health Act module: generated statutory text, then content, then UI. -->
+    <script src="mha-data.js"></script>
+    <script src="mha.js"></script>
+    <script src="mha-ui.js"></script>
     <script src="script.js"></script>
 </body>
 

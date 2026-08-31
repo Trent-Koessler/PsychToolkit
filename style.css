@@ -2190,4 +2190,734 @@ button.btn-primary:hover,
     font-family: inherit;
     box-sizing: border-box;
 }
-
+
+/* =========================================================================
+   Mental Health Act 2007 (NSW) decision support
+   ========================================================================= */
+
+.mha-disclaimer {
+    background: rgba(245, 158, 11, 0.12);
+    background: color-mix(in srgb, var(--warning-color) 12%, transparent);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border: 1px solid color-mix(in srgb, var(--warning-color) 45%, transparent);
+    border-left: 4px solid var(--warning-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    font-size: 13px;
+    line-height: 1.55;
+    margin-bottom: 18px;
+    color: var(--text-color);
+}
+
+.mha-currency-text {
+    display: block;
+    margin-top: 6px;
+    color: var(--text-muted);
+    font-size: 12.5px;
+}
+
+.mha-intro {
+    font-size: 13.5px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin-bottom: 18px;
+    max-width: 78ch;
+}
+
+#mha-page .tab-buttons {
+    flex-wrap: wrap;
+}
+
+/* ------------------------------------------------------------ cards */
+
+.mha-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 18px 20px;
+    margin-bottom: 16px;
+    box-shadow: var(--shadow-sm);
+}
+
+.mha-card h4 {
+    font-size: 16px;
+    margin-bottom: 8px;
+    line-height: 1.4;
+}
+
+.mha-subhead {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 18px 0 8px;
+}
+
+.mha-help,
+.mha-gloss,
+.mha-summary {
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+}
+
+.mha-summary {
+    color: var(--text-color);
+}
+
+.mha-list {
+    margin: 0 0 4px 18px;
+    padding: 0;
+}
+
+.mha-list li {
+    font-size: 13.5px;
+    line-height: 1.62;
+    margin-bottom: 7px;
+}
+
+.mha-actions li::marker {
+    color: var(--primary-color);
+}
+
+.mha-clocks li::marker {
+    color: var(--warning-color);
+}
+
+.mha-kv {
+    font-size: 13px;
+    line-height: 1.6;
+    margin-bottom: 5px;
+}
+
+.mha-provenance {
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--text-muted);
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.mha-callout {
+    font-size: 13px;
+    line-height: 1.6;
+    background: var(--footer-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-top: 8px;
+}
+
+/* ------------------------------------------------------ role picker */
+
+.mha-role-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+    gap: 10px;
+    margin-top: 14px;
+}
+
+.mha-role-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+    text-align: left;
+    padding: 14px 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--tab-active-bg);
+    color: var(--text-color);
+    cursor: pointer;
+    font-family: inherit;
+    transition: border-color 0.15s, transform 0.15s;
+}
+
+.mha-role-btn:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-1px);
+}
+
+.mha-role-label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.mha-role-blurb {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* ----------------------------------------------------------- trail */
+
+.mha-trail {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.mha-trail-btn {
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 5px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.mha-trail-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.mha-trail-role,
+.mha-trail-step {
+    font-size: 12px;
+    padding: 5px 10px;
+    border-radius: 999px;
+    background: var(--tab-bg);
+    color: var(--text-muted);
+    border: 1px solid var(--border-color);
+}
+
+.mha-trail-role {
+    font-weight: 600;
+    color: var(--text-color);
+}
+
+/* -------------------------------------------------------- questions */
+
+.mha-options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 14px;
+}
+
+.mha-option {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+    width: 100%;
+    padding: 13px 16px;
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--primary-color);
+    border-radius: var(--radius-sm);
+    background: var(--tab-active-bg);
+    color: var(--text-color);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+}
+
+.mha-option:hover {
+    border-color: var(--primary-color);
+    background: rgba(79, 70, 229, 0.08);
+    background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+}
+
+.mha-option-label {
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.mha-option-hint {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    line-height: 1.55;
+}
+
+/* --------------------------------------------------------- outcomes */
+
+.mha-outcome {
+    border-left: 4px solid var(--primary-color);
+}
+
+.mha-outcome.mha-tone-go {
+    border-left-color: var(--success-color);
+}
+
+.mha-outcome.mha-tone-caution {
+    border-left-color: var(--warning-color);
+}
+
+.mha-outcome.mha-tone-stop {
+    border-left-color: var(--danger-color);
+}
+
+.mha-outcome-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.mha-outcome-head h4 {
+    margin: 0;
+}
+
+.mha-tone-badge {
+    flex-shrink: 0;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: 0.07em;
+    padding: 4px 9px;
+    border-radius: 999px;
+    margin-top: 2px;
+    color: #fff;
+    background: var(--primary-color);
+}
+
+.mha-tone-go .mha-tone-badge {
+    background: var(--success-color);
+}
+
+.mha-tone-caution .mha-tone-badge {
+    background: var(--warning-color);
+    color: #1f2937;
+}
+
+.mha-tone-stop .mha-tone-badge {
+    background: var(--danger-color);
+}
+
+.mha-caution {
+    font-size: 13px;
+    line-height: 1.62;
+    padding: 11px 14px;
+    border-radius: var(--radius-sm);
+    background: rgba(245, 158, 11, 0.13);
+    background: color-mix(in srgb, var(--warning-color) 13%, transparent);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border: 1px solid color-mix(in srgb, var(--warning-color) 40%, transparent);
+    margin: 10px 0;
+}
+
+.mha-unverified {
+    background: rgba(239, 68, 68, 0.1);
+    background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+    border-color: rgba(239, 68, 68, 0.35);
+    border-color: color-mix(in srgb, var(--danger-color) 35%, transparent);
+}
+
+.mha-next {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px dashed var(--border-color);
+}
+
+.mha-next-label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+}
+
+.mha-next-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 14px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--primary-color);
+    background: transparent;
+    color: var(--primary-color);
+    cursor: pointer;
+}
+
+.mha-next-btn:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+.mha-outcome-tools {
+    margin-top: 16px;
+}
+
+.mha-copy-btn,
+.mha-print-btn {
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 9px 16px;
+    border-radius: var(--radius-sm);
+    border: none;
+    background: var(--primary-color);
+    color: #fff;
+    cursor: pointer;
+}
+
+.mha-copy-btn:hover,
+.mha-print-btn:hover {
+    background: var(--primary-hover);
+}
+
+.mha-print-btn {
+    margin-left: 8px;
+    padding: 6px 12px;
+    font-size: 12px;
+}
+
+/* -------------------------------------------------- section quoting */
+
+.mha-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mha-section {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--tab-active-bg);
+    overflow: hidden;
+}
+
+.mha-section>summary {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13.5px;
+    list-style: none;
+}
+
+.mha-section>summary::-webkit-details-marker {
+    display: none;
+}
+
+.mha-section>summary::before {
+    content: "▸";
+    color: var(--text-muted);
+    font-size: 11px;
+}
+
+.mha-section[open]>summary::before {
+    content: "▾";
+}
+
+.mha-section-no {
+    font-weight: 700;
+    color: var(--primary-color);
+    flex-shrink: 0;
+}
+
+.mha-section-heading {
+    color: var(--text-color);
+}
+
+.mha-section-body {
+    padding: 4px 16px 14px 16px;
+    border-top: 1px solid var(--border-color);
+}
+
+.mha-quote {
+    border-left: 3px solid var(--accent-color);
+    padding: 10px 0 10px 14px;
+    margin: 10px 0;
+}
+
+.mha-quote-line {
+    font-size: 13px;
+    line-height: 1.62;
+    margin-bottom: 6px;
+}
+
+.mha-indent-1 {
+    margin-left: 14px;
+}
+
+.mha-indent-2 {
+    margin-left: 30px;
+}
+
+.mha-indent-3 {
+    margin-left: 46px;
+}
+
+.mha-section-foot {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.mha-aid {
+    margin-top: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--footer-bg);
+}
+
+.mha-aid>summary {
+    padding: 10px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mha-aid-body {
+    padding: 4px 16px 14px;
+    font-size: 13.5px;
+    line-height: 1.62;
+}
+
+.mha-aid-body p {
+    margin-bottom: 8px;
+}
+
+/* ------------------------------------------------------------ forms */
+
+.mha-form-chips {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.mha-form-chip {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--tab-active-bg);
+}
+
+.mha-form-chip>summary {
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.mha-form-chip-body {
+    padding: 2px 16px 12px;
+}
+
+.mha-form-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    margin-bottom: 12px;
+}
+
+.mha-form-card h4 {
+    font-size: 15px;
+    margin-bottom: 10px;
+}
+
+.mha-form-card .mha-sections {
+    margin-top: 12px;
+}
+
+.mha-table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+.mha-clock-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 620px;
+}
+
+.mha-clock-table th,
+.mha-clock-table td {
+    text-align: left;
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border-color);
+    line-height: 1.55;
+    vertical-align: top;
+}
+
+.mha-clock-table th {
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.mha-clock-cell {
+    font-weight: 700;
+    color: var(--warning-color);
+    white-space: nowrap;
+}
+
+.mha-clock-ref {
+    white-space: nowrap;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* ------------------------------------------------------- flowcharts */
+
+.mha-flow-heading {
+    font-size: 15px;
+    margin: 22px 0 6px;
+}
+
+.mha-flow-caption {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-bottom: 10px;
+    max-width: 78ch;
+}
+
+.mha-flow-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    background: var(--tab-active-bg);
+    padding: 12px;
+}
+
+.mha-flow-svg {
+    display: block;
+    width: 100%;
+    min-width: 900px;
+    height: auto;
+}
+
+.mha-flow-box {
+    fill: var(--tab-bg);
+    stroke: var(--border-color);
+    stroke-width: 1.5;
+}
+
+.mha-flow-title {
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    fill: var(--text-color);
+}
+
+.mha-flow-sub {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    fill: var(--text-muted);
+}
+
+.mha-flow-edge {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 1.4;
+    opacity: 0.75;
+}
+
+.mha-flow-arrowhead {
+    fill: var(--text-muted);
+    opacity: 0.85;
+}
+
+.mha-flow-edge-label {
+    font-family: var(--font-sans);
+    font-size: 10.5px;
+    font-weight: 600;
+    fill: var(--text-muted);
+}
+
+.mha-flow-start .mha-flow-box {
+    fill: rgba(79, 70, 229, 0.16);
+    fill: color-mix(in srgb, var(--primary-color) 16%, transparent);
+    stroke: var(--primary-color);
+}
+
+.mha-flow-decision .mha-flow-box {
+    fill: rgba(13, 148, 136, 0.13);
+    fill: color-mix(in srgb, var(--accent-color) 13%, transparent);
+    stroke: var(--accent-color);
+}
+
+.mha-flow-caution .mha-flow-box {
+    fill: rgba(245, 158, 11, 0.16);
+    fill: color-mix(in srgb, var(--warning-color) 16%, transparent);
+    stroke: var(--warning-color);
+}
+
+.mha-flow-stop .mha-flow-box {
+    fill: rgba(239, 68, 68, 0.14);
+    fill: color-mix(in srgb, var(--danger-color) 14%, transparent);
+    stroke: var(--danger-color);
+}
+
+.mha-flow-clickable {
+    cursor: pointer;
+}
+
+.mha-flow-clickable:hover .mha-flow-box {
+    stroke-width: 2.5;
+}
+
+/* ----------------------------------------------------------- mobile */
+
+@media (max-width: 640px) {
+    .mha-card {
+        padding: 14px;
+    }
+
+    .mha-outcome-head {
+        flex-direction: column;
+        gap: 6px;
+    }
+
+    .mha-indent-2 {
+        margin-left: 18px;
+    }
+
+    .mha-indent-3 {
+        margin-left: 26px;
+    }
+}
+
+/* ------------------------------------------------------------ print */
+
+@media print {
+
+    .app-header,
+    .lock-screen,
+    .mha-print-btn,
+    #mha-page .tab-buttons {
+        display: none !important;
+    }
+
+    #mha-page .tab-content {
+        display: block !important;
+    }
+
+    .mha-flow-scroll {
+        overflow: visible;
+        border: none;
+        padding: 0;
+        page-break-inside: avoid;
+    }
+
+    .mha-flow-svg {
+        min-width: 0;
+    }
+
+    .mha-flow-box {
+        fill: #fff;
+        stroke: #333;
+    }
+
+    .mha-flow-title,
+    .mha-flow-sub,
+    .mha-flow-edge-label {
+        fill: #000;
+    }
+
+    .mha-flow-edge {
+        stroke: #333;
+    }
+}
