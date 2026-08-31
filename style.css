@@ -16,6 +16,7 @@
     --border-color: #e2e8f0;
     --card-bg: rgba(255, 255, 255, 0.85);
     --header-bg: rgba(255, 255, 255, 0.9);
+    --drawer-bg: #ffffff;
     --footer-bg: #f1f5f9;
     --tab-bg: #f1f5f9;
     --tab-active-bg: #ffffff;
@@ -43,6 +44,7 @@
     --border-color: #1e293b;
     --card-bg: rgba(30, 41, 59, 0.7);
     --header-bg: rgba(15, 23, 42, 0.95);
+    --drawer-bg: #0f172a;
     --footer-bg: #0f172a;
     --tab-bg: #1e293b;
     --tab-active-bg: #0b0f19;
@@ -76,22 +78,28 @@ body.modal-open>#app-container {
 }
 
 /* Header Styles */
-.app-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 14px 24px;
-    background-color: var(--header-bg);
-    border-bottom: 1px solid var(--border-color);
+#top-bar {
     position: sticky;
     top: 0;
     z-index: 100;
+    background-color: var(--header-bg);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
     box-shadow: var(--shadow-sm);
 }
 
+.app-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 24px;
+    background-color: transparent;
+    border-bottom: 1px solid var(--border-color);
+}
+
 #page-title {
+    flex: 1 1 auto;
+    min-width: 0;
     font-size: clamp(18px, 4.5vw, 22px);
     font-weight: 700;
     letter-spacing: -0.025em;
@@ -108,8 +116,9 @@ body.modal-open>#app-container {
     gap: 10px;
 }
 
-/* Navigation Buttons */
-header.app-header button,
+/* Navigation Buttons. The hamburger is excluded: this rule outranks .hamburger
+   on specificity, and its padding would collapse the three bars to zero width. */
+header.app-header button:not(.hamburger),
 .header-controls button {
     background-color: transparent;
     color: var(--text-color);
@@ -122,7 +131,7 @@ header.app-header button,
     transition: all 0.2s ease;
 }
 
-header.app-header button:hover,
+header.app-header button:not(.hamburger):hover,
 .header-controls button:hover {
     background-color: var(--tab-bg);
     border-color: var(--text-muted);
@@ -140,13 +149,14 @@ header.app-header button:hover,
 
 /* Hamburger Menu */
 .hamburger {
-    display: none;
+    display: flex;
+    flex: 0 0 auto;
     flex-direction: column;
     justify-content: space-around;
     width: 26px;
     height: 20px;
-    background: transparent !important;
-    border: none !important;
+    background: transparent;
+    border: none;
     cursor: pointer;
     padding: 0;
     z-index: 110;
@@ -172,6 +182,171 @@ header.app-header button:hover,
 
 .hamburger.active span:nth-child(3) {
     transform: rotate(-45deg) translate(1px, -1px);
+}
+
+/* Per-page navigation bar (Back / Home) */
+.page-nav {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 24px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-nav[hidden] {
+    display: none;
+}
+
+.page-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background-color: transparent;
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 6px 12px;
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.page-nav-btn:hover {
+    background-color: var(--tab-bg);
+    border-color: var(--text-muted);
+}
+
+.page-nav-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+.page-nav-btn:disabled:hover {
+    background-color: transparent;
+    border-color: var(--border-color);
+}
+
+.page-nav-crumb {
+    margin-left: 4px;
+    font-size: 13px;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Slide-out navigation drawer */
+.nav-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(15, 23, 42, 0.45);
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    z-index: 190;
+}
+
+.nav-backdrop.active {
+    opacity: 1;
+}
+
+.nav-drawer {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 290px;
+    max-width: 85vw;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--drawer-bg);
+    border-right: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    transform: translateX(-100%);
+    transition: transform 0.22s ease;
+    z-index: 200;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+}
+
+.nav-drawer.active {
+    transform: translateX(0);
+}
+
+.nav-drawer-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.nav-drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-color);
+}
+
+.nav-close {
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: 26px;
+    line-height: 1;
+    padding: 0 4px;
+    cursor: pointer;
+}
+
+.nav-close:hover {
+    color: var(--text-color);
+}
+
+.nav-drawer-links {
+    display: flex;
+    flex-direction: column;
+    padding: 10px;
+    gap: 2px;
+}
+
+.nav-drawer-heading {
+    margin: 12px 10px 4px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.nav-link {
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    text-align: left;
+    font-size: 14.5px;
+    font-weight: 500;
+    color: var(--text-color);
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.nav-link:hover {
+    background-color: var(--tab-bg);
+}
+
+.nav-link.current {
+    background-color: var(--tab-bg);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+
+    .nav-drawer,
+    .nav-backdrop {
+        transition: none;
+    }
 }
 
 /* Main Content Area */
@@ -1167,34 +1342,19 @@ button.btn-primary:hover,
 
 /* Responsive Styles */
 @media (max-width: 768px) {
-    .hamburger {
-        display: flex;
-    }
 
+    /* Everything in the header controls also lives in the drawer, so on small
+       screens the hamburger is the only way in. */
     .header-controls {
         display: none;
-        position: absolute;
-        top: 60px;
-        right: 0;
-        background-color: var(--header-bg);
-        border: 1px solid var(--border-color);
-        border-top: none;
-        border-radius: 0 0 0 var(--radius-md);
-        flex-direction: column;
-        width: 180px;
-        padding: 16px 10px;
-        box-shadow: var(--shadow-lg);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
     }
 
-    .header-controls.active {
-        display: flex;
+    .page-nav {
+        padding: 8px 16px;
     }
 
-    .header-controls button {
-        width: 100%;
-        text-align: left;
+    .page-nav-crumb {
+        display: none;
     }
 
     #main-content {
@@ -2884,7 +3044,11 @@ button.btn-primary:hover,
 
 @media print {
 
+    #top-bar,
     .app-header,
+    .page-nav,
+    .nav-drawer,
+    .nav-backdrop,
     .lock-screen,
     .mha-print-btn,
     #mha-page .tab-buttons {
