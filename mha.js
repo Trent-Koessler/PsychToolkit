@@ -68,7 +68,7 @@
         "28": "Examiners may rely on their own observations and other reliable evidence — and the practitioner who scheduled the person must NOT perform the s 27 examinations.",
         "29": "Medication given to a detained person must be the minimum consistent with proper care, so the person can communicate at their mental health inquiry.",
         "30": "An assessable person may be reclassified as a voluntary patient at any time before the inquiry.",
-        "31": "The limits on detaining a mentally disordered person: 3 days excluding weekends and public holidays, examination at least every 24 hours, release when the criteria are not met, and no more than 3 such admissions in a calendar month.",
+        "31": "The limits on detaining a mentally disordered person. Note the wording carefully: the maximum is 3 days NOT INCLUDING weekends and public holidays — which is not the same as 72 hours, and over a long weekend is considerably longer. Examination at least every 24 hours, release as soon as the criteria are not met, and no more than 3 such admissions in a calendar month.",
         "33": "Steps under s 27 and the inquiry may be delayed while the person is too physically unwell to be the subject of them. Section 12 still applies.",
         "34": "The Tribunal must hold a mental health inquiry, and the authorised medical officer must get the person and the evidence there.",
         "35": "What the Tribunal decides at the inquiry and the orders it can make — including an involuntary patient order for up to 3 months.",
@@ -249,8 +249,8 @@
         { clock: "As soon as possible", what: "Second examination. Must be by a psychiatrist unless the first examiner was one.", ref: "s 27(1)(b)", sections: ["27"] },
         { clock: "As soon as practicable", what: "Third examination by a psychiatrist, where the second examiner does not find the person mentally ill or mentally disordered.", ref: "s 27(1)(c)", sections: ["27"] },
         { clock: "5 days / 1 day", what: "Expiry of a Schedule 1 — 5 days where the person is certified mentally ill, 1 day where certified mentally disordered.", ref: "s 19(4)", sections: ["19"] },
-        { clock: "3 days", what: "Maximum continuous detention of a mentally disordered person, NOT counting weekends and public holidays.", ref: "s 31(1)-(2)", sections: ["31"] },
-        { clock: "Every 24 hours", what: "Minimum examination frequency for a detained mentally disordered person.", ref: "s 31(3)", sections: ["31"] },
+        { clock: "3 days", what: "Maximum continuous detention of a mentally disordered person, NOT counting weekends and public holidays. Often taught as '72 hours' — the Act does not say that, and over a long weekend the lawful period is materially longer than 72 clock hours.", ref: "s 31(1)-(2)", sections: ["31"] },
+        { clock: "Every 24 hours", what: "Minimum examination frequency for a detained mentally disordered person — the recertification step. Detention must end at any such examination where the person is no longer mentally disordered or mentally ill, or less restrictive care becomes available (s 31(4)).", ref: "s 31(3)-(4)", sections: ["31"] },
         { clock: "3 per calendar month", what: "Maximum number of admissions as a mentally disordered person in any one calendar month.", ref: "s 31(5)", sections: ["31"] },
         { clock: "24 hours", what: "Notification to designated carers and the principal care provider that the person has been detained.", ref: "s 75(1)", sections: ["75"] },
         { clock: "24 hours before the inquiry", what: "Repeat of the statement of rights where the person could not understand it when first given.", ref: "s 74(4)", sections: ["74"] },
@@ -274,6 +274,7 @@
         { name: "NSW Mental Health Line", detail: "24/7 triage and clinical advice", tel: "1800011511", display: "1800 011 511" },
         { name: "Mental Health Review Tribunal", detail: "Inquiries, reviews, consent to surgery and ECT determinations", url: MHRT_URL },
         { name: "NCAT Guardianship Division", detail: "Guardianship orders and consent to medical/dental treatment", url: NCAT_URL },
+        { name: "Local Public Health Unit", detail: "24/7, routes to your local unit by where you are calling from. The way to reach the Authorised Medical Practitioner for a public health order, and the notification line for notifiable conditions", tel: "1300066055", display: "1300 066 055" },
         { name: "NSW Health mental health legislation and forms", detail: "Current prescribed forms and policy directives", url: FORMS_URL },
         { name: "Your local health district legal / after-hours executive", detail: "For any decision to treat over a competent refusal, or where the law is unclear", local: true }
     ];
@@ -283,7 +284,7 @@
      * ================================================================== */
 
     var ROLES = [
-        { id: "ed", label: "ED / general hospital doctor", start: "d_criteria", blurb: "Straight to the detention criteria." },
+        { id: "ed", label: "Emergency department", start: "ed_start", blurb: "Which of the three Acts applies — after Huber et al." },
         { id: "reg", label: "Psychiatry registrar / MH clinician", start: "start", blurb: "All pathways." },
         { id: "cl", label: "Consultation-liaison (medical ward)", start: "r_age", blurb: "Straight to the treatment-refusal algorithm." },
         { id: "comm", label: "Community / after-hours", start: "d_criteria", blurb: "Getting someone safely to a facility." },
@@ -296,6 +297,7 @@
             kind: "question",
             title: "What do you need to decide right now?",
             options: [
+                { label: "I'm in ED and not sure which Act applies", hint: "Works through the Mental Health Act, the Guardianship Act and the Public Health Act together, after Huber et al. (2021).", next: "ed_start" },
                 { label: "Whether this person can be detained under the Act", next: "d_criteria" },
                 { label: "The person is already detained — what happens next?", next: "e_stage" },
                 { label: "Whether treatment or medication can be given without consent", next: "t_start" },
@@ -304,6 +306,430 @@
                 { label: "Electroconvulsive therapy", next: "ect_status" },
                 { label: "Community treatment order, including a breach", next: "cto_start" }
             ]
+        },
+
+        /* ---------------- ED triage across all three Acts (Huber et al. 2021) ----------------
+         * Follows the published ED algorithm, which routes between the Mental Health Act,
+         * the Guardianship Act and the Public Health Act. Guardianship Act and Public Health
+         * Act content is paraphrased from the paper, not quoted, and is flagged as such. */
+
+        ed_start: {
+            kind: "question",
+            title: "Is the patient declining testing or treatment?",
+            help: "The entry question of the ED algorithm. It decides whether you are dealing with a refusal (Guardianship Act / Public Health Act territory) or with a person who needs a mental health assessment.",
+            source: "huber",
+            options: [
+                { label: "Yes — declining testing or treatment", next: "ed_pha_q1" },
+                { label: "No", next: "ed_mha_q1" }
+            ]
+        },
+
+        ed_pha_q1: {
+            kind: "question",
+            title: "Is the illness a Category 4 or 5 illness under the Public Health Act?",
+            help: "The Public Health Act 2010 (NSW) divides illnesses into categories in its Schedule 1, with different rules for each. COVID-19 was classified across Categories 2-4. Check the current Schedule for the illness in front of you.",
+            source: "huber",
+            unverified: true,
+            options: [
+                { label: "Yes", next: "ed_pha_q2" },
+                { label: "No, or not a notifiable illness", next: "ed_negotiate" }
+            ]
+        },
+
+        ed_pha_q2: {
+            kind: "question",
+            title: "Is the patient behaving in a way that may, as a consequence of their decision, be a risk to public health?",
+            source: "huber",
+            unverified: true,
+            options: [
+                { label: "Yes — a possible risk to the public", next: "out_pha_amp" },
+                { label: "No", next: "ed_ga_q1" }
+            ]
+        },
+
+        out_pha_amp: {
+            kind: "outcome",
+            tone: "caution",
+            title: "Notify the Authorised Medical Practitioner under the Public Health Act",
+            summary: "A medical practitioner or hospital may inform an Authorised Medical Practitioner (AMP) via the local Public Health Unit, who may then make a public health order. Until that order is made and served, you have no power under this Act.",
+            actions: [
+                "Contact the AMP through your local Public Health Unit and discuss a collaborative clinical approach.",
+                "You do NOT have the power to detain or treat the patient under the Public Health Act until an order is enacted by the AMP.",
+                "A public health order must be served in writing on the patient before it comes into effect.",
+                "An order may require the person to refrain from specified conduct, undergo a specified medical examination, be detained at a specified place for the duration of the order, or undergo treatment (Public Health Act s 62).",
+                "Drafting an order takes time. The patient may be allowed to leave before it is made, unless they independently meet the criteria under the Mental Health Act or the Guardianship Act.",
+                "A notifiable diagnosis should be recorded in the notes; the laboratory notifies the Public Health Unit (Public Health Act s 54).",
+                "An order usually works only where there is a clinical structure to scaffold it — plan the supports alongside the order."
+            ],
+            source: "huber",
+            unverified: true,
+            authority: "Public Health Act 2010 (NSW) ss 54, 62 and Schedule 1, as described in Huber et al. (2021)",
+            next: [
+                { label: "They may also need a mental health assessment", node: "ed_mha_q1" },
+                { label: "They may also lack capacity for the refused treatment", node: "ed_ga_q1" }
+            ]
+        },
+
+        ed_negotiate: {
+            kind: "question",
+            title: "Attempt to negotiate a mutually agreed decision. Is the patient still objecting?",
+            help: "The algorithm puts negotiation before any use of legislation. A narrower, staged or deferred intervention is often acceptable where the original proposal is not.",
+            source: "huber",
+            options: [
+                { label: "Yes — still objecting", next: "ed_ga_q1" },
+                { label: "No — agreement reached", next: "out_ed_agreed" }
+            ]
+        },
+
+        out_ed_agreed: {
+            kind: "outcome",
+            tone: "go",
+            title: "Proceed with consent",
+            summary: "Agreement has been reached, so no coercive framework is engaged.",
+            actions: [
+                "Document the discussion, what was agreed and the consent obtained.",
+                "Re-assess if the patient withdraws consent or their condition changes."
+            ],
+            source: "huber"
+        },
+
+        ed_mha_q1: {
+            kind: "question",
+            title: "Does the patient have symptoms that require a mental health assessment or mental health treatment?",
+            source: "huber",
+            options: [
+                { label: "Yes", next: "ed_mha_detained" },
+                { label: "No", next: "out_ed_no_mha" }
+            ]
+        },
+
+        ed_mha_detained: {
+            kind: "question",
+            title: "Is the patient currently detained under the Mental Health Act?",
+            source: "huber",
+            sections: ["18", "19", "20", "22"],
+            options: [
+                { label: "Yes — already detained", next: "out_ed_amo_review" },
+                { label: "No", next: "ed_mha_symptoms" }
+            ]
+        },
+
+        ed_mha_symptoms: {
+            kind: "question",
+            title: "Is the patient suffering from hallucinations, delusions, serious disorder of thought form, severe disturbance of mood, or sustained or repeated irrational behaviour indicating any of those?",
+            help: "This is the s 4 definition of mental illness. If none of these are present, the person may still be a mentally disordered person under s 15 — that limb does not require mental illness.",
+            source: "huber",
+            sections: ["4", "14", "15", "16"],
+            options: [
+                { label: "Yes", next: "ed_mi_risk" },
+                { label: "No", next: "ed_md_risk" }
+            ]
+        },
+
+        ed_mi_risk: {
+            kind: "question",
+            title: "Are there reasonable grounds to believe that care, treatment or control is necessary to protect the patient or others from serious harm?",
+            help: "The s 14 'mentally ill person' limb. Note it is serious harm, not only serious physical harm.",
+            source: "huber",
+            sections: ["14"],
+            options: [
+                { label: "Yes", next: "ed_less_restrictive", set: { limb: "mentally ill person (s 14)" } },
+                { label: "No", next: "out_ed_no_mha" }
+            ]
+        },
+
+        ed_md_risk: {
+            kind: "question",
+            title: "Is their behaviour so irrational as to justify, on reasonable grounds, care, treatment or control for the protection of the patient or others from serious PHYSICAL harm?",
+            help: "The s 15 'mentally disordered person' limb. Mental illness is not required, the harm must be physical, and the detention that follows is tightly time-limited.",
+            source: "huber",
+            sections: ["15"],
+            options: [
+                { label: "Yes", next: "ed_less_restrictive", set: { limb: "mentally disordered person (s 15)" } },
+                { label: "No", next: "out_ed_no_mha" }
+            ]
+        },
+
+        ed_less_restrictive: {
+            kind: "question",
+            title: "Other than the use of the Mental Health Act, is there another less restrictive avenue that is consistent with safe and effective care, and is appropriate and reasonably available?",
+            source: "huber",
+            sections: ["12", "68"],
+            options: [
+                { label: "No", next: "out_ed_schedule1" },
+                { label: "Yes", next: "out_ed_no_mha" }
+            ]
+        },
+
+        out_ed_schedule1: {
+            kind: "outcome",
+            tone: "go",
+            title: "Write a Schedule 1 (Mental Health Act s 19)",
+            summary: "The criteria are met and no less restrictive option is available, so the certificate route is open.",
+            actions: [
+                "Complete the Schedule 1 — the certificate in the form set out in Part 1 of Schedule 1 to the Act.",
+                "You must have personally examined or observed the person immediately before or shortly before completing it.",
+                "You must not be a designated carer, the principal care provider or a near relative of the person (s 19(2)(d)).",
+                "Refer for review by an Authorised Medical Officer."
+            ],
+            forms: ["Schedule 1 — Mental health certificate"],
+            sections: ["19", "12", "18"],
+            source: "huber",
+            next: [{ label: "Referred — what does the AMO review involve?", node: "out_ed_amo_review" }]
+        },
+
+        out_ed_amo_review: {
+            kind: "outcome",
+            tone: "go",
+            title: "Refer for review by an Authorised Medical Officer — within 12 hours",
+            summary: "The patient should be detained until the review occurs, which must be within 12 hours. Psychiatric treatment may be given, including sedation if necessary, despite refusal.",
+            actions: [
+                "The first examination must occur as soon as practicable and no later than 12 hours after arrival (s 27(1)(a)).",
+                "Most hospitals have numerous Authorised Medical Officers, each declared by the doctor designated as the Clinical Superintendent for the Act.",
+                "Detention under the Act authorises psychiatric treatment without consent (s 84, read with s 82).",
+                "It does NOT authorise other medical treatment. For a non-psychiatric procedure the patient is refusing, use the Guardianship Act pathway.",
+                "Give the statement of rights (s 74) and notify carers within 24 hours (s 75)."
+            ],
+            timeframes: ["First examination within 12 hours of arrival (s 27(1)(a))."],
+            forms: ["Form 1 — Clinical Report as to Mental State of a Detained Person", "Statement of legal rights and entitlements"],
+            sections: ["27", "84", "82", "74", "75", "12"],
+            source: "huber",
+            cautions: [
+                "Detention under the Mental Health Act authorises psychiatric treatment without consent, but does not authorise other medical treatment (Huber et al. 2021). Do not treat a physical condition over a refusal on the strength of a schedule."
+            ],
+            next: [
+                { label: "They are also refusing medical treatment", node: "ed_ga_q1" },
+                { label: "Continue the detention pathway", node: "e_stage" }
+            ]
+        },
+
+        out_ed_no_mha: {
+            kind: "outcome",
+            tone: "stop",
+            title: "Do not utilise the Mental Health Act",
+            summary: "The criteria for detention are not made out, or a less restrictive avenue is available.",
+            actions: [
+                "Do not schedule the patient.",
+                "If they are refusing medical treatment and may lack decision-making capacity, the Guardianship Act pathway is the relevant one — not the Mental Health Act.",
+                "If there is a public health risk, consider the Public Health Act pathway.",
+                "Document what you considered and why the Act was not used."
+            ],
+            sections: ["12", "16"],
+            source: "huber",
+            next: [
+                { label: "They are refusing medical treatment", node: "ed_ga_q1" },
+                { label: "There may be a public health risk", node: "ed_pha_q1" }
+            ]
+        },
+
+        ed_ga_q1: {
+            kind: "question",
+            title: "Does the patient have decision-making capacity regarding this treatment?",
+            help: "The Mental Health Act is not the tool for a refusal of non-psychiatric treatment. This is the Guardianship Act branch of the ED algorithm.",
+            source: "huber",
+            capacityAid: true,
+            options: [
+                { label: "Yes — has capacity", next: "out_ed_dmc_refusal" },
+                { label: "No — lacks capacity", next: "ed_acd" },
+                { label: "Suspected to lack capacity, but not confirmed", next: "out_ed_suspected" }
+            ]
+        },
+
+        out_ed_dmc_refusal: {
+            kind: "outcome",
+            tone: "stop",
+            title: "A patient with capacity can refuse — even lifesaving treatment",
+            summary: "A person who has decision-making capacity regarding a particular treatment can refuse that treatment, even if it is lifesaving.",
+            actions: [
+                "Document the capacity assessment against the specific decision, and the refusal.",
+                "Patients who retain decision-making capacity cannot be treated against their objection, except in the extremely limited circumstances set out in the Mental Health Act or the Public Health Act.",
+                "Do not record this as being 'unable to treat under duty of care' — duty of care is not the relevant concept.",
+                "Continue to offer care the patient will accept, and re-assess if their condition changes."
+            ],
+            source: "huber",
+            authority: "Huber et al. (2021); Hunter and New England Area Health Service v A [2009] NSWSC 761",
+            next: [
+                { label: "They may need a mental health assessment", node: "ed_mha_q1" },
+                { label: "There may be a public health risk", node: "ed_pha_q1" }
+            ]
+        },
+
+        out_ed_suspected: {
+            kind: "outcome",
+            tone: "caution",
+            title: "Capacity suspected to be absent but not confirmed",
+            summary: "There is a basis at common law to restrain a patient when incapacity is suspected but uncertain and restraint is required for the protection of the patient.",
+            actions: [
+                "Restraint should be employed only for as long as the necessity prevails, or until other means of consent can be resorted to, and until capacity can be more confidently assessed.",
+                "Weigh the potential harm of restraint against the potential harm of decisions made by a patient who may lack capacity. The judgement is subjective and hard in time-critical situations — document your reasoning.",
+                "Document why you suspect capacity is lacking and describe the potential harms.",
+                "Re-assess as soon as practicable, and treat reversible contributors first.",
+                "If the patient's mental state is likely to improve in the very near future, waiting and reassessing is usually the right answer."
+            ],
+            source: "huber",
+            unverified: true,
+            next: [
+                { label: "Capacity now assessed as absent", node: "ed_acd" },
+                { label: "Capacity now assessed as present", node: "out_ed_dmc_refusal" }
+            ]
+        },
+
+        ed_acd: {
+            kind: "question",
+            title: "Is there an advance care directive that was likely made when the patient had capacity, is clear and unambiguous, and extends to the situation at hand?",
+            source: "huber",
+            options: [
+                { label: "Yes — all three", next: "out_ed_acd" },
+                { label: "No, or unsure", next: "ed_urgent" }
+            ]
+        },
+
+        out_ed_acd: {
+            kind: "outcome",
+            tone: "stop",
+            title: "Respect the advance care directive",
+            summary: "A valid advance care directive made with capacity, clear and unambiguous, and applicable to the situation at hand, governs.",
+            actions: [
+                "Follow the directive.",
+                "Document which directive you relied on, and why it applies to this situation.",
+                "If any of the three conditions is genuinely in doubt, treat it as 'unsure' and continue down the urgency pathway instead."
+            ],
+            source: "huber"
+        },
+
+        ed_urgent: {
+            kind: "question",
+            title: "Is the procedure urgent and necessary to save the person's life, prevent serious damage to their health, or prevent significant pain or distress?",
+            source: "huber",
+            options: [
+                { label: "Yes — urgent on that test", next: "out_ed_ga37" },
+                { label: "No", next: "ed_improve" }
+            ]
+        },
+
+        out_ed_ga37: {
+            kind: "outcome",
+            tone: "go",
+            title: "Treat the urgent issue under Guardianship Act s 37 — then apply to NCAT",
+            summary: "Where a patient aged 16 or over lacks decision-making capacity, treatment is necessary to prevent death or serious injury and the situation is urgent, the Guardianship Act authorises treatment without consent.",
+            actions: [
+                "Treat the urgent issue, and apply to NCAT as soon as possible for a decision about ongoing treatment.",
+                "Document that the patient is being detained and treated under s 37 of the Guardianship Act — NOT 'under duty of care'. 'Duty of care' means the expectation of reasonable care to a competent professional standard; it is not a power to treat, and using it that way is a documented and criticised error.",
+                "Record the capacity finding in the terms of the test: the patient cannot understand or retain the information relevant to the decision, or cannot use and weigh it to come to a decision.",
+                "Record the potential harms — life-threatening, serious damage to health, or significant pain and distress — and that they outweigh the harms of restraint.",
+                "Unlike the Mental Health Act, detention under the Guardianship Act has no form. Security staff may be unfamiliar with it; be explicit in the notes and in your handover about the legal basis.",
+                "Note the age threshold in this pathway is 16, not 18."
+            ],
+            source: "huber",
+            unverified: true,
+            authority: "Guardianship Act 1987 (NSW) s 37, as described in Huber et al. (2021) and Cheng et al. (2018)",
+            contacts: ["NCAT Guardianship Division"]
+        },
+
+        ed_improve: {
+            kind: "question",
+            title: "Is the patient's mental state likely to improve in the very near future — for example, intoxication?",
+            source: "huber",
+            options: [
+                { label: "Yes — likely to clear soon", next: "out_ed_wait" },
+                { label: "No", next: "ed_guardian" }
+            ]
+        },
+
+        out_ed_wait: {
+            kind: "outcome",
+            tone: "caution",
+            title: "Wait and reassess capacity",
+            summary: "Where the sensorium is likely to clear, the right answer is usually to defer the decision and reassess, rather than to reach for a coercive framework.",
+            actions: [
+                "Re-assess decision-making capacity once the reversible cause has resolved.",
+                "In the meantime, provide supportive care and monitoring appropriate to the cause.",
+                "Where incapacity is suspected but uncertain and the patient needs protection, common-law restraint may be used only while the necessity prevails.",
+                "Document the plan, the reason for deferring, and when you will reassess."
+            ],
+            source: "huber",
+            next: [{ label: "Reassessed — continue", node: "ed_ga_q1" }]
+        },
+
+        ed_guardian: {
+            kind: "question",
+            title: "Is there a guardian appointed by NCAT?",
+            source: "huber",
+            options: [
+                { label: "Yes", next: "ed_guardian_powers" },
+                { label: "No", next: "ed_minimal" }
+            ]
+        },
+
+        ed_guardian_powers: {
+            kind: "question",
+            title: "Does the guardian have the healthcare function and explicit power to override the patient's objections?",
+            help: "A guardianship order does not automatically carry the power to override an objection — it has to have been granted explicitly. Read the order.",
+            source: "huber",
+            options: [
+                { label: "Yes — explicitly authorised to override objections", next: "out_ed_guardian_consent" },
+                { label: "No, or the order does not say", next: "ed_minimal" }
+            ]
+        },
+
+        out_ed_guardian_consent: {
+            kind: "outcome",
+            tone: "go",
+            title: "The guardian can consent",
+            summary: "A guardian appointed by NCAT with the healthcare function, explicitly authorised to override objections, may consent to treatment over the patient's objection.",
+            actions: [
+                "Read the guardianship order and confirm the scope of the function before relying on it.",
+                "Obtain and document the guardian's consent.",
+                "Keep a copy of the relevant part of the order in the record."
+            ],
+            source: "huber",
+            unverified: true,
+            authority: "Guardianship Act 1987 (NSW), as described in Huber et al. (2021)"
+        },
+
+        ed_minimal: {
+            kind: "question",
+            title: "Does the patient have no or minimal understanding of what the treatment entails, AND will the treatment cause no lasting distress?",
+            help: "This is the narrow gateway that lets a person responsible consent despite an objection. If the treatment will cause distress, that distress must be no more than reasonably tolerable and only transitory.",
+            source: "huber",
+            options: [
+                { label: "Yes — both limbs are satisfied", next: "out_ed_person_responsible" },
+                { label: "No", next: "out_ed_ncat" }
+            ]
+        },
+
+        out_ed_person_responsible: {
+            kind: "outcome",
+            tone: "go",
+            title: "The objection may be disregarded — the person responsible can consent",
+            summary: "Where the patient has minimal or no understanding of what the treatment entails and it will cause no lasting distress, the objection may be disregarded (Guardianship Act s 46(4)) and the person responsible may consent (s 36).",
+            actions: [
+                "Identify the person responsible and obtain their consent.",
+                "If there is no person responsible, some 'minor' treatments may nonetheless be given.",
+                "'Minor treatments' in the published algorithm: sedation for management of a fracture or dislocation; sedation for endoscopy NOT through skin or mucous membrane; catheterisation; analgesia; antipyretics; anti-Parkinsonian medication; anticonvulsants; antiemetics; antihistamines; and blood tests EXCEPT HIV.",
+                "Document the understanding assessment and the distress assessment separately — both limbs have to be satisfied.",
+                "In every other case, a person responsible cannot override a refusal, even one made without capacity. That requires NCAT."
+            ],
+            source: "huber",
+            unverified: true,
+            authority: "Guardianship Act 1987 (NSW) ss 36, 46(4), as described in Huber et al. (2021) and Cheng et al. (2018)"
+        },
+
+        out_ed_ncat: {
+            kind: "outcome",
+            tone: "go",
+            title: "An application to NCAT must be made",
+            summary: "Where the patient objects and the narrow minimal-understanding exception does not apply, consent must be obtained from the NSW Civil and Administrative Tribunal.",
+            actions: [
+                "Apply to the Guardianship Division of NCAT for consent, or for a guardianship order authorising a guardian to override the objection.",
+                "A person responsible cannot override the patient's refusal, even where the objection is made without capacity.",
+                "If part of the treatment becomes urgent while the application is pending, the emergency pathway (Guardianship Act s 37) covers only the urgent element.",
+                "Document the objection, the capacity finding and the application made."
+            ],
+            source: "huber",
+            unverified: true,
+            authority: "Guardianship Act 1987 (NSW), as described in Huber et al. (2021)",
+            contacts: ["NCAT Guardianship Division"]
         },
 
         /* ---------------- Detention pathway ---------------- */
@@ -589,16 +1015,19 @@
             kind: "outcome",
             tone: "caution",
             title: "Detained as a mentally disordered person — the short clock applies",
-            summary: "No mental health inquiry is held for a person detained only as a mentally disordered person, but the detention is tightly limited.",
+            summary: "No mental health inquiry is held for a person detained only as a mentally disordered person, but the detention is tightly limited and the person must be examined at least every 24 hours.",
             actions: [
-                "Maximum 3 days continuous detention, NOT counting weekends and public holidays (s 31(1)).",
-                "Examine the person at least once every 24 hours (s 31(3)).",
-                "Release as soon as the person is not mentally disordered or mentally ill, or less restrictive care becomes appropriate and reasonably available (s 31(4)).",
+                "Maximum 3 days continuous detention, NOT counting weekends and public holidays (s 31(1)-(2)).",
+                "Examine the person at least once every 24 hours (s 31(3)). This is the recertification step — detention continues only while the opinion holds.",
+                "Release as soon as the person is not mentally disordered or mentally ill, or less restrictive care becomes appropriate and reasonably available (s 31(4)). This applies on ANY such examination, not only at the end of the 3 days.",
                 "Check the calendar month limit: no more than 3 admissions as a mentally disordered person in any one calendar month (s 31(5)).",
                 "If the person becomes, or is found to be, a mentally ill person, the mental health inquiry pathway applies instead."
             ],
             timeframes: ["3 days excluding weekends and public holidays; examination at least every 24 hours; maximum 3 admissions per calendar month."],
             sections: ["31", "12", "15", "79"],
+            cautions: [
+                "It is commonly taught as a '72 hour hold'. The Act does not say 72 hours: s 31(1) says 3 days NOT INCLUDING weekends and public holidays. Those are different periods, and the difference is not academic — a Friday afternoon detention before a public holiday Monday runs well past 72 clock hours. Count days as the section does, and check the local public holiday calendar. Detention is in any case only lawful while the s 31(3) examinations continue to support it and s 12 remains satisfied."
+            ],
             next: [{ label: "The person is now a mentally ill person", node: "out_inquiry_required" }]
         },
 
