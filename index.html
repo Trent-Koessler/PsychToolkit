@@ -77,21 +77,64 @@
     </div>
 
     <div id="app-container">
-        <!-- Main Header -->
-        <header class="app-header">
-            <h1 id="page-title">Psychiatry Toolkit (PsychToolkit)</h1>
-            <button class="hamburger" id="hamburger-menu" aria-label="Toggle menu">
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-            <div class="header-controls" id="header-controls">
-                <button id="home-button">Home</button>
-                <button id="about-button">About</button>
-                <button id="feedback-button">Feedback</button>
-                <button id="theme-toggle">🌙 Dark Mode</button>
+        <!-- Sticky top bar: header + per-page navigation -->
+        <div id="top-bar">
+            <!-- Main Header -->
+            <header class="app-header">
+                <button class="hamburger" id="hamburger-menu" aria-label="Open menu" aria-expanded="false"
+                    aria-controls="nav-drawer">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+                <h1 id="page-title">Psychiatry Toolkit (PsychToolkit)</h1>
+                <div class="header-controls" id="header-controls">
+                    <button id="home-button">Home</button>
+                    <button id="about-button">About</button>
+                    <button id="feedback-button">Feedback</button>
+                    <button id="theme-toggle">🌙 Dark Mode</button>
+                </div>
+            </header>
+
+            <!-- Per-page navigation: hidden on the home page, shown everywhere else -->
+            <nav id="page-nav" class="page-nav" aria-label="Page navigation" hidden>
+                <button id="back-button" class="page-nav-btn" aria-label="Go back">
+                    <span aria-hidden="true">←</span> Back
+                </button>
+                <button id="page-home-button" class="page-nav-btn" aria-label="Go to home">
+                    <span aria-hidden="true">⌂</span> Home
+                </button>
+                <span class="page-nav-crumb" id="page-nav-crumb"></span>
+            </nav>
+        </div>
+
+        <!-- Slide-out navigation drawer -->
+        <div id="nav-backdrop" class="nav-backdrop" hidden></div>
+        <aside id="nav-drawer" class="nav-drawer" aria-label="Main menu" aria-hidden="true" hidden>
+            <div class="nav-drawer-head">
+                <span class="nav-drawer-title">PsychToolkit</span>
+                <button id="nav-close" class="nav-close" aria-label="Close menu">&times;</button>
             </div>
-        </header>
+            <nav class="nav-drawer-links">
+                <button class="nav-link" data-page="home-page">🏠 Home</button>
+                <span class="nav-drawer-heading">Tools</span>
+                <button class="nav-link" data-page="oca-assessment-page">📝 Patient Review Workspace</button>
+                <button class="nav-link" data-page="scales-page">📊 Psychiatric Screening Scales</button>
+                <button class="nav-link" data-page="equivalents-page">⚖️ Dose Equivalents Converters</button>
+                <button class="nav-link" data-page="monitoring-page">✅ Interactive Monitoring Checklists</button>
+                <button class="nav-link" data-page="otp-page">💉 Opioid Treatment (OTP) Calculators</button>
+                <button class="nav-link" data-page="withdrawal-page">🚬 Withdrawal &amp; NRT Tools</button>
+                <button class="nav-link" data-page="qtc-page">❤️ QTc Prolongation Guide</button>
+                <button class="nav-link" data-page="generators-page">🗂️ Assessment Note Generators</button>
+                <button class="nav-link" data-page="mha-page">⚖️ Mental Health Act 2007 (NSW)</button>
+                <button class="nav-link" data-page="contacts-page">☎️ Helpful Contacts &amp; Helplines</button>
+                <button class="nav-link" data-page="pk-page">⚗️ PK Visualiser</button>
+                <span class="nav-drawer-heading">More</span>
+                <button class="nav-link" data-page="about-page">ℹ️ About</button>
+                <button class="nav-link" id="nav-feedback">✉️ Feedback</button>
+                <button class="nav-link" id="nav-theme-toggle">🌙 Dark Mode</button>
+            </nav>
+        </aside>
 
         <!-- Main Body Content -->
         <main id="main-content">

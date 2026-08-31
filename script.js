@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.2.0";
+    const APP_VERSION = "1.3.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -89,78 +89,214 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // --- HAMBURGER MENU --- //
+    // --- HAMBURGER MENU / NAV DRAWER --- //
     const hamburger = document.getElementById("hamburger-menu");
-    const headerControls = document.getElementById("header-controls");
+    const navDrawer = document.getElementById("nav-drawer");
+    const navBackdrop = document.getElementById("nav-backdrop");
+    const navClose = document.getElementById("nav-close");
+    let drawerOpen = false;
 
-    if (hamburger && headerControls) {
-        hamburger.addEventListener("click", () => {
-            hamburger.classList.toggle("active");
-            headerControls.classList.toggle("active");
-        });
+    function openDrawer() {
+        if (!navDrawer || drawerOpen) return;
+        drawerOpen = true;
+        navDrawer.hidden = false;
+        if (navBackdrop) navBackdrop.hidden = false;
+        // Force a reflow so the transform/opacity transitions actually run.
+        void navDrawer.offsetWidth;
+        navDrawer.classList.add("active");
+        if (navBackdrop) navBackdrop.classList.add("active");
+        navDrawer.setAttribute("aria-hidden", "false");
+        if (hamburger) {
+            hamburger.classList.add("active");
+            hamburger.setAttribute("aria-expanded", "true");
+            hamburger.setAttribute("aria-label", "Close menu");
+        }
+        const firstLink = navDrawer.querySelector(".nav-link");
+        if (firstLink) firstLink.focus();
+    }
 
-        document.addEventListener("click", (e) => {
-            if (!hamburger.contains(e.target) && !headerControls.contains(e.target)) {
-                hamburger.classList.remove("active");
-                headerControls.classList.remove("active");
+    function closeDrawer(returnFocus) {
+        if (!navDrawer || !drawerOpen) return;
+        drawerOpen = false;
+        navDrawer.classList.remove("active");
+        if (navBackdrop) navBackdrop.classList.remove("active");
+        navDrawer.setAttribute("aria-hidden", "true");
+        if (hamburger) {
+            hamburger.classList.remove("active");
+            hamburger.setAttribute("aria-expanded", "false");
+            hamburger.setAttribute("aria-label", "Open menu");
+            if (returnFocus) hamburger.focus();
+        }
+        // Keep the panels out of the tab order once the slide-out has finished.
+        window.setTimeout(() => {
+            if (!drawerOpen) {
+                navDrawer.hidden = true;
+                if (navBackdrop) navBackdrop.hidden = true;
             }
+        }, 220);
+    }
+
+    if (hamburger && navDrawer) {
+        hamburger.addEventListener("click", () => {
+            if (drawerOpen) closeDrawer(true); else openDrawer();
+        });
+        if (navClose) navClose.addEventListener("click", () => closeDrawer(true));
+        if (navBackdrop) navBackdrop.addEventListener("click", () => closeDrawer(false));
+
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape" && drawerOpen) closeDrawer(true);
         });
 
-        headerControls.querySelectorAll("button").forEach(button => {
-            button.addEventListener("click", () => {
-                hamburger.classList.remove("active");
-                headerControls.classList.remove("active");
-            });
+        navDrawer.querySelectorAll(".nav-link").forEach(link => {
+            link.addEventListener("click", () => closeDrawer(false));
         });
     }
 
     // --- THEME TOGGLE --- //
-    const themeToggle = document.getElementById("theme-toggle");
+    // Two entry points share one toggle: the header button and the drawer link.
+    const themeToggles = [
+        document.getElementById("theme-toggle"),
+        document.getElementById("nav-theme-toggle")
+    ].filter(Boolean);
     const rootEl = document.documentElement;
 
-    if (themeToggle) {
+    if (themeToggles.length) {
         const updateThemeBtnText = () => {
             const isDark = rootEl.hasAttribute("data-theme");
-            themeToggle.textContent = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+            const label = isDark ? "☀️ Light Mode" : "🌙 Dark Mode";
+            themeToggles.forEach(btn => { btn.textContent = label; });
         };
         updateThemeBtnText();
 
-        themeToggle.addEventListener("click", () => {
-            const isDark = rootEl.hasAttribute("data-theme");
-            if (isDark) {
-                rootEl.removeAttribute("data-theme");
-                localStorage.setItem("theme", "light");
-            } else {
-                rootEl.setAttribute("data-theme", "dark");
-                localStorage.setItem("theme", "dark");
-            }
-            updateThemeBtnText();
+        themeToggles.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const isDark = rootEl.hasAttribute("data-theme");
+                if (isDark) {
+                    rootEl.removeAttribute("data-theme");
+                    localStorage.setItem("theme", "light");
+                } else {
+                    rootEl.setAttribute("data-theme", "dark");
+                    localStorage.setItem("theme", "dark");
+                }
+                updateThemeBtnText();
+            });
         });
     }
 
     // --- PAGE NAVIGATION --- //
+    const HOME_PAGE = "home-page";
     const pageTitle = document.getElementById("page-title");
     const pages = document.querySelectorAll(".page");
     const navButtons = document.querySelectorAll("[data-page]");
     const homeButton = document.getElementById("home-button");
     const aboutButton = document.getElementById("about-button");
     const feedbackButton = document.getElementById("feedback-button");
+    const navFeedback = document.getElementById("nav-feedback");
+    const pageNav = document.getElementById("page-nav");
+    const pageNavCrumb = document.getElementById("page-nav-crumb");
+    const backButton = document.getElementById("back-button");
+    const pageHomeButton = document.getElementById("page-home-button");
+    const drawerLinks = document.querySelectorAll(".nav-drawer .nav-link[data-page]");
 
-    function showPage(pageId) {
-        pages.forEach(page => page.classList.remove("active-page"));
+    // Trail of pages visited in this session, oldest first. Back pops it; it is
+    // what makes Back mean "the page I came from" rather than "the home page".
+    let navTrail = [HOME_PAGE];
+
+    function titleFor(pageId) {
+        if (pageId === HOME_PAGE) return "Psychiatry Toolkit (PsychToolkit)";
+        const page = document.getElementById(pageId);
+        return (page && page.dataset.title) || "PsychToolkit";
+    }
+
+    function renderPage(pageId) {
         const newPage = document.getElementById(pageId);
-        if (newPage) {
-            newPage.classList.add("active-page");
-            let title = "PsychToolkit";
-            if (pageId === "home-page") {
-                title = "Psychiatry Toolkit (PsychToolkit)";
-            } else {
-                title = newPage.dataset.title || "PsychToolkit";
-            }
-            pageTitle.textContent = title;
-            document.title = title + " - PsychToolkit";
+        if (!newPage) return false;
+
+        pages.forEach(page => page.classList.remove("active-page"));
+        newPage.classList.add("active-page");
+
+        const title = titleFor(pageId);
+        if (pageTitle) pageTitle.textContent = title;
+        document.title = title + " - PsychToolkit";
+
+        // The Back/Home bar is only meaningful once you have left the dashboard.
+        if (pageNav) pageNav.hidden = (pageId === HOME_PAGE);
+        if (pageNavCrumb) pageNavCrumb.textContent = pageId === HOME_PAGE ? "" : title;
+        if (backButton) backButton.disabled = navTrail.length < 2;
+
+        drawerLinks.forEach(link => {
+            link.classList.toggle("current", link.dataset.page === pageId);
+        });
+
+        window.scrollTo({ top: 0, behavior: "auto" });
+        return true;
+    }
+
+    function currentPage() {
+        return navTrail[navTrail.length - 1];
+    }
+
+    // Navigate forward. Pushes a browser history entry so the device/browser
+    // back gesture walks the same trail as the in-page Back button.
+    function showPage(pageId) {
+        if (pageId === currentPage()) return;
+        if (!document.getElementById(pageId)) return;
+
+        // Revisiting a page already on the trail collapses back to it instead of
+        // stacking duplicates, so Back never loops between two pages.
+        const seen = navTrail.indexOf(pageId);
+        if (seen !== -1) {
+            navTrail = navTrail.slice(0, seen + 1);
+        } else {
+            navTrail.push(pageId);
+        }
+
+        if (renderPage(pageId)) {
+            // depth counts the entries this app has pushed, so Back knows whether
+            // there is one of its own to step back to.
+            const depth = (window.history.state && window.history.state.depth) || 0;
+            window.history.pushState({ pageId: pageId, depth: depth + 1 }, "", "#" + pageId);
         }
     }
+
+    function goBack() {
+        if (navTrail.length < 2) return;
+        const depth = (window.history.state && window.history.state.depth) || 0;
+        if (depth > 0) {
+            // Delegate to the browser so its own history stays in step; the
+            // popstate handler below does the actual page swap.
+            window.history.back();
+            return;
+        }
+        // Deep link or reload: there is no app entry behind this one, so stepping
+        // back through the browser would leave the site. Swap in place instead.
+        navTrail.pop();
+        const previous = navTrail[navTrail.length - 1];
+        if (renderPage(previous)) {
+            const hash = previous === HOME_PAGE
+                ? location.pathname + location.search
+                : "#" + previous;
+            window.history.replaceState({ pageId: previous, depth: 0 }, "", hash);
+        }
+    }
+
+    function goHome() {
+        showPage(HOME_PAGE);
+    }
+
+    window.addEventListener("popstate", (e) => {
+        const pageId = (e.state && e.state.pageId) ||
+            (location.hash ? location.hash.slice(1) : HOME_PAGE);
+        if (!document.getElementById(pageId)) return;
+
+        const seen = navTrail.indexOf(pageId);
+        if (seen !== -1) {
+            navTrail = navTrail.slice(0, seen + 1);
+        } else {
+            navTrail.push(pageId);
+        }
+        renderPage(pageId);
+    });
 
     navButtons.forEach(button => {
         button.addEventListener("click", () => {
@@ -168,13 +304,29 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     });
 
-    if (homeButton) homeButton.addEventListener("click", () => showPage("home-page"));
+    if (backButton) backButton.addEventListener("click", goBack);
+    if (pageHomeButton) pageHomeButton.addEventListener("click", goHome);
+    if (homeButton) homeButton.addEventListener("click", goHome);
     if (aboutButton) aboutButton.addEventListener("click", () => showPage("about-page"));
-    if (feedbackButton) {
-        feedbackButton.addEventListener("click", () => {
-            const feedbackUrl = "mailto:trentkoessler@gmail.com?subject=PsychToolkit Feedback";
-            window.open(feedbackUrl, "_blank");
-        });
+
+    const openFeedback = () => {
+        const feedbackUrl = "mailto:trentkoessler@gmail.com?subject=PsychToolkit Feedback";
+        window.open(feedbackUrl, "_blank");
+    };
+    if (feedbackButton) feedbackButton.addEventListener("click", openFeedback);
+    if (navFeedback) navFeedback.addEventListener("click", openFeedback);
+
+    // Restore the page named in the URL on load (deep links, reloads, back into
+    // the app from another tab), and seed the first history entry either way.
+    const initialPage = location.hash ? location.hash.slice(1) : HOME_PAGE;
+    if (initialPage !== HOME_PAGE && document.getElementById(initialPage)) {
+        navTrail = [HOME_PAGE, initialPage];
+        renderPage(initialPage);
+        window.history.replaceState({ pageId: initialPage, depth: 0 }, "", "#" + initialPage);
+    } else {
+        renderPage(HOME_PAGE);
+        window.history.replaceState({ pageId: HOME_PAGE, depth: 0 }, "",
+            location.pathname + location.search);
     }
 
     // --- TAB CONTAINER LOGIC (OTP, Weaning, Generators, Checklists) --- //
