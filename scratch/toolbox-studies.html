@@ -1,0 +1,405 @@
+<title>The Toolbox Set</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  :root {
+    --paper: #e9ecf1; --card: #ffffff; --card-2: #f4f6f9;
+    --ink: #121623; --muted: #5c6577; --line: #d2d8e2;
+    --indigo: #4f46e5; --indigo-soft: #eceafd; --teal: #0d9488;
+    --grid: rgba(79, 70, 229, 0.26);
+    --shadow: 0 1px 2px rgba(18, 22, 35, .06), 0 8px 24px -12px rgba(18, 22, 35, .18);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #0a0e17; --card: #141a28; --card-2: #1b2233;
+      --ink: #e7ebf3; --muted: #949eb4; --line: #262f42;
+      --indigo: #7c76ee; --indigo-soft: #221f47; --teal: #2dd4bf;
+      --grid: rgba(124, 118, 238, 0.3);
+      --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #0a0e17; --card: #141a28; --card-2: #1b2233;
+    --ink: #e7ebf3; --muted: #949eb4; --line: #262f42;
+    --indigo: #7c76ee; --indigo-soft: #221f47; --teal: #2dd4bf;
+    --grid: rgba(124, 118, 238, 0.3);
+    --shadow: 0 1px 2px rgba(0, 0, 0, .5), 0 10px 30px -14px rgba(0, 0, 0, .8);
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--paper); color: var(--ink);
+    font-family: "Public Sans", ui-sans-serif, system-ui, sans-serif;
+    font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 0 24px 96px; }
+
+  header.masthead { padding: 56px 0 8px; }
+  .eyebrow {
+    font-family: "IBM Plex Mono", ui-monospace, monospace; font-size: 11px;
+    letter-spacing: .16em; text-transform: uppercase; color: var(--muted); margin: 0 0 14px;
+  }
+  h1 {
+    font-family: "Bricolage Grotesque", "Public Sans", sans-serif; font-weight: 700;
+    font-size: clamp(34px, 5.4vw, 58px); line-height: 1.02; letter-spacing: -0.028em;
+    margin: 0 0 18px; text-wrap: balance;
+  }
+  .lede { max-width: 62ch; color: var(--muted); font-size: 17px; margin: 0; }
+  .lede strong { color: var(--ink); font-weight: 600; }
+
+  .controls {
+    position: sticky; top: 0; z-index: 20; display: flex; flex-wrap: wrap;
+    gap: 10px 22px; align-items: center; padding: 12px 0; margin: 28px 0 8px;
+    background: color-mix(in srgb, var(--paper) 88%, transparent);
+    backdrop-filter: blur(10px); border-bottom: 1px solid var(--line);
+  }
+  .ctl-label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px;
+    letter-spacing: .12em; text-transform: uppercase; color: var(--muted);
+  }
+  .segmented { display: flex; border: 1px solid var(--line); border-radius: 999px; overflow: hidden; background: var(--card); }
+  .segmented button {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    font: 500 13px/1 "Public Sans", sans-serif; color: var(--muted); padding: 9px 16px;
+  }
+  .segmented button + button { border-left: 1px solid var(--line); }
+  .segmented button[aria-pressed="true"] { background: var(--indigo); color: #fff; }
+  .segmented button:focus-visible { outline: 2px solid var(--teal); outline-offset: -2px; }
+  .toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); cursor: pointer; }
+  .toggle input { accent-color: var(--indigo); width: 15px; height: 15px; }
+
+  section { margin-top: 52px; }
+  .sec-head { display: flex; align-items: baseline; gap: 14px; border-bottom: 2px solid var(--ink); padding-bottom: 10px; }
+  .sec-head h2 { font-family: "Bricolage Grotesque", sans-serif; font-size: 24px; letter-spacing: -0.02em; margin: 0; }
+  .sec-head .count { font-family: "IBM Plex Mono", monospace; font-size: 12px; color: var(--muted); margin-left: auto; }
+  .sec-note { color: var(--muted); font-size: 14px; margin: 14px 0 26px; max-width: 68ch; }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 22px; }
+
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 16px;
+  }
+  .card-top { display: flex; gap: 18px; align-items: flex-start; }
+  .card-id { font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: .1em; color: var(--muted); }
+  .card h3 { font-family: "Bricolage Grotesque", sans-serif; font-size: 20px; letter-spacing: -0.015em; margin: 2px 0 6px; }
+  .card p { margin: 0; font-size: 14px; color: var(--muted); }
+
+  .tile { border-radius: 22%; display: grid; place-items: center; flex: none; position: relative; overflow: hidden; }
+  .tile svg { display: block; width: 100%; height: 100%; }
+  .hero-tile { width: 116px; height: 116px; }
+
+  .mode-gradient .tile { background: linear-gradient(145deg, #6366f1 0%, #4f46e5 42%, #0d9488 100%); }
+  .mode-gradient .tile .sym { color: #ffffff; }
+  .mode-block .tile { background: var(--block); }
+  .mode-block .tile .sym { color: #ffffff; }
+  .mode-mono .tile { background: var(--card-2); border: 1px solid var(--line); }
+  .mode-mono .tile .sym { color: var(--ink); }
+  .knockout-bg { fill: currentColor; }
+
+  .tile::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+    background:
+      linear-gradient(var(--grid) 1px, transparent 1px) 0 0 / 100% 12.5%,
+      linear-gradient(90deg, var(--grid) 1px, transparent 1px) 0 0 / 12.5% 100%;
+  }
+  .show-grid .hero-tile::after { opacity: 1; }
+
+  .ladder { display: flex; align-items: flex-end; gap: 16px; padding-top: 4px; border-top: 1px solid var(--line); }
+  .rung { display: flex; flex-direction: column; align-items: center; gap: 7px; padding-top: 14px; }
+  .rung .cap { font-family: "IBM Plex Mono", monospace; font-size: 10px; color: var(--muted); }
+  .s48 { width: 48px; height: 48px; }
+  .s32 { width: 32px; height: 32px; }
+  .s24 { width: 24px; height: 24px; }
+  .s16 { width: 16px; height: 16px; }
+
+  .notes { display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; }
+  .note { display: grid; grid-template-columns: 62px 1fr; gap: 10px; align-items: baseline; }
+  .note .k {
+    font-family: "IBM Plex Mono", monospace; font-size: 10px; letter-spacing: .1em;
+    text-transform: uppercase; color: var(--muted); padding-top: 2px;
+  }
+  .note .v { color: var(--ink); }
+  .note.risk .v { color: var(--muted); }
+  .stat { font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .stat b { font-weight: 500; color: var(--ink); }
+
+  footer.sheet-foot {
+    margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--line); color: var(--muted);
+    font-size: 13.5px; display: flex; flex-wrap: wrap; gap: 8px 28px; font-family: "IBM Plex Mono", monospace;
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+</style>
+
+<div class="wrap" id="root">
+  <header class="masthead">
+    <p class="eyebrow">PsychToolkit / toolbox &amp; data directions / 12 marks</p>
+    <h1>The kit, not the letter</h1>
+    <p class="lede">Twelve marks built on the two ideas you picked: a <strong>case of instruments</strong> with the psi on it, and the <strong>psi that measures something</strong>. The reference draws the toolbox with three tools sticking out — that is a lot of detail for a 16px tile, so the set runs from the literal version down to marks that keep the toolbox read with two shapes. Every psi still carries its full stem.</p>
+  </header>
+
+  <div class="controls" role="group" aria-label="Render controls">
+    <span class="ctl-label">Render</span>
+    <div class="segmented" id="modes">
+      <button type="button" data-mode="gradient" aria-pressed="true">Gradient tile</button>
+      <button type="button" data-mode="block" aria-pressed="false">Colour block</button>
+      <button type="button" data-mode="mono" aria-pressed="false">Mono line</button>
+    </div>
+    <label class="toggle"><input type="checkbox" id="gridToggle"> 8&times;8 construction grid</label>
+    <label class="toggle"><input type="checkbox" id="themeToggle"> Force dark sheet</label>
+  </div>
+
+  <section>
+    <div class="sec-head">
+      <h2>The case</h2>
+      <span class="count">01&ndash;08</span>
+    </div>
+    <p class="sec-note">Flat white silhouettes on a solid field, the way the reference sheet draws them. Detail is the whole question here: each card says how many separate shapes the mark is made of, because that number is what decides whether it holds together on a home screen.</p>
+    <div class="grid" id="grid-box"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>The measure</h2>
+      <span class="count">09&ndash;12</span>
+    </div>
+    <p class="sec-note">The DATA PSY idea: the letter carrying an analysis. The strongest versions build the trend into the letter rather than laying a chart over it — an arrow crossing a psi makes two junctions that turn to mud when the tile shrinks.</p>
+    <div class="grid" id="grid-data"></div>
+  </section>
+
+  <footer class="sheet-foot">
+    <span>Canvas 64 &times; 64</span>
+    <span>Flat fill, no outline</span>
+    <span>Safe margin 5</span>
+    <span>Maskable padding 12.5%</span>
+  </footer>
+</div>
+
+<script>
+  // Flat silhouette marks on a 64x64 canvas. Knockouts use a mask so the psi is
+  // cut from the case rather than drawn on top of it.
+  var R = 'stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round"';
+
+  var CONCEPTS = [
+    {
+      id: "01", name: "Kit", group: "box", shapes: "6", block: "#0284c7",
+      idea: "The reference, drawn tight: an open case with three instruments standing in it and the psi cut into the front panel.",
+      why: "Nothing else here says psychology toolkit as fast. It is a picture of the app's whole premise.",
+      risk: "Six shapes. It is a poster mark — below 32px the instruments collapse into a fringe.",
+      svg:
+        '<mask id="m__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+          '<path d="M8 34 H56 V51 a6 6 0 0 1 -6 6 H14 a6 6 0 0 1 -6 -6 Z" fill="#fff"/>' +
+          '<g stroke="#000" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M32 37 V52"/><path d="M25 37 V41 a7 7 0 0 0 14 0 V37"/></g>' +
+        '</mask>' +
+        '<g fill="currentColor">' +
+          '<rect x="5" y="26" width="54" height="7.5" rx="3.7"/>' +
+          '<path d="M8 34 H56 V51 a6 6 0 0 1 -6 6 H14 a6 6 0 0 1 -6 -6 Z" mask="url(#m__UID__)"/>' +
+          '<path d="M12 25 V12 L16 5 L20 12 V25 Z"/>' +
+          '<rect x="28" y="4" width="8" height="9.5" rx="3.4"/>' +
+          '<rect x="30.5" y="12" width="3" height="13"/>' +
+        '</g>' +
+        '<g ' + R + ' stroke-width="3.2"><path d="M43 8 V14 a5 5 0 0 0 10 0 V8"/><path d="M48 19 V25"/></g>'
+    },
+    {
+      id: "02", name: "Stowed", group: "box", shapes: "3", block: "#4f46e5",
+      idea: "An open case drawn in outline with a full-length psi dropped into it, the stem passing through the rim.",
+      why: "Keeps the whole letter — stem and all — while the case does the toolkit job around it.",
+      risk: "All one stroke weight, so the rim and the stem can read as a single object at 24px.",
+      svg: '<g ' + R + ' stroke-width="4.6">' +
+        '<rect x="9" y="34" width="46" height="22" rx="5"/>' +
+        '<path d="M5 34 H59"/>' +
+        '<path d="M32 4 V50"/><path d="M19 4 V13 a13 13 0 0 0 26 0 V4"/></g>'
+    },
+    {
+      id: "03", name: "Case", group: "box", shapes: "2", block: "#7c3aed",
+      idea: "A closed case with a carry handle, the psi knocked out of the front panel.",
+      why: "Two shapes, maximum contrast, and the psi is protected by the panel around it. The most icon-like mark on the sheet.",
+      risk: "Reads as a briefcase before a toolbox; the handle has to stay wide or it turns into a padlock loop.",
+      svg:
+        '<mask id="m__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+          '<path d="M8 28 H56 V52 a6 6 0 0 1 -6 6 H14 a6 6 0 0 1 -6 -6 Z" fill="#fff"/>' +
+          '<g stroke="#000" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M32 33 V54"/><path d="M22 33 V37 a10 10 0 0 0 20 0 V33"/></g>' +
+        '</mask>' +
+        '<g ' + R + ' stroke-width="4.6"><path d="M18 28 V25 a14 8 0 0 1 28 0 V28"/></g>' +
+        '<path class="knockout-bg" d="M8 28 H56 V52 a6 6 0 0 1 -6 6 H14 a6 6 0 0 1 -6 -6 Z" mask="url(#m__UID__)"/>'
+    },
+    {
+      id: "04", name: "Clasp", group: "box", shapes: "3", block: "#0f766e",
+      idea: "The same case drawn entirely in line: outlined body, outlined handle, psi inside at a lighter weight.",
+      why: "Sits better beside line-drawn system icons, and the lighter mark suits a light interface.",
+      risk: "Three concentric outlines. The gaps between them close first when the tile shrinks.",
+      svg: '<g ' + R + ' stroke-width="4">' +
+        '<rect x="8" y="30" width="48" height="26" rx="6"/>' +
+        '<path d="M19 30 V27 a13 8 0 0 1 26 0 V30"/></g>' +
+        '<g ' + R + ' stroke-width="3.2">' +
+        '<path d="M32 34 V52"/><path d="M24 34 V38 a8 8 0 0 0 16 0 V34"/></g>'
+    },
+    {
+      id: "05", name: "Bag", group: "box", shapes: "2", block: "#db2777",
+      idea: "A soft-topped clinician's bag rather than a hard case, with the psi cut out of the body.",
+      why: "Warmer than a toolbox and closer to the room the app is used in. The dome is a distinctive silhouette.",
+      risk: "The dome plus handle can read as a shopping bag. It needs the psi to be unmistakable.",
+      svg:
+        '<mask id="m__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+          '<path d="M10 40 a22 22 0 0 1 44 0 V52 a5 5 0 0 1 -5 5 H15 a5 5 0 0 1 -5 -5 Z" fill="#fff"/>' +
+          '<g stroke="#000" fill="none" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M32 27 V52"/><path d="M22 27 V32 a10 10 0 0 0 20 0 V27"/></g>' +
+        '</mask>' +
+        '<g ' + R + ' stroke-width="4"><path d="M20 20 a12 7 0 0 1 24 0"/></g>' +
+        '<path class="knockout-bg" d="M10 40 a22 22 0 0 1 44 0 V52 a5 5 0 0 1 -5 5 H15 a5 5 0 0 1 -5 -5 Z" mask="url(#m__UID__)"/>'
+    },
+    {
+      id: "06", name: "Tray", group: "box", shapes: "4", block: "#b45309",
+      idea: "An instrument tray holding three things you would actually reach for: the psi, a vial, a pencil.",
+      why: "The objects stay upright and clearly different from one another, so it keeps the reference's character with far less overlap.",
+      risk: "Still three tall shapes side by side. The psi has to stay the tallest or the composition has no subject.",
+      svg: '<path d="M8 46 H56 L52 57 H12 Z" fill="currentColor"/>' +
+        '<g ' + R + ' stroke-width="3.6">' +
+          '<path d="M16 6 V46"/><path d="M8 6 V15 a8 8 0 0 0 16 0 V6"/></g>' +
+        '<g fill="currentColor">' +
+          '<rect x="30" y="24" width="9" height="22" rx="3"/>' +
+          '<rect x="32" y="19" width="5" height="5" rx="1.5"/>' +
+          '<path d="M46 46 V28 H56 V46 Z"/>' +
+          '<path d="M46 28 L51 19 L56 28 Z"/></g>'
+    },
+    {
+      id: "07", name: "Compartments", group: "box", shapes: "4", block: "#1d4ed8",
+      idea: "The case seen face-on and divided: the psi in the deep compartment, a capsule and a trace in the shallow ones.",
+      why: "Says a kit of several instruments rather than one object, which is what the app actually is.",
+      risk: "The busiest mark here. Below 32px the dividers fill in and it becomes a grey square.",
+      svg:
+        '<mask id="m__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+          '<rect x="6" y="14" width="52" height="42" rx="7" fill="#fff"/>' +
+          '<rect x="11" y="19" width="19" height="32" rx="3" fill="#000"/>' +
+          '<rect x="34" y="19" width="19" height="14" rx="3" fill="#000"/>' +
+          '<rect x="34" y="37" width="19" height="14" rx="3" fill="#000"/>' +
+          '<g stroke="#fff" fill="none" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M20.5 24 V47"/><path d="M15 24 V29 a5.5 5.5 0 0 0 11 0 V24"/>' +
+            '<path d="M39.5 29 L47.5 23" stroke-width="4.6"/>' +
+            '<path d="M37.5 44 l3.5 -4.5 l4 7 l3.5 -5"/></g>' +
+        '</mask>' +
+        '<rect class="knockout-bg" x="6" y="14" width="52" height="42" rx="7" mask="url(#m__UID__)"/>'
+    },
+    {
+      id: "08", name: "Lift", group: "box", shapes: "3", block: "#0891b2",
+      idea: "One instrument lifted out of the open case: the psi at full height, its stem disappearing into the rim.",
+      why: "Keeps the reference's sense of a kit being opened while carrying a single tool, so the letter stays the hero.",
+      risk: "The case is a plain slab. Without the handle or the tools it needs the rim to read as an opening.",
+      svg: '<g fill="currentColor">' +
+          '<rect x="6" y="30" width="52" height="7.5" rx="3.7"/>' +
+          '<path d="M9 38 H55 V51 a5 5 0 0 1 -5 5 H14 a5 5 0 0 1 -5 -5 Z"/></g>' +
+        '<g ' + R + ' stroke-width="4.6"><path d="M32 4 V34"/><path d="M20 4 V12 a12 12 0 0 0 24 0 V4"/></g>'
+    },
+
+    {
+      id: "09", name: "Trend", group: "data", shapes: "3", block: "#4f46e5",
+      idea: "The right prong runs higher than the left and finishes in an arrowhead. The rise is built into the letter.",
+      why: "No crossings and no second object — it still reads as psi first, analysis second.",
+      risk: "The asymmetry needs optical centring, and the arrowhead is the first detail to fill in at 16px.",
+      svg: '<g ' + R + ' stroke-width="5">' +
+        '<path d="M32 10 V58"/>' +
+        '<path d="M15 18 V27 a17 17 0 0 0 34 0 V10"/>' +
+        '<path d="M43.5 16 L49 9 L54.5 16"/>' +
+        '<path d="M22 58 H42"/></g>'
+    },
+    {
+      id: "10", name: "Steps", group: "data", shapes: "2", block: "#7c3aed",
+      idea: "The letter stands on the same baseline as a three-step bar chart climbing away to the right.",
+      why: "Puts the data where it does not fight the bowl, and the stem still runs the full height of the tile.",
+      risk: "Two ideas sharing a baseline. Any taller and the bars start to read as a second letter.",
+      svg: '<g ' + R + ' stroke-width="5">' +
+        '<path d="M20 8 V56"/>' +
+        '<path d="M6 8 V19 a14 14 0 0 0 28 0 V8"/>' +
+        '<path d="M12 56 H28"/></g>' +
+        '<g fill="currentColor">' +
+          '<rect x="38" y="46" width="5.5" height="10" rx="2"/>' +
+          '<rect x="46.5" y="38" width="5.5" height="18" rx="2"/>' +
+          '<rect x="55" y="30" width="5.5" height="26" rx="2"/></g>'
+    },
+    {
+      id: "11", name: "Span", group: "data", shapes: "2", block: "#db2777",
+      idea: "The foot is replaced by a dimension line with end ticks, as if the letter itself had been measured.",
+      why: "Says measurement with two strokes instead of a chart, and it keeps the psi completely intact.",
+      risk: "Quiet. It reads as instrumentation to anyone who works with scales and as an underline to everyone else.",
+      svg: '<g ' + R + ' stroke-width="5">' +
+        '<path d="M32 8 V52"/>' +
+        '<path d="M13 8 V25 a19 19 0 0 0 38 0 V8"/></g>' +
+        '<g ' + R + ' stroke-width="4">' +
+        '<path d="M11 56 H53"/><path d="M11 52 V60"/><path d="M53 52 V60"/></g>'
+    },
+    {
+      id: "12", name: "Overlay", group: "data", shapes: "4", block: "#0f766e",
+      idea: "The literal reference: a rising arrow laid across the psi, cut so it passes behind the letter, with data points around it.",
+      why: "The most explicit statement of measurement, and the gaps keep the crossings legible instead of fused.",
+      risk: "Four shapes and two junctions. This is a store-listing mark; the home screen wants something quieter.",
+      svg:
+        '<mask id="o__UID__" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">' +
+          '<rect x="0" y="0" width="64" height="64" fill="#fff"/>' +
+          '<g stroke="#000" fill="none" stroke-width="10.5" stroke-linecap="round" stroke-linejoin="round">' +
+            '<path d="M24 12 V56"/><path d="M10 12 V24 a14 14 0 0 0 28 0 V12"/></g>' +
+        '</mask>' +
+        '<g ' + R + ' stroke-width="4.6" mask="url(#o__UID__)">' +
+          '<path d="M10 56 L54.5 13.5"/><path d="M44 12.5 H55.5 V24"/></g>' +
+        '<g ' + R + ' stroke-width="4.6">' +
+          '<path d="M24 12 V56"/><path d="M10 12 V24 a14 14 0 0 0 28 0 V12"/><path d="M16 56 H32"/></g>' +
+        '<g fill="currentColor"><circle cx="7" cy="40" r="3.2"/><circle cx="47" cy="52" r="3.2"/>' +
+        '<circle cx="34" cy="5" r="3.2"/></g>'
+    }
+  ];
+
+  var uid = 0;
+  function symbol(c) {
+    uid += 1;
+    return '<svg class="sym" viewBox="0 0 64 64" role="img" aria-label="' + c.name +
+      ' mark">' + c.svg.replace(/__UID__/g, String(uid)) + '</svg>';
+  }
+  function tile(c, size) {
+    return '<div class="tile ' + size + '" style="--block:' + c.block + '">' + symbol(c) + '</div>';
+  }
+
+  function card(c) {
+    return '<article class="card">' +
+      '<div class="card-top">' +
+        tile(c, "hero-tile") +
+        '<div><div class="card-id">' + c.id + '</div><h3>' + c.name + '</h3><p>' + c.idea + '</p></div>' +
+      '</div>' +
+      '<div class="ladder">' +
+        '<div class="rung">' + tile(c, "s48") + '<span class="cap">48</span></div>' +
+        '<div class="rung">' + tile(c, "s32") + '<span class="cap">32</span></div>' +
+        '<div class="rung">' + tile(c, "s24") + '<span class="cap">24</span></div>' +
+        '<div class="rung">' + tile(c, "s16") + '<span class="cap">16</span></div>' +
+      '</div>' +
+      '<div class="notes">' +
+        '<div class="note"><span class="k">Works</span><span class="v">' + c.why + '</span></div>' +
+        '<div class="note risk"><span class="k">Watch</span><span class="v">' + c.risk + '</span></div>' +
+      '</div>' +
+      '<div class="stat">separate shapes <b>' + c.shapes + '</b></div>' +
+    '</article>';
+  }
+
+  document.getElementById("grid-box").innerHTML =
+    CONCEPTS.filter(function (c) { return c.group === "box"; }).map(card).join("");
+  document.getElementById("grid-data").innerHTML =
+    CONCEPTS.filter(function (c) { return c.group === "data"; }).map(card).join("");
+
+  var root = document.getElementById("root");
+  function setMode(m) {
+    root.classList.remove("mode-gradient", "mode-block", "mode-mono");
+    root.classList.add("mode-" + m);
+    Array.prototype.forEach.call(document.querySelectorAll("#modes button"), function (b) {
+      b.setAttribute("aria-pressed", String(b.dataset.mode === m));
+    });
+  }
+  setMode("gradient");
+  document.getElementById("modes").addEventListener("click", function (e) {
+    var b = e.target.closest("button");
+    if (b) { setMode(b.dataset.mode); }
+  });
+  document.getElementById("gridToggle").addEventListener("change", function (e) {
+    root.classList.toggle("show-grid", e.target.checked);
+  });
+  document.getElementById("themeToggle").addEventListener("change", function (e) {
+    document.documentElement.setAttribute("data-theme", e.target.checked ? "dark" : "light");
+  });
+</script>
