@@ -57,7 +57,12 @@
     <link rel="manifest" href="manifest.json">
     <meta name="description"
         content="A clinical decision support PWA for mental health professionals, featuring diagnostic screening scales, psychiatric dose converters, and interactive monitoring checklists.">
-    <link rel="apple-touch-icon" href="icons/icon-192x192.png">
+    <!-- Icon filenames are stable across releases, so the ?v= query is what makes a new
+         mark take effect instead of the browser reusing its cached favicon. Keep it in
+         step with APP_VERSION whenever the artwork changes. -->
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg?v=1.3.2">
+    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png?v=1.3.2">
+    <link rel="apple-touch-icon" href="icons/icon-192x192.png?v=1.3.2">
     <meta name="theme-color" content="#4f46e5" />
 </head>
 
