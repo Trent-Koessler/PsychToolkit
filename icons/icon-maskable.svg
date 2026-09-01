@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="g" gradientUnits="userSpaceOnUse" x1="51" y1="-36" x2="461" y2="548">
+      <stop offset="0" stop-color="#6366f1"/>
+      <stop offset="0.42" stop-color="#4f46e5"/>
+      <stop offset="1" stop-color="#0d9488"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="0" fill="url(#g)"/>
+  <svg x="0" y="0" width="512" height="512" viewBox="-12.45 -16.45 88.9 88.9">
+  <mask id="cut" maskUnits="userSpaceOnUse" x="0" y="0" width="64" height="64">
+    <rect width="64" height="64" fill="#fff"/>
+    <g stroke="#000" fill="none" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 28 L32 38 L54 28"/>
+      <path d="M32 38 V54"/>
+    </g>
+    <g transform="matrix(1,-0.4545,0,1,0,14.5)" stroke="#000" fill="none" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M43 40 V53"/>
+      <path d="M38 40 V44 a5 5 0 0 0 10 0 V40"/>
+    </g>
+  </mask>
+  <g fill="#fff" mask="url(#cut)">
+    <path d="M10 28 L32 18 L40 2 L18 12 Z"/>
+    <path d="M10 28 L32 38 L54 28 L54 44 L32 54 L10 44 Z"/>
+    <path fill-rule="evenodd" d="M10 28 L32 18 L54 28 L32 38 Z M17.5 28 L32 21.4 L46.5 28 L32 34.6 Z"/>
+  </g>
+  </svg>
+</svg>
