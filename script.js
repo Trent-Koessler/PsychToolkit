@@ -5119,4 +5119,18 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         });
     }
 
+    // --- SERVICE WORKER --- //
+    // sw.js is network-first for HTML/CSS/JS, so an online clinician always gets
+    // the current clinical content and the cache only serves as an offline
+    // fallback. updateViaCache "none" keeps the worker script itself out of the
+    // HTTP cache, so a new release is picked up on the next visit rather than
+    // waiting out a stale max-age.
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker
+                .register("sw.js", { updateViaCache: "none" })
+                .catch((err) => console.error("Service worker registration failed:", err));
+        });
+    }
+
 });
