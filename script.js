@@ -11,9 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const lockError = document.getElementById("lock-error");
 
     function checkPassword() {
-        if (passInput.value.toLowerCase() === "psych123") {
+        // Mobile keyboards, autofill and paste routinely append a space, so trim
+        // before comparing rather than rejecting an otherwise correct passphrase.
+        if (passInput.value.trim().toLowerCase() === "psych123") {
             lockScreen.classList.remove("active");
             document.documentElement.classList.add("app-unlocked");
+            lockError.style.display = "none";
             // Optional: store in sessionStorage to prevent locking on refresh
             sessionStorage.setItem("unlocked", "true");
         } else {
