@@ -74,7 +74,8 @@
             <div class="lock-icon">🔒</div>
             <h2>PsychToolkit</h2>
             <p>Please enter the passphrase to access clinical tools.</p>
-            <input type="password" id="passphrase-input" placeholder="Enter passphrase...">
+            <input type="password" id="passphrase-input" placeholder="Enter passphrase..." autocapitalize="none"
+                autocorrect="off" autocomplete="current-password" spellcheck="false">
             <button id="unlock-btn">Unlock</button>
             <p id="lock-error" class="lock-error" style="display:none; color: var(--danger-color); margin-top: 1rem;">
                 Incorrect passphrase.</p>

@@ -11,9 +11,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const lockError = document.getElementById("lock-error");
 
     function checkPassword() {
-        if (passInput.value.toLowerCase() === "psych123") {
+        // Mobile keyboards, autofill and paste routinely append a space, so trim
+        // before comparing rather than rejecting an otherwise correct passphrase.
+        if (passInput.value.trim().toLowerCase() === "psych123") {
             lockScreen.classList.remove("active");
             document.documentElement.classList.add("app-unlocked");
+            lockError.style.display = "none";
             // Optional: store in sessionStorage to prevent locking on refresh
             sessionStorage.setItem("unlocked", "true");
         } else {
@@ -5113,6 +5116,20 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 // Prompt user to save/connect a new file
                 await connectNewFile();
             }
+        });
+    }
+
+    // --- SERVICE WORKER --- //
+    // sw.js is network-first for HTML/CSS/JS, so an online clinician always gets
+    // the current clinical content and the cache only serves as an offline
+    // fallback. updateViaCache "none" keeps the worker script itself out of the
+    // HTTP cache, so a new release is picked up on the next visit rather than
+    // waiting out a stale max-age.
+    if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+        window.addEventListener("load", () => {
+            navigator.serviceWorker
+                .register("sw.js", { updateViaCache: "none" })
+                .catch((err) => console.error("Service worker registration failed:", err));
         });
     }
 
