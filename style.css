@@ -3253,3 +3253,135 @@ button.btn-primary:hover,
     color: var(--accent-color);
     min-height: 1em;
 }
+
+/* =========================================================================
+   Psychiatric Emergencies (medical)
+   ========================================================================= */
+
+.emerg-escalate {
+    display: block;
+    margin-top: 8px;
+}
+
+.emerg-escalate a {
+    color: var(--primary-color);
+    font-weight: 700;
+}
+
+.emerg-tabs .tab-buttons {
+    flex-wrap: wrap;
+}
+
+.emerg-content {
+    max-width: 100ch;
+    line-height: 1.6;
+    font-size: 14.5px;
+}
+
+.emerg-content h3 {
+    margin-bottom: 10px;
+}
+
+.emerg-content h4 {
+    margin: 26px 0 8px;
+    font-size: 16px;
+    color: var(--primary-color);
+}
+
+.emerg-content p {
+    margin: 8px 0;
+}
+
+.emerg-content ul,
+.emerg-content ol {
+    margin: 8px 0 8px 22px;
+}
+
+.emerg-content li {
+    margin-bottom: 5px;
+}
+
+.emerg-summary {
+    font-size: 15px;
+    padding: 12px 16px;
+    border-left: 4px solid var(--danger-color);
+    background: rgba(239, 68, 68, 0.08);
+    background: color-mix(in srgb, var(--danger-color) 8%, transparent);
+    border-radius: var(--radius-sm);
+}
+
+.emerg-table-wrap {
+    overflow-x: auto;
+    margin: 12px 0 16px;
+}
+
+.emerg-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.emerg-table th,
+.emerg-table td {
+    border: 1px solid var(--border-color);
+    padding: 8px 10px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.emerg-table th {
+    background-color: var(--tab-bg);
+    font-weight: 700;
+}
+
+.emerg-table td:first-child {
+    font-weight: 600;
+}
+
+.emerg-check {
+    margin: 12px 0;
+    padding: 10px 14px;
+    font-size: 13.5px;
+    background: rgba(245, 158, 11, 0.12);
+    background: color-mix(in srgb, var(--warning-color) 12%, transparent);
+    border: 1px solid rgba(245, 158, 11, 0.45);
+    border: 1px solid color-mix(in srgb, var(--warning-color) 45%, transparent);
+    border-left: 4px solid var(--warning-color);
+    border-radius: var(--radius-sm);
+}
+
+.emerg-check-tag {
+    display: inline-block;
+    padding: 0 6px;
+    border-radius: 4px;
+    background: var(--warning-color);
+    color: #000;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.emerg-goto {
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.emerg-sources-heading {
+    border-top: 1px solid var(--border-color);
+    padding-top: 18px;
+}
+
+.emerg-sources {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.emerg-sources a {
+    color: var(--primary-color);
+    word-break: break-word;
+}
+
+@media (max-width: 600px) {
+    .emerg-tabs .tab-content {
+        padding: 16px;
+    }
+}
