@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.3.2";
+    const APP_VERSION = "1.4.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -336,6 +336,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-container").forEach(container => {
         const tabButtons = container.querySelectorAll(":scope > .tab-buttons > .tab-button");
         const tabContents = container.querySelectorAll(":scope > .tab-content");
+        // Optional drop-down that stands in for the tab buttons on small screens
+        // (CSS decides which one shows). It drives the buttons, so both stay in step.
+        const tabSelect = container.querySelector(":scope > .tab-select");
 
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
@@ -346,7 +349,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const activeContent = container.querySelector(`#${tabId}`);
                 if (activeContent) activeContent.classList.add("active");
+                if (tabSelect) tabSelect.value = tabId;
             });
+        });
+
+        if (tabSelect) {
+            tabSelect.addEventListener("change", () => {
+                const button = container.querySelector(`:scope > .tab-buttons > .tab-button[data-tab="${tabSelect.value}"]`);
+                if (button) button.click();
+            });
+        }
+    });
+
+    // Links that open a particular tab, e.g. "see the Comparison table" inside the
+    // Psychiatric Emergencies page. Elements that also carry data-page navigate first
+    // through the page handler above, then land on the named tab.
+    document.querySelectorAll("[data-goto-tab]").forEach(link => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const tabButton = document.querySelector(`.tab-button[data-tab="${link.dataset.gotoTab}"]`);
+            if (!tabButton) return;
+            tabButton.click();
+            tabButton.scrollIntoView({ block: "nearest", inline: "center" });
+            if (!link.dataset.page) window.scrollTo({ top: 0, behavior: "smooth" });
         });
     });
 
