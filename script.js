@@ -336,6 +336,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".tab-container").forEach(container => {
         const tabButtons = container.querySelectorAll(":scope > .tab-buttons > .tab-button");
         const tabContents = container.querySelectorAll(":scope > .tab-content");
+        // Optional drop-down that stands in for the tab buttons on small screens
+        // (CSS decides which one shows). It drives the buttons, so both stay in step.
+        const tabSelect = container.querySelector(":scope > .tab-select");
 
         tabButtons.forEach(button => {
             button.addEventListener("click", () => {
@@ -346,8 +349,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const activeContent = container.querySelector(`#${tabId}`);
                 if (activeContent) activeContent.classList.add("active");
+                if (tabSelect) tabSelect.value = tabId;
             });
         });
+
+        if (tabSelect) {
+            tabSelect.addEventListener("change", () => {
+                const button = container.querySelector(`:scope > .tab-buttons > .tab-button[data-tab="${tabSelect.value}"]`);
+                if (button) button.click();
+            });
+        }
     });
 
     // Links that open a particular tab, e.g. "see the Comparison table" inside the
