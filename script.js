@@ -440,6 +440,16 @@ document.addEventListener("DOMContentLoaded", () => {
             if (item.instruction) {
                 itemsHtml += `<p class="calculator-item-instruction">${item.instruction}</p>`;
             }
+            // Typed answers (e.g. PSQI bed time, minutes to fall asleep) are only
+            // usable with computeTotal, which turns the raw answers into a score.
+            if (item.input) {
+                const attrs = item.input === "number"
+                    ? ` min="${item.min ?? 0}" max="${item.max ?? ""}" step="${item.step ?? 1}" inputmode="decimal"`
+                    : "";
+                itemsHtml += `<div class="calculator-item-input"><input type="${item.input}" name="${radioName}"${attrs}>` +
+                    (item.unit ? ` <span>${item.unit}</span>` : "") + `</div></fieldset>`;
+                return;
+            }
             // Items start unanswered. Pre-selecting the first option would make an
             // untouched scale look like a completed assessment scoring zero.
             item.options.forEach((opt) => {
@@ -459,9 +469,21 @@ document.addEventListener("DOMContentLoaded", () => {
             let total = 0;
             let answered = 0;
             let breakdown = "";
+            const answers = [];
             config.items.forEach((item, itemIdx) => {
                 const radioName = `${config.id}-q-${itemIdx}`;
+                if (item.input) {
+                    const field = itemsContainer.querySelector(`input[name="${radioName}"]`);
+                    const raw = field.value.trim();
+                    answers.push(raw);
+                    if (raw !== "") {
+                        answered++;
+                        breakdown += `- ${item.displayName}: ${raw}${item.unit ? " " + item.unit : ""}\n`;
+                    }
+                    return;
+                }
                 const checkedRadio = itemsContainer.querySelector(`input[name="${radioName}"]:checked`);
+                answers.push(checkedRadio ? Number(checkedRadio.value) : null);
                 if (checkedRadio) {
                     answered++;
                     const scoreVal = parseInt(checkedRadio.value, 10);
@@ -488,10 +510,22 @@ document.addEventListener("DOMContentLoaded", () => {
             totalScoreEl.classList.remove("severity-incomplete");
             severityEl.classList.remove("severity-incomplete");
             copyBtn.disabled = false;
+            // Some instruments score from derived components rather than a plain sum.
+            if (config.computeTotal) {
+                const computed = config.computeTotal(answers);
+                if (computed.error) {
+                    totalScoreEl.textContent = "—";
+                    severityEl.textContent = computed.error;
+                    emrSummaryEl.value = `${config.name}: ${computed.error}`;
+                    copyBtn.disabled = true;
+                    return;
+                }
+                total = computed.total;
+            }
             // Bonus points (e.g. the MoCA education point) cannot lift a score past
             // the instrument's ceiling.
             if (config.maxTotal) total = Math.min(total, config.maxTotal);
-            const severity = config.severityLogic(total, itemsContainer);
+            const severity = config.severityLogic(total, itemsContainer, answers);
             // Some instruments (e.g. MDQ) are not simple additive scales, so a summed
             // total is meaningless and is deliberately not reported.
             totalScoreEl.textContent = config.suppressTotal ? "n/a" : total;
@@ -518,6 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         itemsContainer.addEventListener("change", updateState);
+        itemsContainer.addEventListener("input", updateState);
 
         copyBtn.addEventListener("click", () => {
             emrSummaryEl.select();
@@ -531,6 +566,9 @@ document.addEventListener("DOMContentLoaded", () => {
         resetBtn.addEventListener("click", () => {
             itemsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
                 radio.checked = false;
+            });
+            itemsContainer.querySelectorAll('input:not([type="radio"])').forEach(field => {
+                field.value = "";
             });
             updateState();
         });
@@ -935,27 +973,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 10. Panic and Agoraphobia Scale
+    // 10. PDSS (Panic Disorder Severity Scale)
+    const optPdss = [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Extreme" }];
     setupScaleCalculator({
         id: "panic",
-        name: "Panic and Agoraphobia Scale (PAS)",
-        reference: "Bandelow B. Assessing the efficacy of treatments for panic disorder and agoraphobia. Int Clin Psychopharmacol. 1995;10:33-37.",
+        name: "PDSS (Panic Disorder Severity Scale)",
+        note: "Clinician-rated, over the past month. Rate each item using the full PDSS anchors (Shear et al., 1997).",
+        reference: "Shear MK, Brown TA, Barlow DH, et al. Multicenter collaborative panic disorder severity scale. Am J Psychiatry. 1997;154(11):1571-1575. Severity bands: Furukawa TA, Shear MK, Barlow DH, et al. Evidence-based guidelines for interpretation of the Panic Disorder Severity Scale. Depress Anxiety. 2009;26(10):922-929.",
         items: [
-            { displayName: "1. Frequency of panic attacks", options: optZeroFour },
-            { displayName: "2. Severity of panic attacks", options: optZeroFour },
-            { displayName: "3. Anticipatory anxiety (frequency)", options: optZeroFour },
-            { displayName: "4. Anticipatory anxiety (severity)", options: optZeroFour },
-            { displayName: "5. Agoraphobia (avoidance of situations)", options: optZeroFour },
-            { displayName: "6. Avoidance of being alone", options: optZeroFour },
-            { displayName: "7. Social limitations", options: optZeroFour },
-            { displayName: "8. Family relationship limitations", options: optZeroFour },
-            { displayName: "9. Employment/work limitations", options: optZeroFour },
-            { displayName: "10. Health worries", options: optZeroFour }
+            { displayName: "1. Panic attack frequency (full and limited-symptom attacks)", options: optPdss },
+            { displayName: "2. Distress during panic attacks", options: optPdss },
+            { displayName: "3. Anticipatory anxiety (fear and worry about future attacks)", options: optPdss },
+            { displayName: "4. Agoraphobic fear and avoidance", options: optPdss },
+            { displayName: "5. Fear and avoidance of panic-related body sensations", options: optPdss },
+            { displayName: "6. Impairment in work functioning", options: optPdss },
+            { displayName: "7. Impairment in social functioning", options: optPdss },
+            // Not scored: it only chooses which set of severity bands applies.
+            { displayName: "Agoraphobia present? (selects the severity bands; not scored)", options: [{ value: 0, label: "No" }, { value: 0, label: "Yes" }] }
         ],
-        severityLogic: (score) => {
-            if (score <= 8) return "Mild Panic Disorder";
-            if (score <= 27) return "Moderate Panic Disorder";
-            return "Severe Panic Disorder";
+        severityLogic: (score, container) => {
+            const agoraphobia = container.querySelector('input[name="panic-q-7"]:checked')
+                .parentElement.textContent.trim() === "Yes";
+            // Furukawa et al. 2009, linked to CGI-Severity.
+            const bands = agoraphobia
+                ? [[2, "Normal"], [7, "Borderline ill"], [10, "Slightly ill"], [15, "Moderately ill"], [Infinity, "Markedly ill"]]
+                : [[1, "Normal"], [5, "Borderline ill"], [9, "Slightly ill"], [13, "Moderately ill"], [Infinity, "Markedly ill"]];
+            const band = bands.find(([max]) => score <= max)[1];
+            const remission = score <= 5 ? " Meets remission definition (score 5 or less)." : "";
+            return `${band} (${agoraphobia ? "with" : "without"} agoraphobia).${remission}`;
         }
     });
 
@@ -1402,19 +1447,81 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 28. PSQI
+    // 28. PSQI (full 19 self-rated items, 7 components)
+    const optPsqiFreq = [{ value: 0, label: "0 - Not during the past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" }];
+    const psqiDisturbances = [
+        "a. Cannot get to sleep within 30 minutes",
+        "b. Wake up in the middle of the night or early morning",
+        "c. Have to get up to use the bathroom",
+        "d. Cannot breathe comfortably",
+        "e. Cough or snore loudly",
+        "f. Feel too cold",
+        "g. Feel too hot",
+        "h. Have bad dreams",
+        "i. Have pain",
+        "j. Other reason(s) (choose 'Not during the past month' if none)"
+    ];
+
+    // Converts "HH:MM" to hours after midnight.
+    function clockHours(text) {
+        const [h, m] = text.split(":").map(Number);
+        return h + m / 60;
+    }
+
+    // Scores the 7 PSQI components (Buysse et al., 1989). Answer order matches
+    // the items list: 0 bed time, 1 minutes to sleep, 2 get-up time, 3 hours of
+    // sleep, 4-13 Q5a-j, 14 Q6 quality, 15 Q7 medication, 16 Q8, 17 Q9.
+    function scorePsqi(a) {
+        const minutes = Number(a[1]);
+        const sleepHours = Number(a[3]);
+        let hoursInBed = clockHours(a[2]) - clockHours(a[0]);
+        if (hoursInBed <= 0) hoursInBed += 24;
+        if (!(minutes >= 0) || !(sleepHours > 0)) return { error: "Check the typed answers: minutes and hours must be numbers." };
+        if (sleepHours > hoursInBed) return { error: "Hours of actual sleep cannot be more than the time in bed (from bed time to getting-up time)." };
+
+        const band = (value, cuts) => cuts.findIndex(cut => value <= cut);
+        const latencyMinutes = minutes <= 15 ? 0 : minutes <= 30 ? 1 : minutes <= 60 ? 2 : 3;
+        const efficiency = (sleepHours / hoursInBed) * 100;
+        const disturbanceSum = a.slice(5, 14).reduce((sum, v) => sum + v, 0);
+
+        const components = [
+            ["Subjective sleep quality", a[14]],
+            ["Sleep latency", band(latencyMinutes + a[4], [0, 2, 4, 6])],
+            ["Sleep duration", sleepHours >= 7 ? 0 : sleepHours >= 6 ? 1 : sleepHours >= 5 ? 2 : 3],
+            ["Habitual sleep efficiency", efficiency >= 85 ? 0 : efficiency >= 75 ? 1 : efficiency >= 65 ? 2 : 3],
+            ["Sleep disturbances", band(disturbanceSum, [0, 9, 18, 27])],
+            ["Use of sleeping medication", a[15]],
+            ["Daytime dysfunction", band(a[16] + a[17], [0, 2, 4, 6])]
+        ];
+        return {
+            total: components.reduce((sum, [, v]) => sum + v, 0),
+            components,
+            efficiency
+        };
+    }
+
     setupScaleCalculator({
         id: "psqi",
-        name: "PSQI (Pittsburgh Sleep Quality Index Subset)",
+        name: "PSQI (Pittsburgh Sleep Quality Index)",
+        note: "Self-rated. Questions refer to usual sleep habits during the past month only.",
         reference: "Buysse DJ, Reynolds CF, Monk TH, et al. The Pittsburgh Sleep Quality Index: a new instrument for psychiatric practice and research. Psychiatry Res. 1989;28(2):193-213.",
         items: [
-            { displayName: "1. Subjective sleep quality", options: [{ value: 0, label: "0 - Very Good" }, { value: 1, label: "1 - Fairly Good" }, { value: 2, label: "2 - Fairly Bad" }, { value: 3, label: "3 - Very Bad" }] },
-            { displayName: "2. Sleep latency (trouble falling asleep within 30 min)", options: [{ value: 0, label: "0 - Not during past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" }] },
-            { displayName: "3. Sleep duration (hours of sleep)", options: [{ value: 0, label: "0 - > 7 hours" }, { value: 1, label: "1 - 6-7 hours" }, { value: 2, label: "2 - 5-6 hours" }, { value: 3, label: "3 - < 5 hours" }] }
+            { displayName: "1. Usual bed time", input: "time" },
+            { displayName: "2. How long (in minutes) has it usually taken you to fall asleep each night?", input: "number", max: 600, unit: "minutes" },
+            { displayName: "3. Usual getting-up time", input: "time" },
+            { displayName: "4. Hours of actual sleep per night (may differ from time spent in bed)", input: "number", max: 24, step: 0.25, unit: "hours" },
+            ...psqiDisturbances.map(text => ({ displayName: `5${text}`, instruction: "How often have you had trouble sleeping because you...", options: optPsqiFreq })),
+            { displayName: "6. How would you rate your sleep quality overall?", options: [{ value: 0, label: "0 - Very good" }, { value: 1, label: "1 - Fairly good" }, { value: 2, label: "2 - Fairly bad" }, { value: 3, label: "3 - Very bad" }] },
+            { displayName: "7. How often have you taken medicine to help you sleep (prescribed or over the counter)?", options: optPsqiFreq },
+            { displayName: "8. How often have you had trouble staying awake while driving, eating meals, or engaging in social activity?", options: optPsqiFreq },
+            { displayName: "9. How much of a problem has it been to keep up enough enthusiasm to get things done?", options: [{ value: 0, label: "0 - No problem at all" }, { value: 1, label: "1 - Only a very slight problem" }, { value: 2, label: "2 - Somewhat of a problem" }, { value: 3, label: "3 - A very big problem" }] }
         ],
-        severityLogic: (score) => {
-            if (score >= 5) return "Poor sleep quality suggested (Score >= 5)";
-            return "Good sleep quality";
+        computeTotal: scorePsqi,
+        severityLogic: (score, container, answers) => {
+            const { components, efficiency } = scorePsqi(answers);
+            const verdict = score > 5 ? "Poor sleep quality (global score greater than 5)" : "Good sleep quality (global score 5 or less)";
+            const parts = components.map(([name, v]) => `- ${name}: ${v}`).join("\n");
+            return `Global PSQI ${score} / 21. ${verdict}.\nSleep efficiency ${Math.round(efficiency)}%.\nComponents (0-3 each):\n${parts}`;
         }
     });
 

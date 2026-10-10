@@ -31,9 +31,9 @@ function startServer() {
 
 // Published score ranges. If a scale's lowest/highest possible total in the app
 // differs from these, an item or option value is wrong.
-// PSQI and the Panic & Agoraphobia Scale are left out until their item sets are
-// reviewed (they do not currently match the published instruments).
+// The PSQI is scored from typed answers, so it has its own test below.
 const SCALE_RANGES = {
+    panic: [0, 28],
     phq9: [0, 27], gad7: [0, 21], epds: [0, 30], pcl5: [0, 80], ymrs: [0, 60],
     asrs: [0, 24], hamd: [0, 52], hama: [0, 56], bfcrs: [0, 42], bprs: [18, 126],
     panss: [30, 210], aims: [0, 28], audit: [0, 40], dast10: [0, 10], cuditr: [0, 32],
@@ -48,7 +48,10 @@ const SEVERITY_BANDS = {
     gad7: [[4, "Minimal"], [5, "Mild"], [10, "Moderate"], [15, "Severe"]],
     audit: [[7, "Low risk"], [8, "Hazardous"]],
     pgsi: [[0, "Non-problem"], [1, "Low"], [2, "Low"], [3, "Moderate"], [7, "Moderate"], [8, "Problem gambler"]],
-    hamd: [[7, "Normal"], [8, "Mild"], [16, "Mild"], [17, "Moderate"], [23, "Moderate"], [24, "Severe"]]
+    hamd: [[7, "Normal"], [8, "Mild"], [16, "Mild"], [17, "Moderate"], [23, "Moderate"], [24, "Severe"]],
+    // PDSS without agoraphobia (Furukawa et al. 2009); the helper answers "No".
+    panic: [[1, "Normal"], [2, "Borderline"], [5, "remission"], [6, "Slightly ill"], [9, "Slightly ill"],
+        [10, "Moderately ill"], [13, "Moderately ill"], [14, "Markedly ill"]]
 };
 
 const failures = [];
@@ -134,6 +137,69 @@ async function testScales(browser, baseUrl) {
         radio.dispatchEvent(new Event("change", { bubbles: true }));
     });
     expectIncludes("EPDS self-harm alert", await page.inputValue("#epds .emr-summary"), "ALERT");
+}
+
+// PSQI: typed answers by item index (0-3), then radio values for items 4-17.
+async function scorePsqi(page, typed, radios) {
+    return page.evaluate(({ typed, radios }) => {
+        const section = document.getElementById("psqi");
+        typed.forEach((value, i) => {
+            const field = section.querySelector(`input[name="psqi-q-${i}"]`);
+            field.value = value;
+            field.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+        radios.forEach((value, i) => {
+            const radio = section.querySelector(`input[name="psqi-q-${i + 4}"][value="${value}"]`);
+            radio.checked = true;
+            radio.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        return {
+            total: section.querySelector(".total-score").textContent.trim(),
+            severity: section.querySelector(".severity").textContent.trim()
+        };
+    }, { typed, radios });
+}
+
+async function testPsqiAndPdss(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#scales-page");
+    //          Q5a-j                          Q6 Q7 Q8 Q9
+    const none = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+    // Worked example: latency 20 min (1) + Q5a 2 = 3 -> C2 2; 6.5 h sleep -> C3 1;
+    // 6.5 / 8 h in bed = 81% -> C4 1; Q5b-j sum 5 -> C5 1; Q6 2; Q7 0; Q8+Q9 = 3 -> C7 2.
+    let r = await scorePsqi(page, ["23:00", "20", "07:00", "6.5"], [2, 3, 2, 0, 0, 0, 0, 0, 0, 0, 2, 0, 1, 2]);
+    expect("PSQI worked example", r.total, "9");
+    expectIncludes("PSQI worked example verdict", r.severity, "Poor sleep quality");
+
+    r = await scorePsqi(page, ["22:30", "10", "06:30", "7.5"], none);
+    expect("PSQI good sleeper", r.total, "0");
+
+    // Cut-off is "greater than 5": 5 is good, 6 is poor.
+    r = await scorePsqi(page, ["22:30", "10", "06:30", "7.5"], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 0, 0]);
+    expect("PSQI total 5", r.total, "5");
+    expectIncludes("PSQI 5 is good", r.severity, "Good sleep quality");
+    r = await scorePsqi(page, ["22:30", "10", "06:30", "7.5"], [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 3, 2, 1, 0]);
+    expectIncludes("PSQI 6 is poor", r.severity, "Poor sleep quality");
+
+    // Bed time after midnight: 01:00 to 06:00 is 5 h in bed.
+    r = await scorePsqi(page, ["01:00", "10", "06:00", "4.5"], none);
+    expect("PSQI after-midnight bed time", r.total, "3"); // C3 3 (under 5 h); 4.5 / 5 h = 90% -> C4 0
+    r = await scorePsqi(page, ["23:00", "10", "06:00", "8"], none);
+    expectIncludes("PSQI sleep longer than time in bed", r.severity, "cannot be more than the time in bed");
+
+    // PDSS with agoraphobia uses the higher bands: 7 is borderline, 16 markedly ill.
+    const pdss = async (score) => {
+        const result = await answerScale(page, "panic", score);
+        await page.evaluate(() => {
+            const yes = document.querySelectorAll('input[name="panic-q-7"]')[1];
+            yes.checked = true;
+            yes.dispatchEvent(new Event("change", { bubbles: true }));
+        });
+        return page.textContent("#panic .severity");
+    };
+    expectIncludes("PDSS agoraphobia 7", await pdss(7), "Borderline ill (with agoraphobia)");
+    expectIncludes("PDSS agoraphobia 15", await pdss(15), "Moderately ill");
+    expectIncludes("PDSS agoraphobia 16", await pdss(16), "Markedly ill");
 }
 
 async function testConverters(browser, baseUrl) {
@@ -259,6 +325,7 @@ async function testAppShell(browser, baseUrl) {
     );
     try {
         await testScales(browser, baseUrl);
+        await testPsqiAndPdss(browser, baseUrl);
         await testConverters(browser, baseUrl);
         await testWidmark(browser, baseUrl);
         await testEctHelper(browser, baseUrl);
