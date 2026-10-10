@@ -488,6 +488,9 @@ document.addEventListener("DOMContentLoaded", () => {
             totalScoreEl.classList.remove("severity-incomplete");
             severityEl.classList.remove("severity-incomplete");
             copyBtn.disabled = false;
+            // Bonus points (e.g. the MoCA education point) cannot lift a score past
+            // the instrument's ceiling.
+            if (config.maxTotal) total = Math.min(total, config.maxTotal);
             const severity = config.severityLogic(total, itemsContainer);
             // Some instruments (e.g. MDQ) are not simple additive scales, so a summed
             // total is meaningless and is deliberately not reported.
@@ -885,7 +888,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "6. Insomnia (Late)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Waking early but goes back to sleep" }, { value: 2, label: "2 - Unable to fall asleep again" }] },
             { displayName: "7. Work and Activities", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Feelings of incapacity" }, { value: 2, label: "2 - Loss of interest" }, { value: 3, label: "3 - Decrease in actual time spent" }, { value: 4, label: "4 - Stopped working" }] },
             { displayName: "8. Retardation (Psychomotor)", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Slight retardation" }, { value: 2, label: "2 - Obvious retardation" }, { value: 3, label: "3 - Interview difficult" }, { value: 4, label: "4 - Stupor" }] },
-            { displayName: "9. Agitation", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Hand wringing/pulling hair" }] },
+            { displayName: "9. Agitation", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Playing with hands, hair, etc." }, { value: 3, label: "3 - Moving about, can't sit still" }, { value: 4, label: "4 - Hand wringing, nail biting, hair-pulling, biting of lips" }] },
             { displayName: "10. Anxiety (Psychic)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Tension/irritability" }, { value: 2, label: "2 - Worrying" }, { value: 3, label: "3 - Apprehension" }, { value: 4, label: "4 - Panic" }] },
             { displayName: "11. Anxiety (Somatic)", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild (GI, CV, etc)" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Incapacitating" }] },
             { displayName: "12. Somatic Symptoms (GI)", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Loss of appetite" }, { value: 2, label: "2 - Heavy GI complaints" }] },
@@ -1176,11 +1179,18 @@ document.addEventListener("DOMContentLoaded", () => {
     setupScaleCalculator({
         id: "pgsi",
         name: "PGSI (Problem Gambling Severity Index)",
+        note: "Thinking about the last 12 months...",
         reference: "Ferris J, Wynne H. The Canadian Problem Gambling Index: Final Report. Canadian Consortium for Gambling Research. 2001.",
         items: [
             { displayName: "1. Have you bet more than you could afford to lose?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
             { displayName: "2. Have you needed to gamble with larger amounts of money to get the same feeling of excitement?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
-            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] }
+            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "4. Have you borrowed money or sold anything to get money to gamble?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "5. Have you felt that you might have a problem with gambling?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "6. Has gambling caused you any health problems, including stress or anxiety?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "7. Have people criticised your betting or told you that you had a gambling problem, regardless of whether or not you thought it was true?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "8. Has your gambling caused any financial problems for you or your household?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "9. Have you felt guilty about the way you gamble or what happens when you gamble?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] }
         ],
         severityLogic: (score) => {
             if (score === 0) return "Non-problem gambler";
@@ -1195,6 +1205,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: "moca",
         name: "Montreal Cognitive Assessment (MoCA Subset)",
         note: "Evaluate cognitive domains. Total score max 30.",
+        maxTotal: 30,
         reference: "Nasreddine ZS, Phillips NA, Bedirian V, et al. The Montreal Cognitive Assessment, MoCA: a brief screening tool for mild cognitive impairment. J Am Geriatr Soc. 2005;53(4):695-699.",
         items: [
             { displayName: "1. Visuospatial / Executive (Trail, Cube, Clock)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
@@ -1207,7 +1218,6 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "8. Education Adjustment (<= 12 years formal education)", options: [{ value: 0, label: "0 - No" }, { value: 1, label: "1 - Yes (+1 point)" }] }
         ],
         severityLogic: (score) => {
-            if (score > 30) score = 30; // Max score is 30
             let interp = "Severe Cognitive Impairment";
             if (score >= 26) interp = "Normal Cognitive Function";
             else if (score >= 18) interp = "Mild Cognitive Impairment (MCI)";
@@ -1439,10 +1449,11 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "23. I can only think about one thing at a time.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
             { displayName: "24. I change hobbies.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
             { displayName: "25. I spend or charge more than I earn.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "26. I am more interested in the present than the future.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "27. I am restless at the theater or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "28. I like puzzles.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
-            { displayName: "29. I am future-oriented.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] }
+            { displayName: "26. I often have extraneous thoughts when thinking.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "27. I am more interested in the present than the future.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "28. I am restless at the theater or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "29. I like puzzles.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "30. I am future-oriented.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] }
         ],
         severityLogic: (score) => {
             return `Total Impulsivity Score: ${score} (Range 30-120)`;
