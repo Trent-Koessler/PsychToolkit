@@ -562,6 +562,27 @@ header.app-header button:not(.hamburger):hover,
     background-color: var(--primary-hover);
 }
 
+/* Phones: the picker gets its own full-width row so scale names are readable,
+   with Prev and Next sharing the row underneath. */
+@media (max-width: 600px) {
+    .scale-nav-container {
+        flex-wrap: wrap;
+    }
+
+    .scale-selector-wrapper {
+        order: -1;
+        flex-basis: 100%;
+    }
+
+    .scale-selector-wrapper select {
+        width: 100%;
+    }
+
+    .scale-nav-btn {
+        flex: 1;
+    }
+}
+
 /* Tab Container Styles */
 .tab-container {
     background: var(--card-bg);
