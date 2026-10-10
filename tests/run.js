@@ -172,6 +172,50 @@ async function testWidmark(browser, baseUrl) {
     expectIncludes("Widmark time to zero", out, "3.6 hours");
 }
 
+// EEG for ECT dose helper, checked against NSW ECT Handbook v1.2 Appendix 6.
+async function testEctHelper(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#ect-page");
+    await page.click('.tab-button[data-tab="ect-dosing"]');
+    const run = async (chart, age, st, treatment) => {
+        await page.selectOption("#ect-chart", chart);
+        await page.selectOption("#ect-age", age);
+        await page.selectOption("#ect-st", st);
+        if (treatment !== undefined) await page.selectOption("#ect-treatment", treatment);
+        return [await page.textContent("#ect-titration-out"), await page.textContent("#ect-treatment-out")];
+    };
+
+    // Ultra-brief RUL: start T1 (<50) / T2 (>=50); ST T2 -> R2 25%, next R2.5 35%.
+    let [titration, treat] = await run("ub", "under50", "1");
+    expectIncludes("UB start <50", titration, "start at T1 (2%)");
+    expectIncludes("UB 4th stimulus jumps two levels", titration, "Stimulus 4: T5 (25%)");
+    expectIncludes("UB ST T2", treat, "Treat at R2 (25%)");
+    expectIncludes("UB next step", treat, "R2.5 (35%)");
+    [titration] = await run("ub", "50plus", "1");
+    expectIncludes("UB start >=50", titration, "start at T2 (4%)");
+
+    // 1.0 ms: high-dose unilateral +5 levels, but Level 1 -> Level 5.
+    [titration, treat] = await run("p10", "under50", "0", "0");
+    expectIncludes("1.0 ms start <50", titration, "start at Level 1 (5%)");
+    expectIncludes("1.0 ms HDU from L1", treat, "Treat at Level 5 (25%)");
+    [, treat] = await run("p10", "under50", "1", "0");
+    expectIncludes("1.0 ms HDU from L2", treat, "Treat at Level 7 (50%)");
+    [, treat] = await run("p10", "under50", "0", "1");
+    expectIncludes("1.0 ms MDU from L1", treat, "Treat at Level 4 (20%)");
+    [, treat] = await run("p10", "under50", "9", "0");
+    expectIncludes("1.0 ms beyond chart", treat, "Beyond the top of the chart");
+
+    // 0.5 ms: RUL +4 from Level 0, else +5; bitemporal low dose +1.
+    [titration, treat] = await run("p05", "50plus", "0", "4");
+    expectIncludes("0.5 ms start >=50", titration, "start at Level 1 (6%)");
+    expectIncludes("0.5 ms RUL from L0", treat, "Treat at Level 4 (20%)");
+    [, treat] = await run("p05", "50plus", "3", "4");
+    expectIncludes("0.5 ms RUL from L3", treat, "Treat at Level 8 (75%)");
+    [, treat] = await run("p05", "50plus", "6", "4");
+    expectIncludes("0.5 ms >125% warning", treat, "above 90 Hz");
+    [, treat] = await run("p05", "50plus", "4", "2");
+    expectIncludes("0.5 ms low-dose BT", treat, "Treat at Level 5 (25%)");
+}
+
 async function testAppShell(browser, baseUrl) {
     // Lock screen: correct passphrase (with stray spaces/caps) unlocks, wrong one does not.
     const context = await browser.newContext();
@@ -217,6 +261,7 @@ async function testAppShell(browser, baseUrl) {
         await testScales(browser, baseUrl);
         await testConverters(browser, baseUrl);
         await testWidmark(browser, baseUrl);
+        await testEctHelper(browser, baseUrl);
         await testAppShell(browser, baseUrl);
     } finally {
         await browser.close();
