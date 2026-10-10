@@ -134,6 +134,7 @@
                 <button class="nav-link" data-page="qtc-page">❤️ QTc Prolongation Guide</button>
                 <button class="nav-link" data-page="generators-page">🗂️ Assessment Note Generators</button>
                 <button class="nav-link" data-page="mha-page">⚖️ Mental Health Act 2007 (NSW)</button>
+                <button class="nav-link" data-page="ect-page">⚡ EEG for ECT</button>
                 <button class="nav-link" data-page="contacts-page">☎️ Helpful Contacts &amp; Helplines</button>
                 <button class="nav-link" data-page="pk-page">⚗️ PK Visualiser</button>
                 <span class="nav-drawer-heading">More</span>
@@ -148,37 +149,78 @@
 
             <!-- Home Dashboard Page -->
             <div id="home-page" class="page active-page">
-                <nav class="button-container">
-                    <button class="big-button" data-page="oca-assessment-page"
-                        style="border: 2px solid var(--primary-color);">
-                        <span> Patient Review Workspace</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Write
-                            reviews, auto-save to desktop, and has templates for formulation and MSE.</span>
+                <div class="home-search">
+                    <label for="home-search-input" class="visually-hidden">Search tools</label>
+                    <input type="search" id="home-search-input" placeholder="Search tools and scales (e.g. lithium, PHQ)" autocomplete="off" spellcheck="false">
+                </div>
+                <div id="home-search-scales" class="home-search-scales" hidden></div>
+                <p id="home-search-empty" class="home-search-empty" hidden>No tools match your search.</p>
+                <nav class="button-container" id="home-tiles">
+                    <button class="big-button home-tile home-tile-featured" data-page="oca-assessment-page"
+                        data-keywords="review note oca template mse formulation registrar initial assessment">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">📝</span> Patient Review Workspace</span>
+                        <span class="tile-desc">Write reviews with MSE and formulation builders; auto-saves to a file on this computer.</span>
                     </button>
-                    <button class="big-button" data-page="scales-page">Psychiatric Screening Scales</button>
-                    <button class="big-button" data-page="equivalents-page">Dose Equivalents Converters</button>
-                    <button class="big-button" data-page="monitoring-page">Interactive Monitoring Checklists</button>
-                    <button class="big-button" data-page="otp-page">Opioid Treatment (OTP) Calculators</button>
-                    <button class="big-button" data-page="withdrawal-page">Withdrawal & NRT Tools</button>
-                    <button class="big-button" data-page="emergencies-page">
-                        <span>🚨 Psychiatric Emergencies</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">NMS,
-                            serotonin, lithium and other toxicities, QTc, clozapine, valproate and malignant catatonia
-                            &mdash; recognition, management and eTG doses.</span>
+                    <button class="big-button home-tile" data-page="scales-page"
+                        data-keywords="scale screen score rating questionnaire depression anxiety mania psychosis adhd ptsd cognition alcohol drugs">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">📊</span> Psychiatric Screening Scales</span>
+                        <span class="tile-desc">29 scored scales: PHQ-9, GAD-7, YMRS, PANSS, AUDIT, MoCA and more.</span>
                     </button>
-                    <button class="big-button" data-page="qtc-page">QTc Prolongation Guide</button>
-                    <button class="big-button" data-page="generators-page">Assessment Note Generators</button>
-                    <button class="big-button" data-page="mha-page">
-                        <span>⚖️ Mental Health Act 2007 (NSW)</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Point-of-care
-                            decision support across the Mental Health, Guardianship and Public Health Acts &mdash;
-                            scheduling, examinations and treatment refusal, with the sections quoted.</span>
+                    <button class="big-button home-tile" data-page="equivalents-page"
+                        data-keywords="antipsychotic benzodiazepine chlorpromazine diazepam equivalent conversion switch">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚖️</span> Dose Equivalents Converters</span>
+                        <span class="tile-desc">Convert between antipsychotics and between benzodiazepines.</span>
                     </button>
-                    <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
-                    <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
+                    <button class="big-button home-tile" data-page="monitoring-page"
+                        data-keywords="lithium clozapine metabolic syndrome bloods ecg weight troponin crp neutrophils monitoring">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">✅</span> Interactive Monitoring Checklists</span>
+                        <span class="tile-desc">Lithium, clozapine and metabolic monitoring schedules.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="otp-page"
+                        data-keywords="opioid methadone buprenorphine suboxone buvidal sublocade lai script otp">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">💉</span> Opioid Treatment (OTP) Calculators</span>
+                        <span class="tile-desc">Methadone and buprenorphine titration, LAI dose windows and script maker.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="withdrawal-page"
+                        data-keywords="withdrawal diazepam wean taper nicotine nrt smoking alcohol widmark elimination">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🚬</span> Withdrawal &amp; NRT Tools</span>
+                        <span class="tile-desc">Diazepam weaning, nicotine replacement dosing and alcohol elimination.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="emergencies-page"
+                        data-keywords="nms neuroleptic malignant serotonin lithium toxicity anticholinergic tca sympathomimetic maoi hypertensive torsades clozapine myocarditis dystonia akathisia valproate catatonia">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🚨</span> Psychiatric Emergencies</span>
+                        <span class="tile-desc">NMS, serotonin, lithium and other toxicities, QTc, clozapine, valproate and malignant catatonia &mdash; recognition, management and eTG doses.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="qtc-page"
+                        data-keywords="qtc qt ecg torsades cardiac arrhythmia">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">❤️</span> QTc Prolongation Guide</span>
+                        <span class="tile-desc">QTc risk of psychiatric medications.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="generators-page"
+                        data-keywords="mse mental state formulation 4p template note generator">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🗂️</span> Assessment Note Generators</span>
+                        <span class="tile-desc">MSE builder, 4P formulation maker and review templates.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="mha-page"
+                        data-keywords="mha mental health act schedule scheduling involuntary capacity guardianship tribunal nsw law legal">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚖️</span> Mental Health Act 2007 (NSW)</span>
+                        <span class="tile-desc">Point-of-care decision support across the Mental Health, Guardianship and Public Health Acts &mdash; scheduling, examinations and treatment refusal, with the sections quoted.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="ect-page"
+                        data-keywords="ect electroconvulsive eeg seizure thymatron titration threshold dose missed prolonged">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚡</span> EEG for ECT</span>
+                        <span class="tile-desc">Seizure adequacy, sample tracings, Thymatron titration and dosing, and troubleshooting (NSW ECT Handbook 2026).</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="contacts-page"
+                        data-keywords="phone helpline contact lifeline crisis support service">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">☎️</span> Helpful Contacts &amp; Helplines</span>
+                        <span class="tile-desc">Mental health and drug &amp; alcohol support lines and services.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="pk-page"
+                        data-keywords="pharmacokinetics half-life plasma level concentration lai depot graph methadone buprenorphine benzodiazepine antipsychotic lithium valproate">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚗️</span> PK Visualiser</span>
+                        <span class="tile-desc">Graph drug levels over time for oral and long-acting injectable doses.</span>
+                    </button>
                 </nav>
             </div>
 
@@ -1030,7 +1072,7 @@
                             <option value="asrs">ASRS v1.1 (ADHD Screen)</option>
                             <option value="hamd">HAM-D (Hamilton Depression)</option>
                             <option value="hama">HAM-A (Hamilton Anxiety)</option>
-                            <option value="panic">Panic & Agoraphobia Scale</option>
+                            <option value="panic">PDSS (Panic Disorder Severity)</option>
                             <option value="bpi">Brief Pain Inventory (BPI)</option>
                             <option value="bfcrs">BFCRS (Catatonia Rating)</option>
                             <option value="bprs">BPRS (Brief Psychiatric)</option>
@@ -3095,6 +3137,410 @@
                 </div>
             </div>
 
+            <!-- EEG for ECT (Thymatron System IV) Page -->
+            <div id="ect-page" class="page" data-title="EEG for ECT">
+                <div class="mha-disclaimer emerg-banner">
+                    <strong>Draft for clinician review.</strong> Based on the <strong>NSW Health ECT Handbook, version
+                        1.2 (5 August 2026)</strong>, which is used with the mandatory <em>Practice requirements for ECT
+                        services</em> (PD2026_010). Settings are for the <strong>Thymatron System IV</strong>. Handbook
+                    section numbers are given in brackets. Points tagged <span class="ect-general-tag">General
+                        teaching</span> are not from the handbook: check them against your service's protocol and the
+                    Thymatron manual. Your site's own dosing protocol always takes precedence (Handbook 9.6).
+                </div>
+                <div class="tab-container emerg-tabs">
+                    <label class="tab-select-label" for="ect-tab-select">Topic</label>
+                    <select id="ect-tab-select" class="tab-select">
+                        <option value="ect-adequacy">Seizure adequacy</option>
+                        <option value="ect-tracings">Sample tracings</option>
+                        <option value="ect-dosing">Titration &amp; dosing</option>
+                        <option value="ect-trouble">Troubleshooting</option>
+                    </select>
+                    <div class="tab-buttons">
+                        <button class="tab-button active" data-tab="ect-adequacy">Seizure adequacy</button>
+                        <button class="tab-button" data-tab="ect-tracings">Sample tracings</button>
+                        <button class="tab-button" data-tab="ect-dosing">Titration &amp; dosing</button>
+                        <button class="tab-button" data-tab="ect-trouble">Troubleshooting</button>
+                    </div>
+
+                    <section id="ect-adequacy" class="tab-content emerg-content active">
+                        <h3>Seizure adequacy</h3>
+                        <p class="emerg-summary ect-summary">No single EEG number defines an adequate seizure. At every
+                            treatment, record the motor and EEG seizure durations and the EEG quality, and compare them
+                            with earlier tracings. <strong>Change in EEG quality across a course matters more than how
+                                one tracing looks on its own</strong> (9.6).</p>
+
+                        <h4>What the handbook asks for</h4>
+                        <ul>
+                            <li>Observe and record the duration of <strong>both the motor and the EEG seizure</strong>.
+                                Record the EEG quality and compare it with previous tracings to guide the next dose (9.7,
+                                step 5).</li>
+                            <li>Before each treatment, review clinical progress (efficacy and cognition) and the previous
+                                EEG tracings to decide whether the dose needs to change (9.6).</li>
+                            <li>Ictal EEGs vary a lot between people. Older people may respond well despite a poor-quality
+                                EEG, even at high doses. Younger people may have high-quality EEGs with little benefit
+                                (9.6).</li>
+                            <li>During titration, a seizure means <strong>"a generalised motor seizure or definite EEG
+                                    seizure of any length or quality, with or without visible motor seizure"</strong> (9.7,
+                                step 6).</li>
+                            <li>Poor-quality seizures on EEG are common and are <strong>not</strong> the same as missed
+                                seizures (9.7).</li>
+                            <li>Keep the time from anaesthetic induction to stimulus consistent for each person, and take
+                                it into account when judging EEG quality. A longer interval improves seizure quality
+                                (10.6).</li>
+                        </ul>
+
+                        <h4>Isolated limb (cuff) technique (9.2)</h4>
+                        <ul>
+                            <li>Apply a BP cuff just above the ankle before induction. For unilateral ECT, use the ankle on
+                                the <strong>same side</strong> as the electrodes, to check that the seizure has
+                                generalised.</li>
+                            <li>Inflate after induction and immediately before the muscle relaxant, to 50&ndash;100 mmHg
+                                above systolic. Deflate after the motor seizure ends.</li>
+                            <li>Use it for every titration session, to help detect the motor seizure.</li>
+                        </ul>
+
+                        <h4>EEG recording electrodes (9.2)</h4>
+                        <ul>
+                            <li>Clean the skin with saline-moistened gauze, gently but firmly. Take care with fragile
+                                skin.</li>
+                            <li>Use the same set-up every time so tracings can be compared. Common 2-channel convention:
+                                <strong>channel 1 on the left, channel 2 on the right</strong>; positive electrodes on the
+                                forehead, negative on the mastoid.</li>
+                            <li>Forehead electrodes: 2.5 cm above the midpoint of the eyebrow (mid-pupillary line), or
+                                close to the midline on each side. Use the midline position for bifrontal ECT (move them
+                                to less than 1 cm either side of the midline).</li>
+                            <li>Mastoid electrodes: over bone, high enough to avoid the sternocleidomastoid. This avoids
+                                muscle and cardiac artefact.</li>
+                            <li>Keep treatment and recording electrodes (and their gel) apart. Gel bridging them affects
+                                both the treatment and the recording (9.5).</li>
+                        </ul>
+
+                        <h4>Phases of a typical ictal EEG <span class="ect-general-tag">General teaching</span></h4>
+                        <div class="emerg-table-wrap">
+                            <table class="emerg-table">
+                                <thead>
+                                    <tr>
+                                        <th>Phase</th>
+                                        <th>What you see</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Stimulus</td>
+                                        <td>Large artefact while current is delivered (up to about 8 s on the Thymatron).
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>Recruitment and polyspike</td>
+                                        <td>Low-voltage fast activity that builds into high-amplitude, fast polyspikes.
+                                            Matches the tonic phase.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Slow-wave</td>
+                                        <td>Regular, high-amplitude spike-and-slow-wave complexes (about 3 per second)
+                                            that slow down over time. Matches the clonic phase.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Termination</td>
+                                        <td>The seizure ends. Ideally this is a clear, abrupt end-point.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Postictal suppression</td>
+                                        <td>A flat, very low-amplitude trace straight after the seizure.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4>Signs of a good-quality seizure <span class="ect-general-tag">General teaching</span></h4>
+                        <div class="ect-compare">
+                            <div class="ect-compare-col ect-good">
+                                <strong>Better quality</strong>
+                                <ul>
+                                    <li>High amplitude in the polyspike and slow-wave phases</li>
+                                    <li>Well-formed, regular, rhythmic slow waves</li>
+                                    <li>Both channels look alike and move together (symmetry and coherence)</li>
+                                    <li>Clear, abrupt end-point</li>
+                                    <li>Marked postictal suppression (flat line)</li>
+                                </ul>
+                            </div>
+                            <div class="ect-compare-col ect-poor">
+                                <strong>Poorer quality</strong>
+                                <ul>
+                                    <li>Low amplitude</li>
+                                    <li>Slow-wave phase poorly formed or missing</li>
+                                    <li>Channels differ (asymmetry)</li>
+                                    <li>Seizure fades out gradually with no clear end</li>
+                                    <li>Little or no suppression afterwards</li>
+                                </ul>
+                            </div>
+                        </div>
+                        <p>The EEG seizure normally lasts longer than the motor seizure. Seizure length on its own is a
+                            poor guide to adequacy: threshold-level seizures tend to be longer, and younger people tend
+                            to have longer seizures (9.7).</p>
+
+                        <h4>Reading the Thymatron System IV printout <span class="ect-general-tag">General
+                                teaching</span></h4>
+                        <p>After the seizure the Thymatron prints the EEG channels and a set of computed measures. Use
+                            them as <strong>trends for the same person across a course</strong> (same electrode set-up and
+                            anaesthetic timing), not as pass/fail cut-offs.</p>
+                        <div class="emerg-table-wrap">
+                            <table class="emerg-table">
+                                <thead>
+                                    <tr>
+                                        <th>Measure</th>
+                                        <th>What it tells you</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>EEG and EMG endpoints</td>
+                                        <td>The machine's estimate (in seconds) of when the EEG and motor seizures ended.
+                                            Always check them against the trace.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>ASEI (Average Seizure Energy Index)</td>
+                                        <td>Average strength (energy) of the seizure. Higher generally means a more
+                                            intense seizure.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>PSI (Postictal Suppression Index, %)</td>
+                                        <td>How flat the trace is straight after the seizure. Higher means better
+                                            suppression.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>MSC (Maximum Sustained Coherence, %)</td>
+                                        <td>How closely the two channels move together. Higher means better synchrony
+                                            between the hemispheres.</td>
+                                    </tr>
+                                    <tr>
+                                        <td>MSP, TPP, TPC</td>
+                                        <td>Maximum sustained power, and time to peak power and peak coherence.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p class="emerg-check"><span class="emerg-check-tag">Check:</span> confirm the measure names and
+                            any local reference values against your machine's printout and the Thymatron System IV
+                            manual.</p>
+
+                        <h4 class="emerg-sources-heading">Sources</h4>
+                        <ul class="emerg-sources ect-sources"></ul>
+                    </section>
+
+                    <section id="ect-tracings" class="tab-content emerg-content">
+                        <h3>Sample tracings</h3>
+                        <p class="emerg-summary ect-summary">These are <strong>drawn illustrations</strong> of common
+                            patterns, not real recordings. Two channels are shown (left hemisphere above, right below),
+                            as on a 2-channel Thymatron printout.</p>
+                        <div id="ect-tracing-list"></div>
+                        <h4 class="emerg-sources-heading">Sources</h4>
+                        <ul class="emerg-sources ect-sources"></ul>
+                    </section>
+
+                    <section id="ect-dosing" class="tab-content emerg-content">
+                        <h3>Titration &amp; dosing (Thymatron System IV)</h3>
+                        <p class="emerg-summary ect-summary">Find each person's seizure threshold (ST) by titration at the
+                            first session. Then treat at a set multiple of threshold for the electrode placement and
+                            pulse width. Fixed or age-estimated doses are discouraged (9.6).</p>
+
+                        <h4>Dose helper</h4>
+                        <div class="ect-helper">
+                            <div class="ect-helper-row">
+                                <label for="ect-chart">Pulse width / chart</label>
+                                <select id="ect-chart">
+                                    <option value="ub">Right unilateral ultra-brief</option>
+                                    <option value="p05">0.5 ms pulse width (13 levels)</option>
+                                    <option value="p10">1.0 ms brief pulse, DGx program (12 levels)</option>
+                                </select>
+                            </div>
+                            <div class="ect-helper-row">
+                                <label for="ect-age">Age</label>
+                                <select id="ect-age">
+                                    <option value="under50">Under 50 years</option>
+                                    <option value="50plus">50 years or older</option>
+                                </select>
+                            </div>
+                            <div class="ect-helper-out" id="ect-titration-out" aria-live="polite"></div>
+                            <div class="ect-helper-row">
+                                <label for="ect-st">Seizure threshold found at</label>
+                                <select id="ect-st"></select>
+                            </div>
+                            <div class="ect-helper-row">
+                                <label for="ect-treatment">Treatment</label>
+                                <select id="ect-treatment"></select>
+                            </div>
+                            <div class="ect-helper-out" id="ect-treatment-out" aria-live="polite"></div>
+                        </div>
+                        <p class="emerg-check"><span class="emerg-check-tag">Check:</span> the helper copies Appendix 6.
+                            Confirm every dose against your service's own dosing protocol before treating.</p>
+
+                        <h4>Recommended dose for each placement (9.6)</h4>
+                        <div class="emerg-table-wrap">
+                            <table class="emerg-table">
+                                <thead>
+                                    <tr>
+                                        <th>Placement</th>
+                                        <th>Recommended pulse width and dose</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>Right unilateral</td>
+                                        <td>Ultra-brief (0.3 ms) at 6 &times; ST<br>0.5 ms at 5&ndash;6 &times; ST (lower
+                                            level of evidence)<br>1.0 ms at 5&ndash;6 &times; ST (3 &times; ST has lower,
+                                            though still meaningful, efficacy)</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bifrontal</td>
+                                        <td>1.0 ms at 1.5 &times; ST, or 0.5 ms at 1.5&ndash;2.5 &times; ST</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Bitemporal</td>
+                                        <td>1.0 ms at 1.5 &times; ST, or 0.5 ms at 1.5&ndash;2.5 &times; ST. Usual effective
+                                            dose is 50&ndash;100% above threshold. Reserve for failed other approaches,
+                                            urgent need, or past poor response to other forms (9.4).</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <h4>Titration rules (Appendix 6)</h4>
+                        <ol>
+                            <li>Start at the age-based level (see the charts below).</li>
+                            <li>If there is no seizure, go up <strong>one level</strong> and re-stimulate. You can
+                                re-stimulate straight away, as there is no post-seizure inhibition after a failed stimulus
+                                (9.7).</li>
+                            <li>If there is no generalised seizure after 3 stimuli, go up <strong>two levels</strong> for
+                                the 4th. If that works, start <strong>one level lower</strong> at the next session to
+                                continue titration before moving to the treatment dose.</li>
+                            <li>No more than <strong>4 stimuli</strong> in one session. If there is still no seizure,
+                                stop, and start one level higher at the next session.</li>
+                            <li>Stop early if there are anaesthetic or medical concerns (9.7).</li>
+                            <li>A further supra-threshold stimulus in the titration session is generally not recommended:
+                                threshold-level seizures still have meaningful clinical effect (9.7).</li>
+                            <li>A visible motor seizure helps confirm the seizure has generalised. Use the isolated limb
+                                technique when titrating.</li>
+                        </ol>
+                        <p>Adolescents often have a lower seizure threshold. Take this into account when choosing the
+                            starting dose (11.4).</p>
+
+                        <h4>Raising the dose during a course (9.6)</h4>
+                        <ul>
+                            <li>Threshold usually rises over a course, at very different rates between people.</li>
+                            <li>Decide using the degree of clinical improvement, cognitive monitoring results and any change
+                                in EEG quality.</li>
+                            <li>When an increase is needed, go up <strong>one level</strong> (ultra-brief: down one R
+                                level in the chart).</li>
+                            <li>If unsure whether threshold has risen, consider <strong>re-titrating</strong> instead of
+                                increasing further. More electricity may not improve the seizure and can worsen cognition
+                                (9.7).</li>
+                            <li>Re-titrate whenever you switch modality (9.7).</li>
+                        </ul>
+
+                        <h4>Thymatron charts (Appendix 6)</h4>
+                        <div id="ect-charts"></div>
+                        <p class="emerg-check"><span class="emerg-check-tag">Check:</span> version 1.2 of the handbook
+                            lists an "updated protocol for 1.0 ms titrations where no seizure is achieved after three
+                            sessions". That wording does not appear in the Appendix 6 text used here. Check the current
+                            PDF or ask your ECT clinical lead.</p>
+
+                        <h4>Medicines that affect the seizure (8.1)</h4>
+                        <ul>
+                            <li><strong>Benzodiazepines</strong> (especially long-acting) can shorten seizures and may
+                                reduce efficacy, most of all with unilateral and ultra-brief ECT. Wean before the course
+                                where possible. Otherwise switch to a shorter-acting drug at the lowest dose and ideally
+                                withhold the night before.</li>
+                            <li><strong>Anticonvulsant mood stabilisers</strong> raise the seizure threshold. Withdraw if
+                                only used to augment an antidepressant. If continued, withhold the evening dose before ECT
+                                and delay the morning dose until after recovery.</li>
+                            <li><strong>Lithium</strong>: usually suspend for an acute course. If continued, withhold the
+                                evening dose before each treatment and delay the morning dose.</li>
+                            <li><strong>Theophylline</strong>: stop before ECT where possible (prolonged seizures and
+                                status epilepticus).</li>
+                        </ul>
+
+                        <h4 class="emerg-sources-heading">Sources</h4>
+                        <ul class="emerg-sources ect-sources"></ul>
+                    </section>
+
+                    <section id="ect-trouble" class="tab-content emerg-content">
+                        <h3>Troubleshooting</h3>
+                        <p class="emerg-summary ect-summary">Seizure past <strong>120 s</strong>: alert the anaesthetist.
+                            Past <strong>180 s</strong>: the anaesthetist terminates it with medication (9.7, 10.10).</p>
+
+                        <h4>Missed seizure (outside titration) (9.7)</h4>
+                        <ol>
+                            <li>Increase the dose by <strong>one level</strong> and re-stimulate straight away.</li>
+                            <li>Check the electrode placement.</li>
+                            <li>If missed again, you can go up one more level and re-stimulate, up to <strong>2 more
+                                    times</strong>, especially when an urgent response is needed. Weigh this against the
+                                cognitive risk of repeated sub-convulsive stimuli.</li>
+                            <li>Or stop the session and look for causes, such as medicines with anticonvulsant effects.
+                            </li>
+                            <li>Before the next treatment, consider whether the threshold has risen a lot and whether to
+                                re-titrate.</li>
+                        </ol>
+                        <p>A poor-quality seizure is <strong>not</strong> a missed seizure.</p>
+
+                        <h4>Prolonged seizure (9.7, 10.10)</h4>
+                        <ul>
+                            <li><strong>Over 120 s:</strong> tell the anaesthetist the seizure may need to be stopped.</li>
+                            <li><strong>Over 180 s:</strong> the anaesthetist terminates it with an appropriate
+                                medication.</li>
+                            <li>If that fails (rare), re-stimulate at a <strong>higher</strong> electrical dose.</li>
+                            <li>Watch the EEG, not just the limb: EEG activity can continue after visible movement stops.
+                                <span class="ect-general-tag">General teaching</span></li>
+                            <li>Threshold-level seizures and younger people tend to have longer seizures.</li>
+                        </ul>
+
+                        <h4>Short, poor-quality, or declining-quality seizures (9.7)</h4>
+                        <p>Declining quality across a course may mean the seizure threshold is rising.</p>
+                        <ul>
+                            <li>Consider increasing the dose, usually to <strong>1.5 &times; the previous
+                                    dose</strong>.</li>
+                            <li>Use the smallest dose of induction agent, or consider switching agent (e.g. propofol to
+                                thiopentone).</li>
+                            <li>Add remifentanil, alfentanil or ketamine so less induction agent is needed.</li>
+                            <li>Lengthen the time between induction and the stimulus.</li>
+                            <li>Hyperventilate before the stimulus (the effect may not last over a course).</li>
+                            <li>Caffeine or theophylline augmentation is generally <strong>not</strong> recommended
+                                (prolonged seizures, hypertension, tachycardia).</li>
+                            <li>If unsure whether threshold has risen, re-titrate rather than keep increasing the dose.
+                            </li>
+                        </ul>
+
+                        <h4>High impedance (9.7, step 3)</h4>
+                        <p>The Thymatron's limit is <strong>3000 ohms</strong> static impedance (checked manually).</p>
+                        <ol>
+                            <li>Check all connections: electrodes, cable and machine.</li>
+                            <li>Press electrodes firmly on the skin and add conductive gel if needed.</li>
+                            <li>For adhesive electrodes, put a little conductive solution in the centre and hold firmly in
+                                place.</li>
+                            <li>If it still cannot be brought below 3000 ohms, the Thymatron can still safely treat, but
+                                the delivered dose may be lower than the set dose. It is usually better to go ahead than
+                                to abandon treatment.</li>
+                        </ol>
+
+                        <h4>No response to the first modality (9.7)</h4>
+                        <ul>
+                            <li>Consider switching after 4&ndash;6 treatments of RUL (5&ndash;6 &times; ST) or bifrontal
+                                (1.5&ndash;2 &times; ST) at 1.0 ms, assuming EEG quality has been kept adequate.</li>
+                            <li>For RUL ultra-brief at 6 &times; ST, usually wait for 6&ndash;8 treatments.</li>
+                            <li>A switch need not change everything, e.g. RUL ultra-brief 6 &times; ST to RUL 1.0 ms at
+                                5&ndash;6 &times; ST.</li>
+                            <li>Avoid jumping straight from a low-efficacy, cognitively gentle option to a very
+                                high-efficacy one (e.g. bitemporal 1.0 ms at 2 &times; ST) without considering the options
+                                in between.</li>
+                            <li>Re-titrate with the new modality.</li>
+                        </ul>
+
+                        <h4 class="emerg-sources-heading">Sources</h4>
+                        <ul class="emerg-sources ect-sources"></ul>
+                    </section>
+                </div>
+            </div>
+
             <!-- Helpful Contacts & Helplines Page -->
             <div id="contacts-page" class="page" data-title="Helpful Contacts">
                 <h3>Mental Health Support Lines</h3>
@@ -3493,6 +3939,7 @@
     <script src="mha-data.js"></script>
     <script src="mha.js"></script>
     <script src="mha-ui.js"></script>
+    <script src="ect.js"></script>
     <script src="script.js"></script>
 </body>
 

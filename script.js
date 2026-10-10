@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.4.0";
+    const APP_VERSION = "1.5.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -10,10 +10,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const passInput = document.getElementById("passphrase-input");
     const lockError = document.getElementById("lock-error");
 
-    function checkPassword() {
+    // The lock is a privacy curtain, not real security: the site is static, so
+    // anyone can read this file. Storing a SHA-256 hash instead of the plain
+    // passphrase just keeps it from being readable at a glance.
+    const PASSPHRASE_SHA256 = "fb1549ec668427876d6567d44607845418b75dd11639a2d0a3cbdcf826e878c2";
+
+    async function sha256Hex(text) {
+        const bytes = new TextEncoder().encode(text);
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function checkPassword() {
         // Mobile keyboards, autofill and paste routinely append a space, so trim
         // before comparing rather than rejecting an otherwise correct passphrase.
-        if (passInput.value.trim().toLowerCase() === "psych123") {
+        const entered = passInput.value.trim().toLowerCase();
+        if (await sha256Hex(entered) === PASSPHRASE_SHA256) {
             lockScreen.classList.remove("active");
             document.documentElement.classList.add("app-unlocked");
             lockError.style.display = "none";
@@ -23,6 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
             lockError.style.display = "block";
         }
     }
+
+    // Note drafts used to live in localStorage, where they outlived the session
+    // on shared computers. They are now kept in sessionStorage; remove any
+    // copies left behind by older versions.
+    localStorage.removeItem("psych_mse_draft");
+    localStorage.removeItem("psych_formulation_draft");
 
     if (sessionStorage.getItem("unlocked") === "true") {
         lockScreen.classList.remove("active");
@@ -82,13 +100,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const disclaimerModal = document.getElementById("disclaimer-modal");
     const acceptDisclaimerBtn = document.getElementById("accept-disclaimer-btn");
 
+    // Shown until accepted, then again only when the wording changes. Bump this
+    // whenever the disclaimer text is edited so everyone sees the new terms.
+    const DISCLAIMER_VERSION = "1";
+
     if (disclaimerModal && acceptDisclaimerBtn) {
-        disclaimerModal.style.display = "block";
-        document.body.classList.add("modal-open");
+        if (localStorage.getItem("disclaimer_accepted") !== DISCLAIMER_VERSION) {
+            disclaimerModal.style.display = "block";
+            document.body.classList.add("modal-open");
+        }
 
         acceptDisclaimerBtn.addEventListener("click", () => {
             disclaimerModal.style.display = "none";
             document.body.classList.remove("modal-open");
+            localStorage.setItem("disclaimer_accepted", DISCLAIMER_VERSION);
         });
     }
 
@@ -415,6 +440,16 @@ document.addEventListener("DOMContentLoaded", () => {
             if (item.instruction) {
                 itemsHtml += `<p class="calculator-item-instruction">${item.instruction}</p>`;
             }
+            // Typed answers (e.g. PSQI bed time, minutes to fall asleep) are only
+            // usable with computeTotal, which turns the raw answers into a score.
+            if (item.input) {
+                const attrs = item.input === "number"
+                    ? ` min="${item.min ?? 0}" max="${item.max ?? ""}" step="${item.step ?? 1}" inputmode="decimal"`
+                    : "";
+                itemsHtml += `<div class="calculator-item-input"><input type="${item.input}" name="${radioName}"${attrs}>` +
+                    (item.unit ? ` <span>${item.unit}</span>` : "") + `</div></fieldset>`;
+                return;
+            }
             // Items start unanswered. Pre-selecting the first option would make an
             // untouched scale look like a completed assessment scoring zero.
             item.options.forEach((opt) => {
@@ -434,9 +469,21 @@ document.addEventListener("DOMContentLoaded", () => {
             let total = 0;
             let answered = 0;
             let breakdown = "";
+            const answers = [];
             config.items.forEach((item, itemIdx) => {
                 const radioName = `${config.id}-q-${itemIdx}`;
+                if (item.input) {
+                    const field = itemsContainer.querySelector(`input[name="${radioName}"]`);
+                    const raw = field.value.trim();
+                    answers.push(raw);
+                    if (raw !== "") {
+                        answered++;
+                        breakdown += `- ${item.displayName}: ${raw}${item.unit ? " " + item.unit : ""}\n`;
+                    }
+                    return;
+                }
                 const checkedRadio = itemsContainer.querySelector(`input[name="${radioName}"]:checked`);
+                answers.push(checkedRadio ? Number(checkedRadio.value) : null);
                 if (checkedRadio) {
                     answered++;
                     const scoreVal = parseInt(checkedRadio.value, 10);
@@ -463,7 +510,22 @@ document.addEventListener("DOMContentLoaded", () => {
             totalScoreEl.classList.remove("severity-incomplete");
             severityEl.classList.remove("severity-incomplete");
             copyBtn.disabled = false;
-            const severity = config.severityLogic(total, itemsContainer);
+            // Some instruments score from derived components rather than a plain sum.
+            if (config.computeTotal) {
+                const computed = config.computeTotal(answers);
+                if (computed.error) {
+                    totalScoreEl.textContent = "—";
+                    severityEl.textContent = computed.error;
+                    emrSummaryEl.value = `${config.name}: ${computed.error}`;
+                    copyBtn.disabled = true;
+                    return;
+                }
+                total = computed.total;
+            }
+            // Bonus points (e.g. the MoCA education point) cannot lift a score past
+            // the instrument's ceiling.
+            if (config.maxTotal) total = Math.min(total, config.maxTotal);
+            const severity = config.severityLogic(total, itemsContainer, answers);
             // Some instruments (e.g. MDQ) are not simple additive scales, so a summed
             // total is meaningless and is deliberately not reported.
             totalScoreEl.textContent = config.suppressTotal ? "n/a" : total;
@@ -490,6 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         itemsContainer.addEventListener("change", updateState);
+        itemsContainer.addEventListener("input", updateState);
 
         copyBtn.addEventListener("click", () => {
             emrSummaryEl.select();
@@ -503,6 +566,9 @@ document.addEventListener("DOMContentLoaded", () => {
         resetBtn.addEventListener("click", () => {
             itemsContainer.querySelectorAll('input[type="radio"]').forEach(radio => {
                 radio.checked = false;
+            });
+            itemsContainer.querySelectorAll('input:not([type="radio"])').forEach(field => {
+                field.value = "";
             });
             updateState();
         });
@@ -547,6 +613,72 @@ document.addEventListener("DOMContentLoaded", () => {
             if (idx >= scaleSelector.options.length) idx = 0;
             scaleSelector.selectedIndex = idx;
             syncScaleView();
+        });
+    }
+
+    // =================================================================
+    // HOME PAGE SEARCH
+    // Filters the tool tiles by title, description and keywords, and lists
+    // matching scales so one tap opens that scale directly.
+    // =================================================================
+    const homeSearchInput = document.getElementById("home-search-input");
+    const homeTiles = document.querySelectorAll("#home-tiles .home-tile");
+    const homeSearchScales = document.getElementById("home-search-scales");
+    const homeSearchEmpty = document.getElementById("home-search-empty");
+
+    function openScale(scaleId) {
+        if (!scaleSelector) return;
+        scaleSelector.value = scaleId;
+        syncScaleView();
+        showPage("scales-page");
+    }
+
+    function runHomeSearch() {
+        const words = homeSearchInput.value.toLowerCase().split(/\s+/).filter(Boolean);
+        const matches = text => words.every(word => text.toLowerCase().includes(word));
+
+        let visibleTiles = 0;
+        homeTiles.forEach(tile => {
+            const show = matches(tile.textContent + " " + (tile.dataset.keywords || ""));
+            tile.hidden = !show;
+            if (show) visibleTiles++;
+        });
+
+        homeSearchScales.innerHTML = "";
+        const scaleOptions = words.length && scaleSelector
+            ? Array.from(scaleSelector.options).filter(opt => matches(opt.textContent + " " + opt.value))
+            : [];
+        if (scaleOptions.length) {
+            const label = document.createElement("span");
+            label.className = "home-search-scales-label";
+            label.textContent = "Scales:";
+            homeSearchScales.appendChild(label);
+            scaleOptions.forEach(opt => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "home-scale-chip";
+                chip.textContent = opt.textContent;
+                chip.addEventListener("click", () => openScale(opt.value));
+                homeSearchScales.appendChild(chip);
+            });
+        }
+        homeSearchScales.hidden = scaleOptions.length === 0;
+        homeSearchEmpty.hidden = visibleTiles > 0 || scaleOptions.length > 0;
+    }
+
+    if (homeSearchInput) {
+        homeSearchInput.addEventListener("input", runHomeSearch);
+        homeSearchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                homeSearchInput.value = "";
+                runHomeSearch();
+            } else if (e.key === "Enter") {
+                // Enter opens the first result: a matching tool, else a matching scale.
+                const firstTile = Array.from(homeTiles).find(tile => !tile.hidden);
+                const firstChip = homeSearchScales.querySelector(".home-scale-chip");
+                if (homeSearchInput.value.trim() && firstTile) showPage(firstTile.dataset.page);
+                else if (firstChip) firstChip.click();
+            }
         });
     }
 
@@ -794,7 +926,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "6. Insomnia (Late)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Waking early but goes back to sleep" }, { value: 2, label: "2 - Unable to fall asleep again" }] },
             { displayName: "7. Work and Activities", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Feelings of incapacity" }, { value: 2, label: "2 - Loss of interest" }, { value: 3, label: "3 - Decrease in actual time spent" }, { value: 4, label: "4 - Stopped working" }] },
             { displayName: "8. Retardation (Psychomotor)", options: [{ value: 0, label: "0 - Normal" }, { value: 1, label: "1 - Slight retardation" }, { value: 2, label: "2 - Obvious retardation" }, { value: 3, label: "3 - Interview difficult" }, { value: 4, label: "4 - Stupor" }] },
-            { displayName: "9. Agitation", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Hand wringing/pulling hair" }] },
+            { displayName: "9. Agitation", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Fidgetiness" }, { value: 2, label: "2 - Playing with hands, hair, etc." }, { value: 3, label: "3 - Moving about, can't sit still" }, { value: 4, label: "4 - Hand wringing, nail biting, hair-pulling, biting of lips" }] },
             { displayName: "10. Anxiety (Psychic)", options: [{ value: 0, label: "0 - No difficulty" }, { value: 1, label: "1 - Tension/irritability" }, { value: 2, label: "2 - Worrying" }, { value: 3, label: "3 - Apprehension" }, { value: 4, label: "4 - Panic" }] },
             { displayName: "11. Anxiety (Somatic)", options: [{ value: 0, label: "0 - Absent" }, { value: 1, label: "1 - Mild (GI, CV, etc)" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Incapacitating" }] },
             { displayName: "12. Somatic Symptoms (GI)", options: [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Loss of appetite" }, { value: 2, label: "2 - Heavy GI complaints" }] },
@@ -841,27 +973,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 10. Panic and Agoraphobia Scale
+    // 10. PDSS (Panic Disorder Severity Scale)
+    const optPdss = [{ value: 0, label: "0 - None" }, { value: 1, label: "1 - Mild" }, { value: 2, label: "2 - Moderate" }, { value: 3, label: "3 - Severe" }, { value: 4, label: "4 - Extreme" }];
     setupScaleCalculator({
         id: "panic",
-        name: "Panic and Agoraphobia Scale (PAS)",
-        reference: "Bandelow B. Assessing the efficacy of treatments for panic disorder and agoraphobia. Int Clin Psychopharmacol. 1995;10:33-37.",
+        name: "PDSS (Panic Disorder Severity Scale)",
+        note: "Clinician-rated, over the past month. Rate each item using the full PDSS anchors (Shear et al., 1997).",
+        reference: "Shear MK, Brown TA, Barlow DH, et al. Multicenter collaborative panic disorder severity scale. Am J Psychiatry. 1997;154(11):1571-1575. Severity bands: Furukawa TA, Shear MK, Barlow DH, et al. Evidence-based guidelines for interpretation of the Panic Disorder Severity Scale. Depress Anxiety. 2009;26(10):922-929.",
         items: [
-            { displayName: "1. Frequency of panic attacks", options: optZeroFour },
-            { displayName: "2. Severity of panic attacks", options: optZeroFour },
-            { displayName: "3. Anticipatory anxiety (frequency)", options: optZeroFour },
-            { displayName: "4. Anticipatory anxiety (severity)", options: optZeroFour },
-            { displayName: "5. Agoraphobia (avoidance of situations)", options: optZeroFour },
-            { displayName: "6. Avoidance of being alone", options: optZeroFour },
-            { displayName: "7. Social limitations", options: optZeroFour },
-            { displayName: "8. Family relationship limitations", options: optZeroFour },
-            { displayName: "9. Employment/work limitations", options: optZeroFour },
-            { displayName: "10. Health worries", options: optZeroFour }
+            { displayName: "1. Panic attack frequency (full and limited-symptom attacks)", options: optPdss },
+            { displayName: "2. Distress during panic attacks", options: optPdss },
+            { displayName: "3. Anticipatory anxiety (fear and worry about future attacks)", options: optPdss },
+            { displayName: "4. Agoraphobic fear and avoidance", options: optPdss },
+            { displayName: "5. Fear and avoidance of panic-related body sensations", options: optPdss },
+            { displayName: "6. Impairment in work functioning", options: optPdss },
+            { displayName: "7. Impairment in social functioning", options: optPdss },
+            // Not scored: it only chooses which set of severity bands applies.
+            { displayName: "Agoraphobia present? (selects the severity bands; not scored)", options: [{ value: 0, label: "No" }, { value: 0, label: "Yes" }] }
         ],
-        severityLogic: (score) => {
-            if (score <= 8) return "Mild Panic Disorder";
-            if (score <= 27) return "Moderate Panic Disorder";
-            return "Severe Panic Disorder";
+        severityLogic: (score, container) => {
+            const agoraphobia = container.querySelector('input[name="panic-q-7"]:checked')
+                .parentElement.textContent.trim() === "Yes";
+            // Furukawa et al. 2009, linked to CGI-Severity.
+            const bands = agoraphobia
+                ? [[2, "Normal"], [7, "Borderline ill"], [10, "Slightly ill"], [15, "Moderately ill"], [Infinity, "Markedly ill"]]
+                : [[1, "Normal"], [5, "Borderline ill"], [9, "Slightly ill"], [13, "Moderately ill"], [Infinity, "Markedly ill"]];
+            const band = bands.find(([max]) => score <= max)[1];
+            const remission = score <= 5 ? " Meets remission definition (score 5 or less)." : "";
+            return `${band} (${agoraphobia ? "with" : "without"} agoraphobia).${remission}`;
         }
     });
 
@@ -1085,11 +1224,18 @@ document.addEventListener("DOMContentLoaded", () => {
     setupScaleCalculator({
         id: "pgsi",
         name: "PGSI (Problem Gambling Severity Index)",
+        note: "Thinking about the last 12 months...",
         reference: "Ferris J, Wynne H. The Canadian Problem Gambling Index: Final Report. Canadian Consortium for Gambling Research. 2001.",
         items: [
             { displayName: "1. Have you bet more than you could afford to lose?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
             { displayName: "2. Have you needed to gamble with larger amounts of money to get the same feeling of excitement?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
-            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] }
+            { displayName: "3. Have you gone back another day to try to win back the money you lost?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "4. Have you borrowed money or sold anything to get money to gamble?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "5. Have you felt that you might have a problem with gambling?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "6. Has gambling caused you any health problems, including stress or anxiety?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "7. Have people criticised your betting or told you that you had a gambling problem, regardless of whether or not you thought it was true?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "8. Has your gambling caused any financial problems for you or your household?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] },
+            { displayName: "9. Have you felt guilty about the way you gamble or what happens when you gamble?", options: [{ value: 0, label: "0 - Never" }, { value: 1, label: "1 - Sometimes" }, { value: 2, label: "2 - Most of the time" }, { value: 3, label: "3 - Almost always" }] }
         ],
         severityLogic: (score) => {
             if (score === 0) return "Non-problem gambler";
@@ -1104,6 +1250,7 @@ document.addEventListener("DOMContentLoaded", () => {
         id: "moca",
         name: "Montreal Cognitive Assessment (MoCA Subset)",
         note: "Evaluate cognitive domains. Total score max 30.",
+        maxTotal: 30,
         reference: "Nasreddine ZS, Phillips NA, Bedirian V, et al. The Montreal Cognitive Assessment, MoCA: a brief screening tool for mild cognitive impairment. J Am Geriatr Soc. 2005;53(4):695-699.",
         items: [
             { displayName: "1. Visuospatial / Executive (Trail, Cube, Clock)", options: [{ value: 0, label: "0" }, { value: 1, label: "1" }, { value: 2, label: "2" }, { value: 3, label: "3" }, { value: 4, label: "4" }, { value: 5, label: "5" }] },
@@ -1116,7 +1263,6 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "8. Education Adjustment (<= 12 years formal education)", options: [{ value: 0, label: "0 - No" }, { value: 1, label: "1 - Yes (+1 point)" }] }
         ],
         severityLogic: (score) => {
-            if (score > 30) score = 30; // Max score is 30
             let interp = "Severe Cognitive Impairment";
             if (score >= 26) interp = "Normal Cognitive Function";
             else if (score >= 18) interp = "Mild Cognitive Impairment (MCI)";
@@ -1301,19 +1447,81 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // 28. PSQI
+    // 28. PSQI (full 19 self-rated items, 7 components)
+    const optPsqiFreq = [{ value: 0, label: "0 - Not during the past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" }];
+    const psqiDisturbances = [
+        "a. Cannot get to sleep within 30 minutes",
+        "b. Wake up in the middle of the night or early morning",
+        "c. Have to get up to use the bathroom",
+        "d. Cannot breathe comfortably",
+        "e. Cough or snore loudly",
+        "f. Feel too cold",
+        "g. Feel too hot",
+        "h. Have bad dreams",
+        "i. Have pain",
+        "j. Other reason(s) (choose 'Not during the past month' if none)"
+    ];
+
+    // Converts "HH:MM" to hours after midnight.
+    function clockHours(text) {
+        const [h, m] = text.split(":").map(Number);
+        return h + m / 60;
+    }
+
+    // Scores the 7 PSQI components (Buysse et al., 1989). Answer order matches
+    // the items list: 0 bed time, 1 minutes to sleep, 2 get-up time, 3 hours of
+    // sleep, 4-13 Q5a-j, 14 Q6 quality, 15 Q7 medication, 16 Q8, 17 Q9.
+    function scorePsqi(a) {
+        const minutes = Number(a[1]);
+        const sleepHours = Number(a[3]);
+        let hoursInBed = clockHours(a[2]) - clockHours(a[0]);
+        if (hoursInBed <= 0) hoursInBed += 24;
+        if (!(minutes >= 0) || !(sleepHours > 0)) return { error: "Check the typed answers: minutes and hours must be numbers." };
+        if (sleepHours > hoursInBed) return { error: "Hours of actual sleep cannot be more than the time in bed (from bed time to getting-up time)." };
+
+        const band = (value, cuts) => cuts.findIndex(cut => value <= cut);
+        const latencyMinutes = minutes <= 15 ? 0 : minutes <= 30 ? 1 : minutes <= 60 ? 2 : 3;
+        const efficiency = (sleepHours / hoursInBed) * 100;
+        const disturbanceSum = a.slice(5, 14).reduce((sum, v) => sum + v, 0);
+
+        const components = [
+            ["Subjective sleep quality", a[14]],
+            ["Sleep latency", band(latencyMinutes + a[4], [0, 2, 4, 6])],
+            ["Sleep duration", sleepHours >= 7 ? 0 : sleepHours >= 6 ? 1 : sleepHours >= 5 ? 2 : 3],
+            ["Habitual sleep efficiency", efficiency >= 85 ? 0 : efficiency >= 75 ? 1 : efficiency >= 65 ? 2 : 3],
+            ["Sleep disturbances", band(disturbanceSum, [0, 9, 18, 27])],
+            ["Use of sleeping medication", a[15]],
+            ["Daytime dysfunction", band(a[16] + a[17], [0, 2, 4, 6])]
+        ];
+        return {
+            total: components.reduce((sum, [, v]) => sum + v, 0),
+            components,
+            efficiency
+        };
+    }
+
     setupScaleCalculator({
         id: "psqi",
-        name: "PSQI (Pittsburgh Sleep Quality Index Subset)",
+        name: "PSQI (Pittsburgh Sleep Quality Index)",
+        note: "Self-rated. Questions refer to usual sleep habits during the past month only.",
         reference: "Buysse DJ, Reynolds CF, Monk TH, et al. The Pittsburgh Sleep Quality Index: a new instrument for psychiatric practice and research. Psychiatry Res. 1989;28(2):193-213.",
         items: [
-            { displayName: "1. Subjective sleep quality", options: [{ value: 0, label: "0 - Very Good" }, { value: 1, label: "1 - Fairly Good" }, { value: 2, label: "2 - Fairly Bad" }, { value: 3, label: "3 - Very Bad" }] },
-            { displayName: "2. Sleep latency (trouble falling asleep within 30 min)", options: [{ value: 0, label: "0 - Not during past month" }, { value: 1, label: "1 - Less than once a week" }, { value: 2, label: "2 - Once or twice a week" }, { value: 3, label: "3 - Three or more times a week" }] },
-            { displayName: "3. Sleep duration (hours of sleep)", options: [{ value: 0, label: "0 - > 7 hours" }, { value: 1, label: "1 - 6-7 hours" }, { value: 2, label: "2 - 5-6 hours" }, { value: 3, label: "3 - < 5 hours" }] }
+            { displayName: "1. Usual bed time", input: "time" },
+            { displayName: "2. How long (in minutes) has it usually taken you to fall asleep each night?", input: "number", max: 600, unit: "minutes" },
+            { displayName: "3. Usual getting-up time", input: "time" },
+            { displayName: "4. Hours of actual sleep per night (may differ from time spent in bed)", input: "number", max: 24, step: 0.25, unit: "hours" },
+            ...psqiDisturbances.map(text => ({ displayName: `5${text}`, instruction: "How often have you had trouble sleeping because you...", options: optPsqiFreq })),
+            { displayName: "6. How would you rate your sleep quality overall?", options: [{ value: 0, label: "0 - Very good" }, { value: 1, label: "1 - Fairly good" }, { value: 2, label: "2 - Fairly bad" }, { value: 3, label: "3 - Very bad" }] },
+            { displayName: "7. How often have you taken medicine to help you sleep (prescribed or over the counter)?", options: optPsqiFreq },
+            { displayName: "8. How often have you had trouble staying awake while driving, eating meals, or engaging in social activity?", options: optPsqiFreq },
+            { displayName: "9. How much of a problem has it been to keep up enough enthusiasm to get things done?", options: [{ value: 0, label: "0 - No problem at all" }, { value: 1, label: "1 - Only a very slight problem" }, { value: 2, label: "2 - Somewhat of a problem" }, { value: 3, label: "3 - A very big problem" }] }
         ],
-        severityLogic: (score) => {
-            if (score >= 5) return "Poor sleep quality suggested (Score >= 5)";
-            return "Good sleep quality";
+        computeTotal: scorePsqi,
+        severityLogic: (score, container, answers) => {
+            const { components, efficiency } = scorePsqi(answers);
+            const verdict = score > 5 ? "Poor sleep quality (global score greater than 5)" : "Good sleep quality (global score 5 or less)";
+            const parts = components.map(([name, v]) => `- ${name}: ${v}`).join("\n");
+            return `Global PSQI ${score} / 21. ${verdict}.\nSleep efficiency ${Math.round(efficiency)}%.\nComponents (0-3 each):\n${parts}`;
         }
     });
 
@@ -1348,10 +1556,11 @@ document.addEventListener("DOMContentLoaded", () => {
             { displayName: "23. I can only think about one thing at a time.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
             { displayName: "24. I change hobbies.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
             { displayName: "25. I spend or charge more than I earn.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "26. I am more interested in the present than the future.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "27. I am restless at the theater or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
-            { displayName: "28. I like puzzles.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
-            { displayName: "29. I am future-oriented.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] }
+            { displayName: "26. I often have extraneous thoughts when thinking.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "27. I am more interested in the present than the future.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "28. I am restless at the theater or lectures.", options: [{ value: 1, label: "Rarely/Never" }, { value: 2, label: "Occasionally" }, { value: 3, label: "Often" }, { value: 4, label: "Almost Always" }] },
+            { displayName: "29. I like puzzles.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] },
+            { displayName: "30. I am future-oriented.", options: [{ value: 4, label: "Rarely/Never" }, { value: 3, label: "Occasionally" }, { value: 2, label: "Often" }, { value: 1, label: "Almost Always" }] }
         ],
         severityLogic: (score) => {
             return `Total Impulsivity Score: ${score} (Range 30-120)`;
@@ -1975,12 +2184,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (el) draft[id] = el.checked;
             });
 
-            localStorage.setItem("psych_mse_draft", JSON.stringify(draft));
+            sessionStorage.setItem("psych_mse_draft", JSON.stringify(draft));
         }
 
         function loadMseDraft() {
             try {
-                const saved = localStorage.getItem("psych_mse_draft");
+                const saved = sessionStorage.getItem("psych_mse_draft");
                 if (!saved) return;
                 const draft = JSON.parse(saved);
 
@@ -2051,7 +2260,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     document.getElementById("mse-insight-good").checked = true;
 
-                    localStorage.removeItem("psych_mse_draft");
+                    sessionStorage.removeItem("psych_mse_draft");
                     updateVisibility();
                     compileMseNote();
                 }
@@ -2067,7 +2276,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Initialize
         loadMseDraft();
-        if (!localStorage.getItem("psych_mse_draft")) {
+        if (!sessionStorage.getItem("psych_mse_draft")) {
             compileMseNote();
         }
     }
@@ -2492,11 +2701,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (el) draftData[id] = el.value;
         });
 
-        localStorage.setItem("psych_formulation_draft", JSON.stringify(draftData));
+        sessionStorage.setItem("psych_formulation_draft", JSON.stringify(draftData));
     }
 
     function loadFormulationDraft() {
-        const draftStr = localStorage.getItem("psych_formulation_draft");
+        const draftStr = sessionStorage.getItem("psych_formulation_draft");
         if (!draftStr) return;
         try {
             const draftData = JSON.parse(draftStr);
@@ -2622,7 +2831,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const outEl = document.getElementById("form-note-out");
         if (outEl) outEl.value = "";
 
-        localStorage.removeItem("psych_formulation_draft");
+        sessionStorage.removeItem("psych_formulation_draft");
     }
 
     const formContainer = document.getElementById("gen-5ps");
@@ -2762,7 +2971,7 @@ On review:
 
 Diagnostic screen:
 - Manic symptoms - 
-- Depressive symptoms - (anhedonia / guild / energy / concentration / slowing)
+- Depressive symptoms - (anhedonia / guilt / energy / concentration / slowing)
 - Organic and somatic - pain
 - Cognitive - difficulties thinking, confusion, memory
 - Psychotic experiences - 
