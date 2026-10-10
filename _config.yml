@@ -1,0 +1,9 @@
+# GitHub Pages builds this site with Jekyll. Everything in the repo is
+# published unless it is listed here, so keep working files off the live site.
+exclude:
+  - scratch/
+  - tests/
+  - package.json
+  - package-lock.json
+  - node_modules/
+  - README.md

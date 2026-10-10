@@ -10,10 +10,22 @@ document.addEventListener("DOMContentLoaded", () => {
     const passInput = document.getElementById("passphrase-input");
     const lockError = document.getElementById("lock-error");
 
-    function checkPassword() {
+    // The lock is a privacy curtain, not real security: the site is static, so
+    // anyone can read this file. Storing a SHA-256 hash instead of the plain
+    // passphrase just keeps it from being readable at a glance.
+    const PASSPHRASE_SHA256 = "fb1549ec668427876d6567d44607845418b75dd11639a2d0a3cbdcf826e878c2";
+
+    async function sha256Hex(text) {
+        const bytes = new TextEncoder().encode(text);
+        const digest = await crypto.subtle.digest("SHA-256", bytes);
+        return Array.from(new Uint8Array(digest), b => b.toString(16).padStart(2, "0")).join("");
+    }
+
+    async function checkPassword() {
         // Mobile keyboards, autofill and paste routinely append a space, so trim
         // before comparing rather than rejecting an otherwise correct passphrase.
-        if (passInput.value.trim().toLowerCase() === "psych123") {
+        const entered = passInput.value.trim().toLowerCase();
+        if (await sha256Hex(entered) === PASSPHRASE_SHA256) {
             lockScreen.classList.remove("active");
             document.documentElement.classList.add("app-unlocked");
             lockError.style.display = "none";
@@ -23,6 +35,12 @@ document.addEventListener("DOMContentLoaded", () => {
             lockError.style.display = "block";
         }
     }
+
+    // Note drafts used to live in localStorage, where they outlived the session
+    // on shared computers. They are now kept in sessionStorage; remove any
+    // copies left behind by older versions.
+    localStorage.removeItem("psych_mse_draft");
+    localStorage.removeItem("psych_formulation_draft");
 
     if (sessionStorage.getItem("unlocked") === "true") {
         lockScreen.classList.remove("active");
@@ -82,13 +100,20 @@ document.addEventListener("DOMContentLoaded", () => {
     const disclaimerModal = document.getElementById("disclaimer-modal");
     const acceptDisclaimerBtn = document.getElementById("accept-disclaimer-btn");
 
+    // Shown until accepted, then again only when the wording changes. Bump this
+    // whenever the disclaimer text is edited so everyone sees the new terms.
+    const DISCLAIMER_VERSION = "1";
+
     if (disclaimerModal && acceptDisclaimerBtn) {
-        disclaimerModal.style.display = "block";
-        document.body.classList.add("modal-open");
+        if (localStorage.getItem("disclaimer_accepted") !== DISCLAIMER_VERSION) {
+            disclaimerModal.style.display = "block";
+            document.body.classList.add("modal-open");
+        }
 
         acceptDisclaimerBtn.addEventListener("click", () => {
             disclaimerModal.style.display = "none";
             document.body.classList.remove("modal-open");
+            localStorage.setItem("disclaimer_accepted", DISCLAIMER_VERSION);
         });
     }
 
@@ -547,6 +572,72 @@ document.addEventListener("DOMContentLoaded", () => {
             if (idx >= scaleSelector.options.length) idx = 0;
             scaleSelector.selectedIndex = idx;
             syncScaleView();
+        });
+    }
+
+    // =================================================================
+    // HOME PAGE SEARCH
+    // Filters the tool tiles by title, description and keywords, and lists
+    // matching scales so one tap opens that scale directly.
+    // =================================================================
+    const homeSearchInput = document.getElementById("home-search-input");
+    const homeTiles = document.querySelectorAll("#home-tiles .home-tile");
+    const homeSearchScales = document.getElementById("home-search-scales");
+    const homeSearchEmpty = document.getElementById("home-search-empty");
+
+    function openScale(scaleId) {
+        if (!scaleSelector) return;
+        scaleSelector.value = scaleId;
+        syncScaleView();
+        showPage("scales-page");
+    }
+
+    function runHomeSearch() {
+        const words = homeSearchInput.value.toLowerCase().split(/\s+/).filter(Boolean);
+        const matches = text => words.every(word => text.toLowerCase().includes(word));
+
+        let visibleTiles = 0;
+        homeTiles.forEach(tile => {
+            const show = matches(tile.textContent + " " + (tile.dataset.keywords || ""));
+            tile.hidden = !show;
+            if (show) visibleTiles++;
+        });
+
+        homeSearchScales.innerHTML = "";
+        const scaleOptions = words.length && scaleSelector
+            ? Array.from(scaleSelector.options).filter(opt => matches(opt.textContent + " " + opt.value))
+            : [];
+        if (scaleOptions.length) {
+            const label = document.createElement("span");
+            label.className = "home-search-scales-label";
+            label.textContent = "Scales:";
+            homeSearchScales.appendChild(label);
+            scaleOptions.forEach(opt => {
+                const chip = document.createElement("button");
+                chip.type = "button";
+                chip.className = "home-scale-chip";
+                chip.textContent = opt.textContent;
+                chip.addEventListener("click", () => openScale(opt.value));
+                homeSearchScales.appendChild(chip);
+            });
+        }
+        homeSearchScales.hidden = scaleOptions.length === 0;
+        homeSearchEmpty.hidden = visibleTiles > 0 || scaleOptions.length > 0;
+    }
+
+    if (homeSearchInput) {
+        homeSearchInput.addEventListener("input", runHomeSearch);
+        homeSearchInput.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                homeSearchInput.value = "";
+                runHomeSearch();
+            } else if (e.key === "Enter") {
+                // Enter opens the first result: a matching tool, else a matching scale.
+                const firstTile = Array.from(homeTiles).find(tile => !tile.hidden);
+                const firstChip = homeSearchScales.querySelector(".home-scale-chip");
+                if (homeSearchInput.value.trim() && firstTile) showPage(firstTile.dataset.page);
+                else if (firstChip) firstChip.click();
+            }
         });
     }
 
@@ -1975,12 +2066,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (el) draft[id] = el.checked;
             });
 
-            localStorage.setItem("psych_mse_draft", JSON.stringify(draft));
+            sessionStorage.setItem("psych_mse_draft", JSON.stringify(draft));
         }
 
         function loadMseDraft() {
             try {
-                const saved = localStorage.getItem("psych_mse_draft");
+                const saved = sessionStorage.getItem("psych_mse_draft");
                 if (!saved) return;
                 const draft = JSON.parse(saved);
 
@@ -2051,7 +2142,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     });
                     document.getElementById("mse-insight-good").checked = true;
 
-                    localStorage.removeItem("psych_mse_draft");
+                    sessionStorage.removeItem("psych_mse_draft");
                     updateVisibility();
                     compileMseNote();
                 }
@@ -2067,7 +2158,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Initialize
         loadMseDraft();
-        if (!localStorage.getItem("psych_mse_draft")) {
+        if (!sessionStorage.getItem("psych_mse_draft")) {
             compileMseNote();
         }
     }
@@ -2492,11 +2583,11 @@ document.addEventListener("DOMContentLoaded", () => {
             if (el) draftData[id] = el.value;
         });
 
-        localStorage.setItem("psych_formulation_draft", JSON.stringify(draftData));
+        sessionStorage.setItem("psych_formulation_draft", JSON.stringify(draftData));
     }
 
     function loadFormulationDraft() {
-        const draftStr = localStorage.getItem("psych_formulation_draft");
+        const draftStr = sessionStorage.getItem("psych_formulation_draft");
         if (!draftStr) return;
         try {
             const draftData = JSON.parse(draftStr);
@@ -2622,7 +2713,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const outEl = document.getElementById("form-note-out");
         if (outEl) outEl.value = "";
 
-        localStorage.removeItem("psych_formulation_draft");
+        sessionStorage.removeItem("psych_formulation_draft");
     }
 
     const formContainer = document.getElementById("gen-5ps");
@@ -2762,7 +2853,7 @@ On review:
 
 Diagnostic screen:
 - Manic symptoms - 
-- Depressive symptoms - (anhedonia / guild / energy / concentration / slowing)
+- Depressive symptoms - (anhedonia / guilt / energy / concentration / slowing)
 - Organic and somatic - pain
 - Cognitive - difficulties thinking, confusion, memory
 - Psychotic experiences - 

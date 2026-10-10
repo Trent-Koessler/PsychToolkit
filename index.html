@@ -148,37 +148,73 @@
 
             <!-- Home Dashboard Page -->
             <div id="home-page" class="page active-page">
-                <nav class="button-container">
-                    <button class="big-button" data-page="oca-assessment-page"
-                        style="border: 2px solid var(--primary-color);">
-                        <span> Patient Review Workspace</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Write
-                            reviews, auto-save to desktop, and has templates for formulation and MSE.</span>
+                <div class="home-search">
+                    <label for="home-search-input" class="visually-hidden">Search tools</label>
+                    <input type="search" id="home-search-input" placeholder="Search tools and scales (e.g. lithium, PHQ)" autocomplete="off" spellcheck="false">
+                </div>
+                <div id="home-search-scales" class="home-search-scales" hidden></div>
+                <p id="home-search-empty" class="home-search-empty" hidden>No tools match your search.</p>
+                <nav class="button-container" id="home-tiles">
+                    <button class="big-button home-tile home-tile-featured" data-page="oca-assessment-page"
+                        data-keywords="review note oca template mse formulation registrar initial assessment">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">📝</span> Patient Review Workspace</span>
+                        <span class="tile-desc">Write reviews with MSE and formulation builders; auto-saves to a file on this computer.</span>
                     </button>
-                    <button class="big-button" data-page="scales-page">Psychiatric Screening Scales</button>
-                    <button class="big-button" data-page="equivalents-page">Dose Equivalents Converters</button>
-                    <button class="big-button" data-page="monitoring-page">Interactive Monitoring Checklists</button>
-                    <button class="big-button" data-page="otp-page">Opioid Treatment (OTP) Calculators</button>
-                    <button class="big-button" data-page="withdrawal-page">Withdrawal & NRT Tools</button>
-                    <button class="big-button" data-page="emergencies-page">
-                        <span>🚨 Psychiatric Emergencies</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">NMS,
-                            serotonin, lithium and other toxicities, QTc, clozapine, valproate and malignant catatonia
-                            &mdash; recognition, management and eTG doses.</span>
+                    <button class="big-button home-tile" data-page="scales-page"
+                        data-keywords="scale screen score rating questionnaire depression anxiety mania psychosis adhd ptsd cognition alcohol drugs">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">📊</span> Psychiatric Screening Scales</span>
+                        <span class="tile-desc">29 scored scales: PHQ-9, GAD-7, YMRS, PANSS, AUDIT, MoCA and more.</span>
                     </button>
-                    <button class="big-button" data-page="qtc-page">QTc Prolongation Guide</button>
-                    <button class="big-button" data-page="generators-page">Assessment Note Generators</button>
-                    <button class="big-button" data-page="mha-page">
-                        <span>⚖️ Mental Health Act 2007 (NSW)</span>
-                        <span
-                            style="font-size: 12px; font-weight: normal; color: var(--text-muted); margin-top: 6px; line-height: 1.3;">Point-of-care
-                            decision support across the Mental Health, Guardianship and Public Health Acts &mdash;
-                            scheduling, examinations and treatment refusal, with the sections quoted.</span>
+                    <button class="big-button home-tile" data-page="equivalents-page"
+                        data-keywords="antipsychotic benzodiazepine chlorpromazine diazepam equivalent conversion switch">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚖️</span> Dose Equivalents Converters</span>
+                        <span class="tile-desc">Convert between antipsychotics and between benzodiazepines.</span>
                     </button>
-                    <button class="big-button" data-page="contacts-page">Helpful Contacts & Helplines</button>
-                    <button class="big-button" data-page="pk-page">⚗️ PK Visualiser</button>
+                    <button class="big-button home-tile" data-page="monitoring-page"
+                        data-keywords="lithium clozapine metabolic syndrome bloods ecg weight troponin crp neutrophils monitoring">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">✅</span> Interactive Monitoring Checklists</span>
+                        <span class="tile-desc">Lithium, clozapine and metabolic monitoring schedules.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="otp-page"
+                        data-keywords="opioid methadone buprenorphine suboxone buvidal sublocade lai script otp">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">💉</span> Opioid Treatment (OTP) Calculators</span>
+                        <span class="tile-desc">Methadone and buprenorphine titration, LAI dose windows and script maker.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="withdrawal-page"
+                        data-keywords="withdrawal diazepam wean taper nicotine nrt smoking alcohol widmark elimination">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🚬</span> Withdrawal &amp; NRT Tools</span>
+                        <span class="tile-desc">Diazepam weaning, nicotine replacement dosing and alcohol elimination.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="emergencies-page"
+                        data-keywords="nms neuroleptic malignant serotonin lithium toxicity anticholinergic tca sympathomimetic maoi hypertensive torsades clozapine myocarditis dystonia akathisia valproate catatonia">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🚨</span> Psychiatric Emergencies</span>
+                        <span class="tile-desc">NMS, serotonin, lithium and other toxicities, QTc, clozapine, valproate and malignant catatonia &mdash; recognition, management and eTG doses.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="qtc-page"
+                        data-keywords="qtc qt ecg torsades cardiac arrhythmia">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">❤️</span> QTc Prolongation Guide</span>
+                        <span class="tile-desc">QTc risk of psychiatric medications.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="generators-page"
+                        data-keywords="mse mental state formulation 4p template note generator">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">🗂️</span> Assessment Note Generators</span>
+                        <span class="tile-desc">MSE builder, 4P formulation maker and review templates.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="mha-page"
+                        data-keywords="mha mental health act schedule scheduling involuntary capacity guardianship tribunal nsw law legal">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚖️</span> Mental Health Act 2007 (NSW)</span>
+                        <span class="tile-desc">Point-of-care decision support across the Mental Health, Guardianship and Public Health Acts &mdash; scheduling, examinations and treatment refusal, with the sections quoted.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="contacts-page"
+                        data-keywords="phone helpline contact lifeline crisis support service">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">☎️</span> Helpful Contacts &amp; Helplines</span>
+                        <span class="tile-desc">Mental health and drug &amp; alcohol support lines and services.</span>
+                    </button>
+                    <button class="big-button home-tile" data-page="pk-page"
+                        data-keywords="pharmacokinetics half-life plasma level concentration lai depot graph methadone buprenorphine benzodiazepine antipsychotic lithium valproate">
+                        <span class="tile-title"><span class="tile-icon" aria-hidden="true">⚗️</span> PK Visualiser</span>
+                        <span class="tile-desc">Graph drug levels over time for oral and long-acting injectable doses.</span>
+                    </button>
                 </nav>
             </div>
 

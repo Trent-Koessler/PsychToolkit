@@ -426,6 +426,109 @@ header.app-header button:not(.hamburger):hover,
     border-color: var(--primary-color);
 }
 
+/* Home dashboard tiles: every tile has an icon, a title and a one-line description */
+.home-tile {
+    justify-content: flex-start;
+    gap: 6px;
+}
+
+.home-tile-featured {
+    border: 2px solid var(--primary-color);
+}
+
+.tile-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tile-icon {
+    font-size: 20px;
+    line-height: 1;
+}
+
+.tile-desc {
+    font-size: 13px;
+    font-weight: normal;
+    color: var(--text-muted);
+    line-height: 1.4;
+}
+
+.home-search {
+    margin-bottom: 20px;
+}
+
+.home-search input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 14px 16px;
+    font-size: 16px;
+    font-family: inherit;
+    color: var(--text-color);
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+}
+
+.home-search input:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+}
+
+.home-search-scales {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.home-search-scales-label {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-right: 4px;
+}
+
+.home-scale-chip {
+    font-family: inherit;
+    font-size: 14px;
+    padding: 6px 12px;
+    color: var(--text-color);
+    background: var(--card-bg);
+    border: 1px solid var(--primary-color);
+    border-radius: 999px;
+    cursor: pointer;
+}
+
+.home-scale-chip:hover {
+    background: var(--primary-color);
+    color: #fff;
+}
+
+/* .big-button and the chip row set display:flex, which would override [hidden] */
+.home-tile[hidden],
+.home-search-scales[hidden] {
+    display: none;
+}
+
+.home-search-empty {
+    color: var(--text-muted);
+    text-align: center;
+    padding: 24px 0;
+}
+
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+
 /* Option A Custom Scale Navigation Header */
 .scale-nav-container {
     display: flex;
