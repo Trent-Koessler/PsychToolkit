@@ -3157,6 +3157,18 @@ button.btn-primary:hover,
     font-size: 12.5px;
 }
 
+/* The "+" between examination findings in the s 27 chart. */
+.mha-flow-plus .mha-flow-box {
+    fill: none;
+    stroke: none;
+}
+
+.mha-flow-plus .mha-flow-title {
+    font-size: 20px;
+    font-weight: 700;
+    fill: var(--accent-color);
+}
+
 .mha-flow-group .mha-flow-box {
     fill: none;
     stroke: var(--border-color);
