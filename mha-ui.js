@@ -886,6 +886,101 @@
         ]
     };
 
+    /* Initial detention and the s 27 examinations, laid out like the
+       "Initial Detention & s27 Examinations (Form 1's)" teaching chart
+       (updated June 2016): the routes in on the left, then one row per
+       combination of examination findings. Terms are brought up to date
+       with the current Act. */
+    var S27_FINDING = {
+        MI: "Mentally ill",
+        MD: "Mentally disordered",
+        NOT: "Not mentally ill or disordered",
+        ANY: "Mentally ill or disordered"
+    };
+    var S27_ROWS = [
+        { a: "MI", b: "MI", out: "inquiry" },
+        { a: "MI", b: "MD", out: "inquiry" },
+        { a: "MD", b: "MI", out: "inquiry" },
+        { a: "MD", b: "MD", out: "md" },
+        { a: "NOT", out: "release1" },
+        { a: "MD", b: "NOT", c: "MD", out: "mdUp" },
+        { a: "MI", b: "NOT", c: "MI", out: "inquiry" },
+        { a: "MI", b: "NOT", c: "MD", out: "inquiry" },
+        { a: "MD", b: "NOT", c: "MI", out: "inquiry" },
+        { a: "ANY", b: "NOT", c: "NOT", out: "release3" }
+    ];
+    var S27_PATHWAYS = [
+        { title: "s 19 — Schedule 1", sub: "Certificate by a medical practitioner or accredited person", node: "out_sched1" },
+        { title: "s 20 — Ambulance", sub: "Brought to the facility by an ambulance officer", node: "out_s20" },
+        { title: "s 22 — Police", sub: "After being apprehended by a police officer", node: "out_s22" },
+        { title: "s 23 — Order to examine", sub: "Order by a Local Court judge or authorised officer to examine a person who is physically inaccessible", node: "out_s23" },
+        { title: "s 24 — Court order", sub: "Order of a Local Court judge under the 2020 Forensic Provisions Act", node: "out_s24" },
+        { title: "s 25 — Transfer", sub: "From another health facility", node: "out_s25" },
+        { title: "s 26 — Written request", sub: "By a designated carer, principal care provider, relative or friend", node: "out_s26" },
+        { title: "s 10 — Voluntary patient", sub: "Detention of a voluntary patient (up to 2 h hold for assessment)", node: "out_s10" }
+    ];
+
+    var FLOW_S27 = (function () {
+        var COL = { a: 490, plus1: 645, b: 670, plus2: 845, c: 870, status: 1090, next: 1320 };
+        var W = { a: 150, b: 170, c: 170, status: 200, next: 200 };
+        var rowY = function (i) { return 64 + i * 78; };
+        var ROW_H = 60;
+        var nodes = [
+            { id: "hp", kind: "lane", x: 20, y: 10, w: 300, h: 48, title: "PATHWAYS TO DETENTION — s 18" },
+            { id: "ha", kind: "lane", x: COL.a, y: 10, w: W.a, h: 48, title: "s 27(a) 1st EXAM" },
+            { id: "hb", kind: "lane", x: COL.b, y: 10, w: W.b, h: 48, title: "s 27(b) 2nd EXAM" },
+            { id: "hc", kind: "lane", x: COL.c, y: 10, w: W.c, h: 48, title: "s 27(c) 3rd EXAM", sub: "if needed" },
+            { id: "hs", kind: "lane", x: COL.status, y: 10, w: W.status, h: 48, title: "LEGAL STATUS" },
+            { id: "hn", kind: "lane", x: COL.next, y: 10, w: W.next, h: 48, title: "NEXT" },
+            { id: "then", kind: "note", x: 340, y: 290, w: 130, h: 200, title: "Then:", sub: "first examination by an authorised medical officer within 12 hours of arrival (s 27 Form 1)" }
+        ];
+        S27_PATHWAYS.forEach(function (p, i) {
+            nodes.push({ id: "p" + i, kind: "action", x: 20, y: 64 + i * 94, w: 300, h: 82, title: p.title, sub: p.sub, node: p.node });
+        });
+        var edges = [];
+        S27_ROWS.forEach(function (r, i) {
+            var y = rowY(i), id = "s" + i, cy = y + ROW_H / 2;
+            var cell = function (col, key, kind, node) {
+                nodes.push({ id: id + col, kind: kind || "action", x: COL[col], y: y, w: W[col], h: ROW_H, title: S27_FINDING[key] || key, node: node });
+            };
+            var plus = function (col) {
+                nodes.push({ id: id + col, kind: "plus", x: COL[col], y: y, w: 20, h: ROW_H, title: "+" });
+            };
+            cell("a", r.a, "action", "e_first");
+            if (r.b) { plus("plus1"); cell("b", r.b, "action", "e_second"); }
+            if (r.c) { plus("plus2"); cell("c", r.c, "action", "e_third"); }
+            var last = id + (r.c ? "c" : r.b ? "b" : "a");
+
+            if (r.out === "inquiry") {
+                nodes.push({ id: id + "s", kind: "action", x: COL.status, y: y, w: W.status, h: ROW_H, title: "Assessable person", sub: "s 27(d)", node: "out_inquiry_required" });
+                nodes.push({ id: id + "n", kind: "action", x: COL.next, y: y, w: W.next, h: ROW_H, title: "Mental health inquiry", sub: "ss 34, 35", node: "out_inquiry_orders" });
+                edges.push({ from: last, to: id + "s", fromSide: "r", toSide: "l" });
+                edges.push({ from: id + "s", to: id + "n", fromSide: "r", toSide: "l" });
+            } else if (r.out === "md") {
+                nodes.push({ id: "md", kind: "caution", x: COL.status, y: y, w: W.status, h: 138, title: "Mentally disordered — s 27(e)", sub: "Detain up to 3 working days ONLY, no more than 3 times in a calendar month. Review at least daily.", node: "out_md_detention" });
+                nodes.push({ id: "mdEnd", kind: "stop", x: COL.next, y: y, w: W.next, h: 138, title: "At the end of the 3 days: discharge", sub: "To keep detaining: admit as voluntary, or a new Schedule 1 and two new Form 1s", node: "out_md_detention" });
+                edges.push({ from: last, to: "md", fromSide: "r", toSide: "l", toPt: [COL.status, cy] });
+                edges.push({ from: "md", to: "mdEnd", fromSide: "r", toSide: "l" });
+            } else if (r.out === "mdUp") {
+                edges.push({ from: last, to: "md", fromSide: "r", via: [[COL.status + W.status / 2, cy]], toPt: [COL.status + W.status / 2, rowY(3) + 138] });
+            } else if (r.out === "release1") {
+                nodes.push({ id: id + "x", kind: "stop", x: COL.b, y: y, w: W.b, h: ROW_H, title: "Discharge or voluntary", sub: "ss 12(2), 27(1)(a)", node: "out_must_release" });
+                edges.push({ from: last, to: id + "x", fromSide: "r", toSide: "l" });
+            } else if (r.out === "release3") {
+                nodes.push({ id: id + "x", kind: "stop", x: COL.status, y: y, w: W.status, h: ROW_H, title: "Discharge or voluntary", sub: "s 27(1)(d)", node: "out_must_release_third" });
+                edges.push({ from: last, to: id + "x", fromSide: "r", toSide: "l" });
+            }
+        });
+        return {
+            id: "flowD",
+            title: "Initial detention and the s 27 examinations (Form 1s) under the Mental Health Act 2007 (NSW)",
+            width: 1540,
+            height: 846,
+            nodes: nodes,
+            edges: edges
+        };
+    })();
+
     var FLOW_REFUSAL = {
         id: "flowB",
         title: "Managing an adult who refuses medical treatment in New South Wales",
@@ -1027,7 +1122,7 @@
     };
 
     /* Exposed so the layouts can be checked for overlapping boxes offline. */
-    window.MHA_FLOWS = { involuntary: FLOW_INVOLUNTARY, involuntaryNarrow: FLOW_INVOLUNTARY_NARROW, refusal: FLOW_REFUSAL, ed: FLOW_ED };
+    window.MHA_FLOWS = { involuntary: FLOW_INVOLUNTARY, involuntaryNarrow: FLOW_INVOLUNTARY_NARROW, s27: FLOW_S27, refusal: FLOW_REFUSAL, ed: FLOW_ED };
     window.MHA_FLOW_TEXT = flowText;
 
     /* =====================================================================
@@ -1410,6 +1505,8 @@
                 else if (narrow.addListener) narrow.addListener(drawA);
             }
         }
+        var flowD = document.getElementById("mha-flow-s27");
+        if (flowD) renderFlow(flowD, FLOW_S27);
         var flowB = document.getElementById("mha-flow-refusal");
         if (flowB) renderFlow(flowB, FLOW_REFUSAL);
         var flowC = document.getElementById("mha-flow-ed");
