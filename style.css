@@ -3099,16 +3099,18 @@ button.btn-primary:hover,
     stroke-width: 1.5;
 }
 
+/* Font sizes here are mirrored by FLOW_TEXT in mha-ui.js, which uses them to
+   wrap text inside the boxes. Change both together. */
 .mha-flow-title {
     font-family: var(--font-sans);
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
     fill: var(--text-color);
 }
 
 .mha-flow-sub {
     font-family: var(--font-sans);
-    font-size: 10.5px;
+    font-size: 11.5px;
     fill: var(--text-muted);
 }
 
@@ -3124,11 +3126,48 @@ button.btn-primary:hover,
     opacity: 0.85;
 }
 
+/* A halo in the diagram's background colour keeps Yes/No labels readable
+   where they sit over a line. */
 .mha-flow-edge-label {
     font-family: var(--font-sans);
-    font-size: 10.5px;
-    font-weight: 600;
-    fill: var(--text-muted);
+    font-size: 11.5px;
+    font-weight: 700;
+    fill: var(--text-color);
+    stroke: var(--tab-active-bg);
+    stroke-width: 4px;
+    stroke-linejoin: round;
+    paint-order: stroke;
+}
+
+/* Phone layout of the involuntary pathway: drawn narrow, so it fits the
+   screen with no sideways scrolling, and its text is set larger. */
+.mha-flow-svg--compact {
+    min-width: 0;
+}
+
+.mha-flow-svg--compact .mha-flow-title {
+    font-size: 14px;
+}
+
+.mha-flow-svg--compact .mha-flow-sub {
+    font-size: 12px;
+}
+
+.mha-flow-svg--compact .mha-flow-edge-label {
+    font-size: 12.5px;
+}
+
+.mha-flow-group .mha-flow-box {
+    fill: none;
+    stroke: var(--border-color);
+    stroke-dasharray: 5 4;
+}
+
+.mha-flow-hint {
+    display: none;
+    font-size: 12px;
+    color: var(--text-muted);
+    margin: 0 0 6px;
 }
 
 .mha-flow-start .mha-flow-box {
@@ -3182,6 +3221,14 @@ button.btn-primary:hover,
     .mha-indent-3 {
         margin-left: 26px;
     }
+
+    .mha-flow-hint {
+        display: block;
+    }
+
+    .mha-flow-scroll {
+        padding: 8px;
+    }
 }
 
 /* ------------------------------------------------------------ print */
@@ -3223,6 +3270,10 @@ button.btn-primary:hover,
     .mha-flow-sub,
     .mha-flow-edge-label {
         fill: #000;
+    }
+
+    .mha-flow-edge-label {
+        stroke: #fff;
     }
 
     .mha-flow-edge {

@@ -46,7 +46,7 @@
         "5": "Voluntary admission on the person's own request.",
         "8": "A voluntary patient must be discharged when they ask, unless steps are taken to detain them.",
         "9": "Periodic review of voluntary patients.",
-        "10": "A voluntary patient can be detained, but only by going through the Part 2 detention process — being an inpatient is not itself authority.",
+        "10": "A voluntary patient can be detained, but only by going through the Part 2 detention process — being an inpatient is not itself authority. They may be held for up to 2 hours so an authorised medical officer can assess them (s 10(3)).",
         "12": "The safety net that governs every detention decision: the person must be mentally ill or mentally disordered AND no less restrictive care may be appropriate and reasonably available. If that is not so, the officer must refuse to detain, and must not continue detaining.",
         "13": "Detention and compulsory treatment are only available if the person satisfies the criteria in this Part — nothing else will do.",
         "14": "The 'mentally ill person' test: mental illness, plus reasonable grounds to believe care, treatment or control is necessary for protection from serious harm. The continuing condition and likely deterioration are taken into account.",
@@ -59,8 +59,8 @@
         "20": "An ambulance officer may take a person to a declared mental health facility on reasonable grounds, without a certificate.",
         "21": "Police must respond to a police assistance endorsement or an ambulance officer's request, and may enter premises without a warrant.",
         "22": "Police apprehension. Requires the offence / self-harm / serious physical harm limb AND that dealing with the person under this Act is better for their welfare.",
-        "23": "Where a person is physically inaccessible, a Magistrate or authorised officer may order that they be visited and examined; premises may be entered by force.",
-        "24": "Detention on a court order under the forensic provisions Act.",
+        "23": "Where a person is physically inaccessible, a Judge of the Local Court or authorised officer may order that they be visited and examined; premises may be entered by force.",
+        "24": "Detention on the order of a Judge of the Local Court under Division 3 of Part 2 of the Mental Health and Cognitive Impairment Forensic Provisions Act 2020.",
         "25": "Transfer from another health facility. The person is then treated as detained under s 19 — but document the reasons and the grounds.",
         "26": "Detention on the written request of a designated carer, principal care provider, relative or friend — only where distance and urgency make a certificate impracticable.",
         "27": "The examination sequence that authorises ongoing detention: first examination within 12 hours, a second examination, and a third where the second does not agree. Also sets out when the Tribunal must be notified.",
@@ -84,9 +84,9 @@
         "48": "Apprehension of a person who is absent from a facility without permission.",
         "51": "Who may apply for a community treatment order and when one may be made.",
         "52": "Notice of a community treatment order application to the person, their carers and the treating facility.",
-        "53": "The criteria the Tribunal applies to a community treatment order — including the requirement of a previous history of refusing appropriate treatment where the person has been previously diagnosed.",
+        "53": "The criteria the Tribunal applies to a community treatment order — including the requirement of a previous history of refusing appropriate treatment where the person has been previously diagnosed, unless they were a forensic patient or on a community treatment order in the last 12 months (s 53(3A)). Maximum period 12 months (s 53(6)).",
         "54": "What the treatment plan under a community treatment order must contain.",
-        "56": "Form and duration — a community treatment order runs for the specified period, or 12 months if none is specified.",
+        "56": "Form and duration — a community treatment order runs for the specified period, or 12 months if none is specified. The 12-month maximum itself is in s 53(6).",
         "58": "The breach procedure: reasonable steps first, then a breach notice, then a breach order.",
         "59": "Police assistance in taking a person to a facility under a breach order.",
         "60": "What happens at the facility after a breach notice or breach order.",
@@ -95,7 +95,7 @@
         "62": "Discharge and detention of a person brought in under a breach order.",
         "63": "Tribunal review of a person detained after a breach order.",
         "65": "The Tribunal's power to vary or revoke orders.",
-        "66": "The director of community treatment may revoke a community treatment order.",
+        "66": "The director of community treatment may revoke a community treatment order — but must first consult the person and, where reasonably practicable, the designated carer and principal care provider (s 66(2)).",
         "66A": "Who must be notified when a community treatment order is varied or revoked.",
         "68": "The principles for care and treatment. Least restrictive environment, timely and high quality care, minimum interference with liberty and dignity, cultural and developmental needs, and involving the person and monitoring their capacity to consent.",
         "69": "It is an offence to ill-treat a patient.",
@@ -236,7 +236,7 @@
             source: "Mental Health Act 2007 (NSW), s 51",
             who: "An authorised medical officer, a medical practitioner familiar with the person's clinical history, or a prescribed person.",
             when: "At an inquiry, on review, or on a free-standing application.",
-            clock: "An order runs for the period specified, or 12 months if none is specified — s 56(2).",
+            clock: "Maximum 12 months (s 53(6)). An order runs for the period specified, or 12 months if none is specified (s 56(2)).",
             sections: ["51", "53", "54", "56"]
         }
     ];
@@ -245,11 +245,12 @@
      * Statutory clocks, gathered in one place.
      * ------------------------------------------------------------------ */
     var TIMEFRAMES = [
+        { clock: "Up to 2 hours", what: "Holding a voluntary patient in a mental health facility so an authorised medical officer can decide whether to detain them.", ref: "s 10(3)", sections: ["10"] },
         { clock: "12 hours", what: "First examination by an authorised medical officer after the person arrives at the facility (or after a voluntary patient is detained).", ref: "s 27(1)(a)", sections: ["27", "27A"] },
         { clock: "As soon as possible", what: "Second examination. Must be by a psychiatrist unless the first examiner was one.", ref: "s 27(1)(b)", sections: ["27"] },
         { clock: "As soon as practicable", what: "Third examination by a psychiatrist, where the second examiner does not find the person mentally ill or mentally disordered.", ref: "s 27(1)(c)", sections: ["27"] },
         { clock: "5 days / 1 day", what: "Expiry of a Schedule 1 — 5 days where the person is certified mentally ill, 1 day where certified mentally disordered.", ref: "s 19(4)", sections: ["19"] },
-        { clock: "3 days", what: "Maximum continuous detention of a mentally disordered person, NOT counting weekends and public holidays. Often taught as '72 hours' — the Act does not say that, and over a long weekend the lawful period is materially longer than 72 clock hours.", ref: "s 31(1)-(2)", sections: ["31"] },
+        { clock: "3 days", what: "Maximum continuous detention of a mentally disordered person, NOT counting weekends and public holidays. Often taught as '72 hours' — the Act does not say that, and over a long weekend the lawful period is materially longer than 72 clock hours. In practice the count is usually started from midnight on the day of the examination (step 2 or 3) that confirmed the finding — this is practice guidance, not wording in the Act. At the end, the person must be discharged: to keep detaining, admit as voluntary or start again with a new Schedule 1 and two new Form 1s.", ref: "s 31(1)-(2)", sections: ["31"] },
         { clock: "Every 24 hours", what: "Minimum examination frequency for a detained mentally disordered person — the recertification step. Detention must end at any such examination where the person is no longer mentally disordered or mentally ill, or less restrictive care becomes available (s 31(4)).", ref: "s 31(3)-(4)", sections: ["31"] },
         { clock: "3 per calendar month", what: "Maximum number of admissions as a mentally disordered person in any one calendar month.", ref: "s 31(5)", sections: ["31"] },
         { clock: "24 hours", what: "Notification to designated carers and the principal care provider that the person has been detained.", ref: "s 75(1)", sections: ["75"] },
@@ -259,10 +260,11 @@
         { clock: "Up to 3 months", what: "Initial involuntary patient order made at a mental health inquiry.", ref: "s 35(5)(c)", sections: ["35"] },
         { clock: "3 months / 6 months", what: "Tribunal review of an involuntary patient — at least 3-monthly for the first 12 months, then at least 6-monthly.", ref: "s 37(1)", sections: ["37"] },
         { clock: "3 working days", what: "If the authorised medical officer has not determined a discharge application within this time, the person may appeal to the Tribunal.", ref: "s 44(1)(b)", sections: ["44", "42"] },
-        { clock: "Up to 14 days", what: "Deferral of the operation of a discharge order where the Tribunal thinks it in the person's best interests.", ref: "ss 35(4), 38(6)", sections: ["35", "38"] },
+        { clock: "Up to 14 days", what: "Deferral of the operation of a discharge order where the Tribunal thinks it in the person's best interests — at an inquiry, a review, a voluntary patient review, a discharge appeal, or when a community treatment order is made.", ref: "ss 9(4), 35(4), 38(6), 44(6), 53(8)", sections: ["9", "35", "38", "44", "53"] },
         { clock: "14 days after notice", what: "Earliest an application for consent to surgery or special medical treatment may be made after notice to carers — sooner if urgent or the person notified does not object.", ref: "ss 100(5), 101(5), 103(5)", sections: ["100", "101", "103", "78"] },
         { clock: "As soon as practicable", what: "Notification to the Tribunal after emergency surgery performed under s 99.", ref: "s 99(4)", sections: ["99"] },
-        { clock: "12 months", what: "Maximum duration of a community treatment order.", ref: "s 56(2)", sections: ["56", "53"] }
+        { clock: "12 months", what: "Maximum duration of a community treatment order.", ref: "s 53(6)", sections: ["53", "56"] },
+        { clock: "Every 12 months", what: "Tribunal review of a voluntary patient who has been in a mental health facility (voluntarily or involuntarily) for a continuous period of more than 12 months.", ref: "s 9(1)", sections: ["9"] }
     ];
 
     /* ---------------------------------------------------------------------
@@ -795,9 +797,11 @@
                 { label: "They need ambulance transport", next: "out_s20" },
                 { label: "Police are involved or have apprehended them", next: "out_s22" },
                 { label: "They are physically inaccessible and cannot be examined", next: "out_s23" },
+                { label: "A Local Court judge has ordered it (forensic provisions)", next: "out_s24" },
                 { label: "They are already an inpatient in another health facility", next: "out_s25" },
                 { label: "Remote area, no practitioner able to attend — carer or relative requesting", next: "out_s26" },
-                { label: "They are already in a declared mental health facility", next: "e_stage" }
+                { label: "They are a voluntary patient in a mental health facility", next: "out_s10" },
+                { label: "They are already detained in a declared mental health facility", next: "e_stage" }
             ]
         },
 
@@ -845,6 +849,9 @@
                 "The s 27 examination sequence starts once the person arrives."
             ],
             sections: ["22", "81", "190", "18"],
+            cautions: [
+                "Registrar teaching on the 2015 amendments describes s 32(4)(a): where a person was brought in by police (or referred by a court), an authorised medical officer may detain them for up to 2 hours pending apprehension by a police officer. Section 32 is not in this app's copy of the Act, so its current wording has not been checked — read it before relying on it."
+            ],
             next: [{ label: "The person has arrived at the facility — what next?", node: "e_stage" }]
         },
 
@@ -852,7 +859,7 @@
             kind: "outcome",
             tone: "go",
             title: "Order for examination where the person is physically inaccessible — s 23",
-            summary: "A Magistrate or authorised officer may order that a medical practitioner or accredited person visit and personally examine or observe the person, with assistance if needed.",
+            summary: "A Judge of the Local Court or authorised officer may order that a medical practitioner or accredited person visit and personally examine or observe the person, with assistance if needed.",
             actions: [
                 "The order requires evidence on oath that the person may be mentally ill or mentally disordered AND that they could not otherwise be examined because of physical inaccessibility.",
                 "Premises may be entered, by force if needed, to enable the examination.",
@@ -889,6 +896,36 @@
             ],
             sections: ["26", "19", "18"],
             next: [{ label: "The person has arrived — what next?", node: "e_stage" }]
+        },
+
+        out_s24: {
+            kind: "outcome",
+            tone: "go",
+            title: "Detention on the order of a Local Court judge — s 24",
+            summary: "A person may be taken to and detained in a declared mental health facility in accordance with an order made under Division 3 of Part 2 of the Mental Health and Cognitive Impairment Forensic Provisions Act 2020.",
+            actions: [
+                "Read the order and keep a copy with the record — it is the authority for bringing the person in.",
+                "Once the person arrives, the s 27 examination sequence applies as for any other route.",
+                "Older teaching material refers to a Magistrate and to s 33 of the Mental Health (Forensic Provisions) Act 1990 — both have been replaced."
+            ],
+            sections: ["24", "18", "27", "81"],
+            next: [{ label: "The person has arrived — what next?", node: "e_stage" }]
+        },
+
+        out_s10: {
+            kind: "outcome",
+            tone: "caution",
+            title: "Detaining a voluntary patient — s 10",
+            summary: "An authorised medical officer may cause a voluntary patient to be detained if the officer considers them a mentally ill or mentally disordered person. The patient is then taken to be detained under s 19.",
+            actions: [
+                "The patient may be held for up to 2 hours so that an authorised medical officer can assess them (s 10(3)). Use the local detention-of-voluntary-patient form if your facility has one.",
+                "Give the oral explanation and written statement of rights as soon as it is decided to take steps to detain (s 74(1)(b)).",
+                "Section 12 applies: detain only if the person is mentally ill or mentally disordered AND no less restrictive care is appropriate and reasonably available.",
+                "The first s 27 examination must happen within 12 hours of the person being detained."
+            ],
+            timeframes: ["Up to 2 hours' hold for assessment (s 10(3)); first examination within 12 hours of detention (s 27(1)(a))."],
+            sections: ["10", "74", "12", "27", "19"],
+            next: [{ label: "Decided to detain — start the examinations", node: "e_stage" }]
         },
 
         /* ---------------- Examination sequence ---------------- */
@@ -966,6 +1003,15 @@
             title: "Was the person also found to be a mentally disordered person at the first examination?",
             help: "Detention as a mentally disordered person under step 5 requires that finding at the first examination and again at the second or third. If the first examination found the person mentally ill, a mental health inquiry is required instead.",
             sections: ["27", "31"],
+            // Answered automatically when the first examination was recorded
+            // earlier in this walk-through, so the question is not asked twice.
+            autoNext: {
+                key: "finding1",
+                map: {
+                    "mentally disordered person": { next: "out_md_detention", label: "First examination: mentally disordered" },
+                    "mentally ill person": { next: "out_inquiry_required", label: "First examination: mentally ill" }
+                }
+            },
             options: [
                 { label: "Yes — mentally disordered at the first examination too", next: "out_md_detention" },
                 { label: "No — the first examination found a mentally ill person", next: "out_inquiry_required" }
@@ -1021,14 +1067,16 @@
                 "Examine the person at least once every 24 hours (s 31(3)). This is the recertification step — detention continues only while the opinion holds.",
                 "Release as soon as the person is not mentally disordered or mentally ill, or less restrictive care becomes appropriate and reasonably available (s 31(4)). This applies on ANY such examination, not only at the end of the 3 days.",
                 "Check the calendar month limit: no more than 3 admissions as a mentally disordered person in any one calendar month (s 31(5)).",
-                "If the person becomes, or is found to be, a mentally ill person, the mental health inquiry pathway applies instead."
+                "When the clock starts: in practice, count from midnight on the day of the examination (step 2 or 3) that confirmed the person is mentally disordered. This is practice guidance — the Act does not say when the count begins.",
+                "At the end of the 3 days the person must be discharged. The period cannot be extended. If the hospital wishes to continue to detain after this, the person must be admitted as a voluntary patient, or a new Schedule 1 and two new Form 1s must be completed.",
+                "The same applies if the person now appears to be a mentally ill person: s 27(1)(d) only sends a person to a mental health inquiry on the step 1 and step 2/3 findings, so complete a new Schedule 1 and two new Form 1s."
             ],
             timeframes: ["3 days excluding weekends and public holidays; examination at least every 24 hours; maximum 3 admissions per calendar month."],
-            sections: ["31", "12", "15", "79"],
+            sections: ["31", "27", "12", "15", "19", "79"],
             cautions: [
                 "It is commonly taught as a '72 hour hold'. The Act does not say 72 hours: s 31(1) says 3 days NOT INCLUDING weekends and public holidays. Those are different periods, and the difference is not academic — a Friday afternoon detention before a public holiday Monday runs well past 72 clock hours. Count days as the section does, and check the local public holiday calendar. Detention is in any case only lawful while the s 31(3) examinations continue to support it and s 12 remains satisfied."
             ],
-            next: [{ label: "The person is now a mentally ill person", node: "out_inquiry_required" }]
+            next: [{ label: "Detention needs to continue, or the person now appears mentally ill — new Schedule 1", node: "out_sched1" }]
         },
 
         out_inquiry_required: {
@@ -1037,6 +1085,7 @@
             title: "Notify the Tribunal — a mental health inquiry must be held",
             summary: "The person is an assessable person. The authorised medical officer must notify the Tribunal and bring the person before it as soon as practicable after admission.",
             actions: [
+                "This applies when the person was found mentally ill at step 1 and mentally ill or mentally disordered at step 2 or 3, OR mentally disordered at step 1 and mentally ill at step 2 or 3 (s 27(1)(d)). Mentally disordered at both steps is the s 31 short detention instead.",
                 "Notify the Tribunal and arrange for the person to be brought before it as soon as practicable (s 27(1)(d), s 34(1)).",
                 "Ensure the person is, as far as practicable, dressed in street clothes, that medical witnesses appear and that all relevant reports and Form 1s are provided to the Tribunal (s 34(2)).",
                 "Notify the person that an inquiry will be held, and take all reasonably practicable steps to notify carers and the principal care provider (s 76).",
@@ -1526,11 +1575,12 @@
             summary: "A voluntary patient may be discharged at their request. Detaining them requires the Part 2 process — being an inpatient is not itself authority.",
             actions: [
                 "If you consider detention is necessary, you must take the steps under Part 2 of Chapter 3 (s 10) — that means the criteria in s 12 and the examination sequence, not simply refusing to let the person go.",
+                "The person may be held for up to 2 hours so an authorised medical officer can assess them (s 10(3)).",
                 "Give the statement of legal rights if it is decided to take steps to detain (s 74(1)(b)).",
                 "Otherwise discharge, with discharge planning and follow-up information (s 79)."
             ],
             sections: ["8", "10", "9", "74", "79", "12"],
-            next: [{ label: "Detention may be necessary", node: "d_criteria" }]
+            next: [{ label: "Detention may be necessary", node: "out_s10" }]
         },
 
         out_detained_leave: {
@@ -1642,12 +1692,13 @@
             actions: [
                 "Prepare a treatment plan meeting s 54 — the facility must be capable of implementing it.",
                 "The Tribunal must be satisfied of each limb of s 53(3): no less restrictive care is appropriate and reasonably available and the person would benefit as the least restrictive alternative; the facility has an appropriate plan and can implement it; AND, where the person has been previously diagnosed with a mental illness, that they have a previous history of refusing to accept appropriate treatment.",
-                "An order may be made at a mental health inquiry, on a Tribunal review, or on a free-standing application (s 51(5)).",
-                "An order runs for the period specified, or 12 months if none is specified (s 56(2)).",
+                "Exception (s 53(3A)): if the person has been a forensic patient or on a community treatment order in the last 12 months, the 'history of refusing treatment' limb is not needed — instead the Tribunal must be satisfied they are likely to continue in, or relapse into, an active phase of mental illness without the order.",
+                "An order may be made at a mental health inquiry, on a Tribunal review, on a free-standing application, or in the same proceedings as a discharge appeal (s 51(5)-(6)). At an inquiry the person must be found to be a mentally ill person (s 53(4)).",
+                "Maximum 12 months (s 53(6)); if no period is specified, it runs for 12 months (s 56(2)).",
                 "Making the order triggers discharge from detention (s 41)."
             ],
             forms: ["Application for a community treatment order"],
-            timeframes: ["Maximum 12 months (s 56(2))."],
+            timeframes: ["Maximum 12 months (s 53(6))."],
             sections: ["51", "53", "54", "56", "41", "52"]
         },
 
@@ -1673,7 +1724,7 @@
             summary: "The Tribunal may vary or revoke an order; the director of community treatment may revoke one.",
             actions: [
                 "Apply to the Tribunal to vary or revoke (s 65).",
-                "The director of community treatment may revoke an order (s 66); notification duties follow (s 66A).",
+                "The director of community treatment may revoke an order if the person is not likely to benefit from it continuing (s 66(1)) — but must first consult the person and, if reasonably practicable, the designated carer and principal care provider (s 66(2)). The Tribunal must be told in writing (s 66(3)); other notification duties follow (s 66A).",
                 "An order has no effect while the person is detained otherwise than under the CTO Part, or is a voluntary patient — but time keeps running (s 56(3), (5))."
             ],
             sections: ["65", "66", "56"]
