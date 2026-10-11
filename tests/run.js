@@ -317,6 +317,77 @@ async function testAppShell(browser, baseUrl) {
     await context.close();
 }
 
+// Mental Health Act: the pathway maps are drawn without overlapping boxes,
+// clipped text or hidden Yes/No labels (desktop and phone layouts), and the
+// guided pathway does not ask about the first examination twice.
+async function testMhaPathway(browser, baseUrl) {
+    for (const [name, viewport] of [["desktop", { width: 1300, height: 900 }], ["phone", { width: 390, height: 844 }]]) {
+        const context = await browser.newContext({ viewport });
+        const page = await context.newPage();
+        page.on("pageerror", err => failures.push(`Page error: ${err.message}`));
+        await page.addInitScript(() => {
+            sessionStorage.setItem("unlocked", "true");
+            localStorage.setItem("disclaimer_accepted", "1");
+        });
+        await page.goto(baseUrl + "/index.html#mha-page");
+        await page.click('#mha-page .tab-button[data-tab="mha-map"]');
+        const problems = await page.evaluate(() => {
+            const out = [];
+            const overlap = (a, b, pad = 0) => a.x < b.x + b.width + pad && b.x < a.x + a.width + pad &&
+                a.y < b.y + b.height + pad && b.y < a.y + a.height + pad;
+            document.querySelectorAll(".mha-flow-svg").forEach(svg => {
+                const flow = svg.parentElement.id;
+                const vb = svg.viewBox.baseVal;
+                const nodes = Array.from(svg.querySelectorAll(".mha-flow-node:not(.mha-flow-group)")).map(g => ({
+                    box: g.querySelector("rect").getBBox(),
+                    texts: Array.from(g.querySelectorAll("text")).map(t => ({ s: t.textContent, b: t.getBBox() }))
+                }));
+                nodes.forEach((n, i) => {
+                    const r = n.box, name = n.texts.map(t => t.s).join(" ").slice(0, 40);
+                    if (r.x < 0 || r.y < 0 || r.x + r.width > vb.width || r.y + r.height > vb.height) out.push(`${flow}: "${name}" is outside the diagram`);
+                    n.texts.forEach(t => {
+                        if (t.b.x < r.x + 2 || t.b.x + t.b.width > r.x + r.width - 2 || t.b.y < r.y + 1 || t.b.y + t.b.height > r.y + r.height - 1)
+                            out.push(`${flow}: text "${t.s}" spills out of its box`);
+                    });
+                    nodes.slice(i + 1).forEach(m => { if (overlap(r, m.box)) out.push(`${flow}: "${name}" overlaps another box`); });
+                });
+                const labels = Array.from(svg.querySelectorAll(".mha-flow-edge-label")).map(l => ({ s: l.textContent, b: l.getBBox() }));
+                labels.forEach((l, i) => {
+                    if (nodes.some(n => overlap(l.b, n.box))) out.push(`${flow}: edge label "${l.s}" sits on a box`);
+                    labels.slice(i + 1).forEach(m => { if (overlap(l.b, m.b)) out.push(`${flow}: edge labels "${l.s}" and "${m.s}" overlap`); });
+                });
+            });
+            return out;
+        });
+        expect(`MHA flowcharts drawn cleanly (${name})`, problems, []);
+        if (name === "phone") {
+            expect("phone gets the stacked involuntary pathway",
+                await page.$eval("#mha-flow-involuntary svg", s => s.classList.contains("mha-flow-svg--compact")), true);
+            expect("stacked pathway needs no sideways scroll",
+                await page.$eval("#mha-flow-involuntary", el => el.scrollWidth <= el.clientWidth + 1), true);
+        }
+        await context.close();
+    }
+
+    // Step 1 and step 2 both mentally disordered: straight to the s 31 card,
+    // and Back returns to the step 2 question rather than the skipped one.
+    const page = await newUnlockedPage(browser, baseUrl, "#mha-page");
+    const click = async (sel, text) => page.locator(sel, { hasText: text }).first().click();
+    const heading = () => page.textContent("#mha-wizard .mha-card h4");
+    await click(".mha-role-btn", "Psychiatry registrar");
+    await click(".mha-option", "already detained");
+    await click(".mha-option", "First examination");
+    await click(".mha-option", "Mentally disordered person");
+    await click(".mha-next-btn", "second examination");
+    await click(".mha-option", "Mentally disordered person");
+    expectIncludes("MD + MD skips the repeat question", await heading(), "Detained as a mentally disordered person");
+    await click(".mha-trail-btn", "Back");
+    expectIncludes("Back skips over the auto-answered step", await heading(), "Second examination");
+    await click(".mha-option", "Mentally ill person");
+    expectIncludes("MD + MI goes to an inquiry", await heading(), "mental health inquiry must be held");
+    await page.context().close();
+}
+
 (async () => {
     const server = await startServer();
     const baseUrl = `http://localhost:${server.address().port}`;
@@ -330,6 +401,7 @@ async function testAppShell(browser, baseUrl) {
         await testWidmark(browser, baseUrl);
         await testEctHelper(browser, baseUrl);
         await testAppShell(browser, baseUrl);
+        await testMhaPathway(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

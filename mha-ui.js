@@ -155,11 +155,24 @@
         if (option.set) {
             Object.keys(option.set).forEach(function (k) { state.answers[k] = option.set[k]; });
         }
-        goTo(option.next);
+        goTo(skipAnswered(option.next));
+    }
+
+    // A question with `autoNext` is skipped when an earlier answer already
+    // settles it. The skip is recorded in the trail (marked `auto`) so the
+    // person can see why, and so Back steps over it.
+    function skipAnswered(nodeId) {
+        var node = NODES[nodeId];
+        var auto = node && node.autoNext;
+        var hit = auto && auto.map[state.answers[auto.key]];
+        if (!hit) return nodeId;
+        state.trail.push({ node: nodeId, title: node.title, answer: hit.label, auto: true });
+        return skipAnswered(hit.next);
     }
 
     function stepBack() {
         var last = state.trail.pop();
+        while (last && last.auto) last = state.trail.pop();
         if (last) goTo(last.node);
     }
 
@@ -358,7 +371,7 @@
                 var b = el("button", "mha-next-btn", n.label);
                 b.addEventListener("click", function () {
                     state.trail.push({ node: state.current, title: node.title, answer: n.label });
-                    goTo(n.node);
+                    goTo(skipAnswered(n.node));
                 });
                 nx.appendChild(b);
             });
@@ -512,8 +525,16 @@
         return n;
     }
 
+    // Section and form references ("s 31(5)", "Form 1s") are kept on one line.
+    var KEEP_WITH_NEXT = { s: true, ss: true, Form: true, Schedule: true };
+
     function wrap(text, maxChars) {
-        var words = String(text).split(/\s+/);
+        var words = [];
+        String(text).split(/\s+/).forEach(function (w) {
+            var prev = words[words.length - 1];
+            if (prev !== undefined && KEEP_WITH_NEXT[prev]) words[words.length - 1] = prev + " " + w;
+            else words.push(w);
+        });
         var lines = [];
         var line = "";
         words.forEach(function (w) {
@@ -560,11 +581,65 @@
         return [[ax, ay], [bx, by]];
     }
 
+    /* Text metrics, kept in step with the font sizes in style.css. `compact`
+       is the phone layout, drawn smaller so its text is set larger. */
+    var FLOW_TEXT = {
+        normal: { titleW: 6.9, subW: 6.1, lineH: 15.5, subH: 13.5, pad: 18 },
+        compact: { titleW: 7.4, subW: 6.4, lineH: 16.5, subH: 14, pad: 14 }
+    };
+
+    function flowText(spec, n) {
+        var m = spec.compact ? FLOW_TEXT.compact : FLOW_TEXT.normal;
+        var titleLines = wrap(n.title, Math.max(8, Math.floor((n.w - m.pad) / m.titleW)));
+        var subLines = n.sub ? wrap(n.sub, Math.max(8, Math.floor((n.w - m.pad) / m.subW))) : [];
+        var height = titleLines.length * m.lineH + (subLines.length ? subLines.length * m.subH + 4 : 0);
+        return { titleLines: titleLines, subLines: subLines, height: height, m: m };
+    }
+
+    // Labels sit beside the last segment of the line, next to the box the
+    // line points into. If that segment is too short, or the label would
+    // touch a box, the other side and then the other segments are tried.
+    function labelPosition(e, pts, boxes, compact) {
+        if (e.labelAt) return { x: e.labelAt[0], y: e.labelAt[1], anchor: "middle" };
+        var w = e.label.length * (compact ? 8 : 7.5) + 2, h = 13;
+        var len = function (p, q) { return Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]); };
+        var segs = [];
+        for (var i = pts.length - 1; i > 0; i--) segs.push([pts[i - 1], pts[i]]);
+        var last = segs[0];
+        segs = segs.slice(1).sort(function (s1, s2) { return len(s2[0], s2[1]) - len(s1[0], s1[1]); });
+        if (len(last[0], last[1]) >= 40) segs.unshift(last); else segs.push(last);
+
+        var candidates = [];
+        segs.forEach(function (sg) {
+            var p = sg[0], q = sg[1];
+            if (Math.abs(p[0] - q[0]) < 1) {
+                var my = (p[1] + q[1]) / 2 + 4;
+                candidates.push({ x: p[0] + 6, y: my, anchor: "start", left: p[0] + 6 });
+                candidates.push({ x: p[0] - 6, y: my, anchor: "end", left: p[0] - 6 - w });
+            } else {
+                var mx = (p[0] + q[0]) / 2;
+                candidates.push({ x: mx, y: p[1] - 6, anchor: "middle", left: mx - w / 2 });
+                candidates.push({ x: mx, y: p[1] + 15, anchor: "middle", left: mx - w / 2 });
+            }
+        });
+        var clear = function (c) {
+            var top = c.y - 11;
+            return !boxes.some(function (n) {
+                return c.left < n.x + n.w + 2 && n.x - 2 < c.left + w && top < n.y + n.h + 2 && n.y - 2 < top + h;
+            });
+        };
+        var pos = candidates.filter(clear)[0] || candidates[0];
+        pos = { x: pos.x, y: pos.y, anchor: pos.anchor };
+        if (e.labelDx) pos.x += e.labelDx;
+        if (e.labelDy) pos.y += e.labelDy;
+        return pos;
+    }
+
     function renderFlow(container, spec) {
         clear(container);
         var svg = svgEl("svg", {
             viewBox: "0 0 " + spec.width + " " + spec.height,
-            class: "mha-flow-svg",
+            class: "mha-flow-svg" + (spec.compact ? " mha-flow-svg--compact" : ""),
             role: "img",
             "aria-label": spec.title
         });
@@ -581,31 +656,29 @@
         var byId = {};
         spec.nodes.forEach(function (n) { byId[n.id] = n; });
 
-        // Edges first so boxes paint over them.
+        // Edges first so boxes paint over them; edge labels last so nothing
+        // paints over them.
+        var labels = [];
         (spec.edges || []).forEach(function (e) {
             var from = byId[e.from], to = byId[e.to];
             if (!from || !to) return;
             var fs = e.fromSide || "b";
             var ts = e.toSide || "t";
-            // `via` gives an explicit orthogonal corridor where the automatic
-            // route would run through an unrelated box.
+            // `fromPt` / `toPt` pin an end of the line to an exact point on a
+            // box edge; `via` gives an explicit orthogonal corridor where the
+            // automatic route would run through an unrelated box.
+            var a = e.fromPt || anchor(from, fs);
+            var b = e.toPt || anchor(to, ts);
             var pts = e.via
-                ? [anchor(from, fs)].concat(e.via).concat([anchor(to, ts)])
-                : routePoints(anchor(from, fs), anchor(to, ts), fs, ts);
+                ? [a].concat(e.via).concat([b])
+                : routePoints(a, b, fs, ts);
             var poly = svgEl("polyline", {
                 points: pts.map(function (p) { return p[0] + "," + p[1]; }).join(" "),
                 class: "mha-flow-edge",
                 "marker-end": "url(#" + spec.id + "-arrow)"
             });
             svg.appendChild(poly);
-            if (e.label) {
-                var mid = pts[Math.floor(pts.length / 2)];
-                var lx = e.labelDx ? mid[0] + e.labelDx : mid[0];
-                var ly = e.labelDy ? mid[1] + e.labelDy : mid[1] - 5;
-                var t = svgEl("text", { x: lx, y: ly, class: "mha-flow-edge-label", "text-anchor": "middle" });
-                t.textContent = e.label;
-                svg.appendChild(t);
-            }
+            if (e.label) labels.push({ e: e, pts: pts });
         });
 
         spec.nodes.forEach(function (n) {
@@ -614,11 +687,10 @@
                 x: n.x, y: n.y, width: n.w, height: n.h, rx: 10, ry: 10, class: "mha-flow-box"
             }));
 
-            var titleLines = wrap(n.title, Math.max(12, Math.floor((n.w - 18) / 6.3)));
-            var subLines = n.sub ? wrap(n.sub, Math.max(12, Math.floor((n.w - 18) / 5.6))) : [];
-            var lineH = 14, subH = 12;
-            var total = titleLines.length * lineH + (subLines.length ? subLines.length * subH + 4 : 0);
-            var startY = n.y + (n.h - total) / 2 + 11;
+            var txt = flowText(spec, n);
+            var titleLines = txt.titleLines, subLines = txt.subLines;
+            var lineH = txt.m.lineH, subH = txt.m.subH;
+            var startY = n.y + (n.h - txt.height) / 2 + lineH * 0.78;
 
             titleLines.forEach(function (line, i) {
                 var t = svgEl("text", {
@@ -646,6 +718,18 @@
             svg.appendChild(g);
         });
 
+        var boxes = spec.nodes.filter(function (n) { return n.kind !== "group"; });
+        labels.forEach(function (l) {
+            var pos = labelPosition(l.e, l.pts, boxes, spec.compact);
+            // Later labels steer around this one too.
+            var lw = l.e.label.length * (spec.compact ? 8 : 7.5) + 2;
+            var left = pos.anchor === "start" ? pos.x : pos.anchor === "end" ? pos.x - lw : pos.x - lw / 2;
+            boxes = boxes.concat([{ x: left, y: pos.y - 11, w: lw, h: 13 }]);
+            var t = svgEl("text", { x: pos.x, y: pos.y, class: "mha-flow-edge-label", "text-anchor": pos.anchor });
+            t.textContent = l.e.label;
+            svg.appendChild(t);
+        });
+
         container.appendChild(svg);
     }
 
@@ -661,58 +745,144 @@
 
     /* ------------------------------------------------- flowchart layouts */
 
+    /* Involuntary admission and detention. The bottom half follows the
+       s 27(1)(d)-(e) combinations: a mentally ill finding at either
+       examination leads to an inquiry; mentally disordered at both leads to
+       the s 31 short detention. */
+    var INVOL_ROUTES = [
+        { id: "r1", title: "Schedule 1", sub: "Doctor's or accredited person's certificate (s 19)", node: "out_sched1" },
+        { id: "r2", title: "Ambulance", sub: "Officer may take the person (s 20)", node: "out_s20" },
+        { id: "r3", title: "Police", sub: "Apprehension without warrant (s 22)", node: "out_s22" },
+        { id: "r4", title: "Order to examine", sub: "Person physically inaccessible (s 23)", node: "out_s23" },
+        { id: "r5", title: "Court order", sub: "Local Court judge, forensic provisions (s 24)", node: "out_s24" },
+        { id: "r6", title: "Transfer", sub: "From another health facility (s 25)", node: "out_s25" },
+        { id: "r7", title: "Written request", sub: "Carer, relative or friend; remote areas (s 26)", node: "out_s26" },
+        { id: "r8", title: "Voluntary patient", sub: "May be held up to 2 h for assessment (s 10)", node: "out_s10" }
+    ];
+
+    var COMBINATIONS_NOTE = "Ill + ill: inquiry. Ill + disordered: inquiry. Disordered + ill: inquiry. Disordered + disordered: mentally disordered detention.";
+
+    function routeNodes(positions) {
+        return INVOL_ROUTES.map(function (r, i) {
+            var p = positions[i];
+            return { id: r.id, kind: "action", x: p[0], y: p[1], w: p[2], h: p[3], title: r.title, sub: r.sub, node: r.node };
+        });
+    }
+
     var FLOW_INVOLUNTARY = {
         id: "flowA",
         title: "Involuntary admission and detention pathway under the Mental Health Act 2007 (NSW)",
-        width: 1200,
-        height: 1290,
+        width: 1225,
+        height: 1440,
         nodes: [
-            { id: "a1", kind: "start", x: 420, y: 10, w: 360, h: 48, title: "Person may need involuntary care" },
-            { id: "a2", kind: "decision", x: 400, y: 96, w: 400, h: 62, title: "Mentally ill person (s 14) or mentally disordered person (s 15)?", node: "d_criteria" },
-            { id: "a3", kind: "stop", x: 30, y: 100, w: 290, h: 54, title: "Neither — detention not available", sub: "s 12(1)(a); see also s 16", node: "out_no_detain" },
-            { id: "a4", kind: "decision", x: 390, y: 196, w: 420, h: 68, title: "Is less restrictive care appropriate and reasonably available?", sub: "s 12(1)(b)", node: "d_less" },
-            { id: "a5", kind: "stop", x: 880, y: 200, w: 290, h: 60, title: "Yes — must not detain", sub: "s 12(2)", node: "out_less_restrictive" },
-            { id: "a6", kind: "action", x: 420, y: 302, w: 360, h: 44, title: "Route to a declared mental health facility (s 18)", node: "d_where" },
-
-            { id: "r1", kind: "action", x: 20, y: 386, w: 180, h: 84, title: "Schedule 1", sub: "Certificate by practitioner or accredited person (s 19)", node: "out_sched1" },
-            { id: "r2", kind: "action", x: 215, y: 386, w: 180, h: 84, title: "Ambulance", sub: "Officer may take the person (s 20)", node: "out_s20" },
-            { id: "r3", kind: "action", x: 410, y: 386, w: 180, h: 84, title: "Police", sub: "Apprehension without warrant (s 22)", node: "out_s22" },
-            { id: "r4", kind: "action", x: 605, y: 386, w: 180, h: 84, title: "Court order", sub: "Examination where inaccessible (s 23)", node: "out_s23" },
-            { id: "r5", kind: "action", x: 800, y: 386, w: 180, h: 84, title: "Transfer", sub: "From another health facility (s 25)", node: "out_s25" },
-            { id: "r6", kind: "action", x: 995, y: 386, w: 185, h: 84, title: "Written request", sub: "Carer, relative or friend (s 26)", node: "out_s26" },
-
-            { id: "a7", kind: "action", x: 410, y: 520, w: 380, h: 44, title: "Detained in a declared mental health facility (s 18)" },
-            { id: "a8", kind: "action", x: 385, y: 600, w: 430, h: 62, title: "Step 1: examine as soon as practicable, within 12 hours", sub: "Authorised medical officer, or s 27A alternative — Form 1", node: "e_first" },
-            { id: "a9", kind: "decision", x: 400, y: 700, w: 400, h: 56, title: "Mentally ill or mentally disordered?" },
-            { id: "a10", kind: "stop", x: 30, y: 700, w: 290, h: 56, title: "No — must release", sub: "ss 12(2), 27(1)(a)", node: "out_must_release" },
-            { id: "a11", kind: "action", x: 385, y: 792, w: 430, h: 62, title: "Step 2: second examination", sub: "Psychiatrist unless step 1 examiner was one — s 27(1)(b)", node: "e_second" },
-            { id: "a12", kind: "decision", x: 415, y: 890, w: 370, h: 52, title: "Findings at the second examination" },
-
-            { id: "a13", kind: "action", x: 25, y: 990, w: 300, h: 76, title: "Neither — third examination by a psychiatrist", sub: "s 27(1)(c); decides release or detention", node: "e_third" },
-            { id: "a14", kind: "caution", x: 355, y: 990, w: 320, h: 76, title: "Both mentally disordered — detain up to 3 days", sub: "Excluding weekends and public holidays; examine every 24 h — s 31", node: "out_md_detention" },
-            { id: "a15", kind: "action", x: 705, y: 990, w: 330, h: 76, title: "Mentally ill — notify the Tribunal", sub: "Assessable person; inquiry as soon as practicable — ss 27(1)(d), 34", node: "out_inquiry_required" },
-
-            { id: "a16", kind: "action", x: 25, y: 1120, w: 300, h: 60, title: "Third examination decides", sub: "Release, mentally disordered detention, or inquiry", node: "e_third" },
-            { id: "a17", kind: "stop", x: 355, y: 1120, w: 320, h: 60, title: "Release when criteria cease", sub: "s 31(4); max 3 admissions per calendar month", node: "out_md_detention" },
-            { id: "a18", kind: "action", x: 705, y: 1120, w: 330, h: 96, title: "Mental health inquiry (s 35)", sub: "Discharge / discharge to carer / community treatment order / involuntary order up to 3 months", node: "out_inquiry_orders" }
-        ],
+            { id: "a1", kind: "start", x: 432, y: 10, w: 360, h: 48, title: "Person may need involuntary care" },
+            { id: "a2", kind: "decision", x: 412, y: 96, w: 400, h: 62, title: "Mentally ill person (s 14) or mentally disordered person (s 15)?", node: "d_criteria" },
+            { id: "a3", kind: "stop", x: 30, y: 100, w: 300, h: 54, title: "Neither — detention not available", sub: "s 12(1)(a); see also s 16", node: "out_no_detain" },
+            { id: "a4", kind: "decision", x: 402, y: 196, w: 420, h: 68, title: "Is less restrictive care appropriate and reasonably available?", sub: "s 12(1)(b)", node: "d_less" },
+            { id: "a5", kind: "stop", x: 895, y: 200, w: 300, h: 60, title: "Yes — must not detain", sub: "s 12(2)", node: "out_less_restrictive" },
+            { id: "a6", kind: "action", x: 432, y: 302, w: 360, h: 44, title: "Route to a declared mental health facility (s 18)", node: "d_where" }
+        ].concat(routeNodes([0, 1, 2, 3, 4, 5, 6, 7].map(function (i) { return [15 + i * 151, 386, 140, 100]; }))).concat([
+            { id: "a7", kind: "action", x: 422, y: 530, w: 380, h: 44, title: "Detained in a declared mental health facility" },
+            { id: "a8", kind: "action", x: 397, y: 610, w: 430, h: 62, title: "Step 1: examine as soon as practicable, within 12 hours", sub: "Authorised medical officer, or s 27A alternative — Form 1", node: "e_first" },
+            { id: "a9", kind: "decision", x: 412, y: 710, w: 400, h: 56, title: "Step 1: mentally ill or mentally disordered?", node: "e_first" },
+            { id: "a10", kind: "stop", x: 30, y: 710, w: 300, h: 56, title: "Neither — must release", sub: "ss 12(2), 27(1)(a)", node: "out_must_release" },
+            { id: "a11", kind: "action", x: 397, y: 804, w: 430, h: 62, title: "Step 2: second examination, as soon as possible", sub: "Psychiatrist unless the step 1 examiner was one — s 27(1)(b) — Form 1", node: "e_second" },
+            { id: "a12", kind: "decision", x: 412, y: 904, w: 400, h: 56, title: "Step 2: mentally ill or mentally disordered?", node: "e_second" },
+            { id: "a13", kind: "action", x: 30, y: 896, w: 300, h: 72, title: "Step 3: third examination by a psychiatrist", sub: "As soon as practicable — s 27(1)(c) — Form 1", node: "out_third_needed" },
+            { id: "a13b", kind: "decision", x: 30, y: 1008, w: 300, h: 56, title: "Step 3: mentally ill or mentally disordered?", node: "e_third" },
+            { id: "a13c", kind: "stop", x: 30, y: 1104, w: 300, h: 60, title: "Neither — must not be detained after step 3", sub: "s 27(1)(d)", node: "out_must_release_third" },
+            { id: "a19", kind: "decision", x: 412, y: 1004, w: 400, h: 64, title: "Mentally ill at step 1, or at step 2 or 3?", sub: "s 27(1)(d)-(e)" },
+            { id: "a15", kind: "action", x: 870, y: 1004, w: 330, h: 64, title: "Yes — assessable person: notify the Tribunal", sub: "Inquiry as soon as practicable — ss 27(1)(d), 34", node: "out_inquiry_required" },
+            { id: "a18", kind: "action", x: 870, y: 1110, w: 330, h: 100, title: "Mental health inquiry (s 35)", sub: "Discharge / discharge to carer / community treatment order / involuntary order up to 3 months", node: "out_inquiry_orders" },
+            { id: "a14", kind: "caution", x: 412, y: 1110, w: 400, h: 76, title: "No — mentally disordered at both: detain as mentally disordered", sub: "Up to 3 days, excluding weekends and public holidays — ss 27(1)(e), 31", node: "out_md_detention" },
+            { id: "a17", kind: "stop", x: 362, y: 1230, w: 230, h: 92, title: "Release as soon as criteria cease", sub: "Examine at least every 24 h — s 31(3)-(4)", node: "out_md_detention" },
+            { id: "a20", kind: "stop", x: 612, y: 1230, w: 250, h: 124, title: "End of 3 days: must be discharged", sub: "To keep detaining: admit as voluntary, or a new Schedule 1 and two new Form 1s", node: "out_md_detention" },
+            { id: "a21", kind: "note", x: 30, y: 1204, w: 300, h: 124, title: "Step 1 + step 2 (or 3)", sub: COMBINATIONS_NOTE },
+            { id: "a22", kind: "note", x: 362, y: 1366, w: 500, h: 50, title: "No more than 3 mentally disordered admissions in a calendar month — s 31(5)" }
+        ]),
         edges: [
             { from: "a1", to: "a2" },
             { from: "a2", to: "a3", fromSide: "l", toSide: "r", label: "No" },
             { from: "a2", to: "a4", label: "Yes" },
             { from: "a4", to: "a5", fromSide: "r", toSide: "l", label: "Yes" },
-            { from: "a4", to: "a6", label: "No" },
-            { from: "a6", to: "r1" }, { from: "a6", to: "r2" }, { from: "a6", to: "r3" },
-            { from: "a6", to: "r4" }, { from: "a6", to: "r5" }, { from: "a6", to: "r6" },
-            { from: "r1", to: "a7" }, { from: "r2", to: "a7" }, { from: "r3", to: "a7" },
-            { from: "r4", to: "a7" }, { from: "r5", to: "a7" }, { from: "r6", to: "a7" },
+            { from: "a4", to: "a6", label: "No" }
+        ].concat(INVOL_ROUTES.map(function (r) { return { from: "a6", to: r.id }; }))
+         .concat(INVOL_ROUTES.map(function (r) { return { from: r.id, to: "a7" }; }))
+         .concat([
             { from: "a7", to: "a8" },
             { from: "a8", to: "a9" },
             { from: "a9", to: "a10", fromSide: "l", toSide: "r", label: "No" },
             { from: "a9", to: "a11", label: "Yes" },
             { from: "a11", to: "a12" },
-            { from: "a12", to: "a13" }, { from: "a12", to: "a14" }, { from: "a12", to: "a15" },
-            { from: "a13", to: "a16" }, { from: "a14", to: "a17" }, { from: "a15", to: "a18" }
+            { from: "a12", to: "a13", fromSide: "l", toSide: "r", label: "No / no opinion" },
+            { from: "a12", to: "a19", label: "Yes" },
+            { from: "a13", to: "a13b" },
+            { from: "a13b", to: "a13c", label: "No" },
+            { from: "a13b", to: "a19", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "a19", to: "a15", fromSide: "r", toSide: "l", label: "Yes" },
+            { from: "a19", to: "a14", label: "No" },
+            { from: "a15", to: "a18" },
+            { from: "a14", to: "a17" },
+            { from: "a14", to: "a20" }
+        ])
+    };
+
+    /* The same pathway stacked into one narrow column for phones: decisions
+       down the left, exits on the right, and the routes as a tappable grid. */
+    var FLOW_INVOLUNTARY_NARROW = {
+        id: "flowA",
+        compact: true,
+        title: FLOW_INVOLUNTARY.title,
+        width: 400,
+        height: 2004,
+        nodes: [
+            { id: "a1", kind: "start", x: 10, y: 10, w: 240, h: 44, title: "Person may need involuntary care" },
+            { id: "a2", kind: "decision", x: 10, y: 84, w: 240, h: 80, title: "Mentally ill (s 14) or mentally disordered (s 15)?", node: "d_criteria" },
+            { id: "a3", kind: "stop", x: 280, y: 84, w: 110, h: 80, title: "Cannot detain", sub: "s 12(1)(a)", node: "out_no_detain" },
+            { id: "a4", kind: "decision", x: 10, y: 194, w: 240, h: 84, title: "Less restrictive care appropriate and reasonably available?", sub: "s 12(1)(b)", node: "d_less" },
+            { id: "a5", kind: "stop", x: 280, y: 194, w: 110, h: 84, title: "Must not detain", sub: "s 12(2)", node: "out_less_restrictive" },
+            { id: "a6", kind: "action", x: 10, y: 308, w: 240, h: 60, title: "Route to a declared facility (s 18) — tap one", node: "d_where" },
+            { id: "grp", kind: "group", x: 10, y: 392, w: 380, h: 412, title: "" }
+        ].concat(routeNodes([0, 1, 2, 3, 4, 5, 6, 7].map(function (i) {
+            return [20 + (i % 2) * 185, 402 + Math.floor(i / 2) * 100, 175, 92];
+        }))).concat([
+            { id: "a7", kind: "action", x: 10, y: 832, w: 240, h: 60, title: "Detained in a declared mental health facility" },
+            { id: "a8", kind: "action", x: 10, y: 920, w: 240, h: 96, title: "Step 1: examine within 12 hours", sub: "Authorised medical officer, or s 27A alternative — Form 1", node: "e_first" },
+            { id: "a9", kind: "decision", x: 10, y: 1044, w: 240, h: 80, title: "Step 1: mentally ill or mentally disordered?", node: "e_first" },
+            { id: "a10", kind: "stop", x: 280, y: 1044, w: 110, h: 80, title: "Must release", sub: "s 27(1)(a)", node: "out_must_release" },
+            { id: "a11", kind: "action", x: 10, y: 1152, w: 240, h: 96, title: "Step 2: second examination", sub: "Psychiatrist unless the step 1 examiner was one — s 27(1)(b)", node: "e_second" },
+            { id: "a12", kind: "decision", x: 10, y: 1276, w: 240, h: 80, title: "Step 2: mentally ill or mentally disordered?", node: "e_second" },
+            { id: "a13", kind: "action", x: 280, y: 1276, w: 110, h: 80, title: "Step 3 exam", sub: "By a psychiatrist, s 27(1)(c)", node: "out_third_needed" },
+            { id: "a13b", kind: "decision", x: 280, y: 1384, w: 110, h: 96, title: "Step 3: ill or disordered?", node: "e_third" },
+            { id: "a13c", kind: "stop", x: 280, y: 1512, w: 110, h: 80, title: "Must release", sub: "s 27(1)(d)", node: "out_must_release_third" },
+            { id: "a19", kind: "decision", x: 10, y: 1620, w: 380, h: 70, title: "Mentally ill at step 1, or at step 2 or 3?", sub: "s 27(1)(d)-(e)" },
+            { id: "a14", kind: "caution", x: 10, y: 1734, w: 185, h: 130, title: "No — disordered at both: detain as mentally disordered", sub: "Up to 3 days excl. weekends and public holidays — s 31", node: "out_md_detention" },
+            { id: "a15", kind: "action", x: 205, y: 1734, w: 185, h: 130, title: "Yes — assessable person: notify the Tribunal", sub: "Inquiry as soon as practicable — ss 27(1)(d), 34", node: "out_inquiry_required" },
+            { id: "a20", kind: "stop", x: 10, y: 1888, w: 185, h: 106, title: "Release when criteria cease; at 3 days must discharge", sub: "Then voluntary, or new Schedule 1 + two Form 1s", node: "out_md_detention" },
+            { id: "a18", kind: "action", x: 205, y: 1888, w: 185, h: 106, title: "Mental health inquiry (s 35)", sub: "Discharge, CTO, or involuntary order up to 3 months", node: "out_inquiry_orders" }
+        ]),
+        edges: [
+            { from: "a1", to: "a2" },
+            { from: "a2", to: "a3", fromSide: "r", toSide: "l", label: "No", labelDy: -4 },
+            { from: "a2", to: "a4", label: "Yes" },
+            { from: "a4", to: "a5", fromSide: "r", toSide: "l", label: "Yes", labelDy: -4 },
+            { from: "a4", to: "a6", label: "No" },
+            { from: "a6", to: "grp", toPt: [130, 392] },
+            { from: "grp", to: "a7", fromPt: [130, 804] },
+            { from: "a7", to: "a8" },
+            { from: "a8", to: "a9" },
+            { from: "a9", to: "a10", fromSide: "r", toSide: "l", label: "No", labelDy: -4 },
+            { from: "a9", to: "a11", label: "Yes" },
+            { from: "a11", to: "a12" },
+            { from: "a12", to: "a13", fromSide: "r", toSide: "l", label: "No", labelDy: -4 },
+            { from: "a12", to: "a19", label: "Yes", toPt: [130, 1620] },
+            { from: "a13", to: "a13b" },
+            { from: "a13b", to: "a13c", label: "No" },
+            { from: "a13b", to: "a19", fromSide: "l", via: [[265, 1432]], toPt: [265, 1620], label: "Yes", labelAt: [240, 1560] },
+            { from: "a19", to: "a14", label: "No" },
+            { from: "a19", to: "a15", label: "Yes" },
+            { from: "a14", to: "a20" },
+            { from: "a15", to: "a18" }
         ]
     };
 
@@ -723,7 +893,7 @@
         height: 900,
         nodes: [
             { id: "b1", kind: "start", x: 520, y: 10, w: 360, h: 46, title: "Adult (18+) refuses medical or surgical treatment" },
-            { id: "b2", kind: "action", x: 500, y: 92, w: 400, h: 52, title: "First: explain clearly, support the decision, try to negotiate", sub: "Excluded categories go to specialist advice", node: "r_negotiate" },
+            { id: "b2", kind: "action", x: 480, y: 88, w: 440, h: 62, title: "First: explain clearly, support the decision, try to negotiate", sub: "Excluded categories go to specialist advice", node: "r_negotiate" },
             { id: "b3", kind: "decision", x: 500, y: 180, w: 400, h: 58, title: "Decision-making capacity for THIS decision, at THIS time?", node: "r_capacity" },
 
             { id: "L1", kind: "decision", x: 190, y: 282, w: 320, h: 52, title: "Has capacity — status under the Act?", node: "r_status_cap" },
@@ -763,7 +933,7 @@
             { from: "R2", to: "R4", label: "Yes" },
             { from: "R2", to: "R5", label: "No" },
             { from: "R3", to: "R6", label: "Yes" },
-            { from: "R3", to: "R9", fromSide: "b", toSide: "t", label: "No", via: [[1210, 470], [1100, 470], [1100, 660], [1030, 660]] },
+            { from: "R3", to: "R9", fromSide: "b", toSide: "t", label: "No", via: [[1210, 470], [1090, 470], [1090, 680], [1030, 680]] },
             { from: "R6", to: "R7", label: "Yes" },
             { from: "R6", to: "R8", label: "No" }
         ]
@@ -783,12 +953,12 @@
             { id: "m1", kind: "decision", x: 30, y: 52, w: 300, h: 76, title: "Does the patient have symptoms needing mental health assessment or treatment?", node: "ed_mha_q1" },
             { id: "m2", kind: "decision", x: 30, y: 160, w: 300, h: 54, title: "Currently detained under the MHA?", node: "ed_mha_detained" },
             { id: "m3", kind: "decision", x: 20, y: 246, w: 470, h: 84, title: "Hallucinations, delusions, serious disorder of thought form, severe mood disturbance, or sustained irrational behaviour indicating any of these?", sub: "s 4 definition of mental illness", node: "ed_mha_symptoms" },
-            { id: "m4", kind: "decision", x: 20, y: 364, w: 225, h: 104, title: "Reasonable grounds that care, treatment or control is necessary to protect the patient or others from serious harm?", sub: "s 14", node: "ed_mi_risk" },
-            { id: "m5", kind: "decision", x: 265, y: 364, w: 225, h: 104, title: "Behaviour so irrational as to justify care, treatment or control for protection from serious PHYSICAL harm?", sub: "s 15", node: "ed_md_risk" },
-            { id: "m6", kind: "decision", x: 20, y: 504, w: 470, h: 68, title: "Other than the MHA, is there a less restrictive avenue, consistent with safe and effective care, appropriate and reasonably available?", sub: "s 12(1)(b)", node: "ed_less_restrictive" },
-            { id: "m7", kind: "action", x: 20, y: 610, w: 225, h: 54, title: "Write a Schedule 1 (s 19)", node: "out_ed_schedule1" },
-            { id: "m8", kind: "stop", x: 265, y: 610, w: 225, h: 54, title: "Do not utilise the MHA", node: "out_ed_no_mha" },
-            { id: "m9", kind: "action", x: 20, y: 700, w: 470, h: 86, title: "Refer for review by an AMO — detained until this occurs, which must be within 12 hours", sub: "Psychiatric treatment may be given, including sedation if necessary, despite refusal. Does NOT authorise other medical treatment.", node: "out_ed_amo_review" },
+            { id: "m4", kind: "decision", x: 20, y: 378, w: 225, h: 104, title: "Reasonable grounds that care, treatment or control is necessary to protect the patient or others from serious harm?", sub: "s 14", node: "ed_mi_risk" },
+            { id: "m5", kind: "decision", x: 265, y: 378, w: 225, h: 104, title: "Behaviour so irrational as to justify care, treatment or control for protection from serious PHYSICAL harm?", sub: "s 15", node: "ed_md_risk" },
+            { id: "m6", kind: "decision", x: 20, y: 518, w: 470, h: 82, title: "Other than the MHA, is there a less restrictive avenue, consistent with safe and effective care, appropriate and reasonably available?", sub: "s 12(1)(b)", node: "ed_less_restrictive" },
+            { id: "m7", kind: "action", x: 20, y: 648, w: 225, h: 54, title: "Write a Schedule 1 (s 19)", node: "out_ed_schedule1" },
+            { id: "m8", kind: "stop", x: 265, y: 648, w: 225, h: 54, title: "Do not utilise the MHA", node: "out_ed_no_mha" },
+            { id: "m9", kind: "action", x: 20, y: 730, w: 470, h: 86, title: "Refer for review by an AMO — detained until this occurs, which must be within 12 hours", sub: "Psychiatric treatment may be given, including sedation if necessary, despite refusal. Does NOT authorise other medical treatment.", node: "out_ed_amo_review" },
 
             /* ---- Guardianship Act lane ---- */
             { id: "g0", kind: "lane", x: 520, y: 150, w: 240, h: 28, title: "GUARDIANSHIP ACT" },
@@ -808,8 +978,8 @@
             { id: "g14", kind: "action", x: 730, y: 816, w: 420, h: 76, title: "Objection may be disregarded (GA s 46(4)); person responsible can consent (GA s 36)", sub: "If no person responsible, some 'minor' treatments may still be given", node: "out_ed_person_responsible" },
 
             /* ---- Public Health Act lane, and the negotiate step ---- */
-            { id: "p4", kind: "action", x: 1250, y: 96, w: 170, h: 84, title: "Attempt to negotiate a mutually agreed decision", sub: "If still objecting, go to the Guardianship Act", node: "ed_negotiate" },
-            { id: "cg", kind: "connector", x: 1250, y: 196, w: 170, h: 40, title: "Go to Guardianship Act", node: "ed_ga_q1" },
+            { id: "p4", kind: "action", x: 1232, y: 90, w: 180, h: 104, title: "Attempt to negotiate a mutually agreed decision", sub: "If still objecting, go to the Guardianship Act", node: "ed_negotiate" },
+            { id: "cg", kind: "connector", x: 1232, y: 214, w: 180, h: 40, title: "Go to Guardianship Act", node: "ed_ga_q1" },
             { id: "p0", kind: "lane", x: 1470, y: 14, w: 250, h: 28, title: "PUBLIC HEALTH ACT" },
             { id: "p1", kind: "decision", x: 1470, y: 52, w: 250, h: 64, title: "Category 4 or 5 illness under the PHA?", node: "ed_pha_q1" },
             { id: "p2", kind: "decision", x: 1470, y: 148, w: 250, h: 90, title: "Behaving in a way that may, as a consequence of their decision, be a risk to public health?", node: "ed_pha_q2" },
@@ -857,7 +1027,8 @@
     };
 
     /* Exposed so the layouts can be checked for overlapping boxes offline. */
-    window.MHA_FLOWS = { involuntary: FLOW_INVOLUNTARY, refusal: FLOW_REFUSAL, ed: FLOW_ED };
+    window.MHA_FLOWS = { involuntary: FLOW_INVOLUNTARY, involuntaryNarrow: FLOW_INVOLUNTARY_NARROW, refusal: FLOW_REFUSAL, ed: FLOW_ED };
+    window.MHA_FLOW_TEXT = flowText;
 
     /* =====================================================================
      * STATIC PANELS
@@ -1226,7 +1397,19 @@
         renderAbout();
 
         var flowA = document.getElementById("mha-flow-involuntary");
-        if (flowA) renderFlow(flowA, FLOW_INVOLUNTARY);
+        if (flowA) {
+            // Phones get the stacked layout; it swaps live if the window is
+            // resized or the phone is turned.
+            var narrow = window.matchMedia ? window.matchMedia("(max-width: 640px)") : null;
+            var drawA = function () {
+                renderFlow(flowA, narrow && narrow.matches ? FLOW_INVOLUNTARY_NARROW : FLOW_INVOLUNTARY);
+            };
+            drawA();
+            if (narrow) {
+                if (narrow.addEventListener) narrow.addEventListener("change", drawA);
+                else if (narrow.addListener) narrow.addListener(drawA);
+            }
+        }
         var flowB = document.getElementById("mha-flow-refusal");
         if (flowB) renderFlow(flowB, FLOW_REFUSAL);
         var flowC = document.getElementById("mha-flow-ed");
