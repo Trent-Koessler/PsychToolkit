@@ -990,3 +990,229 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         }
     });
 })();
+
+/* Cognitive impairment. Card ids match the guided questions in
+   reasoning-flow-cognitive.js. */
+Object.assign(window.REASONING_CONTENT.differentials, {
+    cognitive: {
+        name: "Cognitive impairment",
+        ruleOut: [
+            {
+                id: "delirium",
+                name: "Delirium",
+                clues: "Acute onset, fluctuating attention and awareness. Missed in a third to a half of cases, especially the hypoactive form. Often sits on top of dementia.",
+                tests: "4AT or CAM; find the cause."
+            },
+            {
+                id: "wernicke",
+                name: "Wernicke encephalopathy",
+                clues: "Heavy alcohol use or malnutrition with confusion, ataxia or eye signs. The full triad is the exception: Caine criteria need 2 of dietary deficiency, eye signs, cerebellar signs, altered mental state or mild memory impairment.",
+                tests: "Treat on suspicion with parenteral thiamine; check magnesium."
+            },
+            {
+                id: "medication",
+                name: "Medications",
+                clues: "Anticholinergic burden, benzodiazepines and other sedatives, opioids, antiepileptics, lithium toxicity.",
+                tests: "Medication review and anticholinergic burden score; drug levels where relevant."
+            },
+            {
+                id: "depression",
+                name: "Depression",
+                clues: "Abrupt, datable onset; low mood before the cognitive complaints; 'don't know' answers; complains of memory loss; worse in the morning.",
+                tests: "GDS-15, or the Cornell Scale with carer input; retest cognition after treatment."
+            },
+            {
+                id: "metabolic",
+                name: "Metabolic and nutritional",
+                clues: "Hypothyroidism, B12 or folate deficiency, hyponatraemia, hypercalcaemia, hypo- or hyperglycaemia, liver or kidney disease.",
+                tests: "FBC, EUC, LFT, calcium, glucose, TSH, B12, folate, CRP."
+            },
+            {
+                id: "infection",
+                name: "Infection",
+                clues: "HIV, syphilis; in older adults, any infection can cause delirium.",
+                tests: "HIV and syphilis serology where indicated; urine culture only if symptomatic."
+            },
+            {
+                id: "structural",
+                name: "Structural brain disease",
+                clues: "Stroke, tumour, subdural haematoma (falls, anticoagulation), normal pressure hydrocephalus (gait, incontinence). Young onset or new focal signs need imaging and neurology.",
+                tests: "CT or MRI brain; EEG if seizures or encephalopathy suspected."
+            },
+            {
+                id: "sensory",
+                name: "Hearing, vision and sleep",
+                clues: "Uncorrected hearing or vision loss lowers test scores; sleep apnoea impairs attention and memory.",
+                tests: "Check hearing and vision; STOP-BANG."
+            },
+            {
+                id: "safety",
+                name: "Safety (check for it)",
+                clues: "Elder abuse and neglect, driving, finances, medication management, capacity for current decisions.",
+                tests: "Collateral history; capacity assessment for specific decisions."
+            }
+        ],
+        differentials: [
+            {
+                id: "delirium",
+                code: "ICD-11 6D70",
+                name: "Delirium",
+                dsm: "Delirium",
+                icd: "6D70 Delirium",
+                supports: "Acute onset, disturbed attention and awareness, fluctuating through the day.",
+                keyQuestion: "What was the person like a week ago? Collateral about baseline is the most useful information.",
+                note: "A medical emergency with substantial mortality."
+            },
+            {
+                id: "alcohol",
+                code: "ICD-11 6D84 / 6D72",
+                name: "Alcohol-related brain injury (Wernicke-Korsakoff)",
+                dsm: "Substance/medication-induced major or mild neurocognitive disorder (e.g. alcohol, amnestic-confabulatory type)",
+                icd: "6D84 Dementia due to use of psychoactive substances · 6D72 Amnestic disorder",
+                supports: "Heavy alcohol use; Korsakoff syndrome is mainly an inability to learn new information, often with confabulation.",
+                keyQuestion: "Does it persist beyond intoxication and withdrawal, and is memory affected out of proportion to other domains?",
+                note: "Cognition can improve over months of abstinence and nutrition: don't finalise placement on a short assessment.",
+                check: "Confirm the ICD-11 code 6D84."
+            },
+            {
+                id: "medication",
+                name: "Intoxication, withdrawal or medication effect",
+                dsm: "Substance intoxication or withdrawal; adverse effect of medication",
+                icd: "",
+                supports: "Cognitive effects only while the substance or medication is acting, improving when it is stopped.",
+                keyQuestion: "Does cognition improve when the drug is reduced or stopped?"
+            },
+            {
+                id: "depression",
+                name: "Cognitive impairment due to depression",
+                dsm: "Major depressive disorder (cognitive symptoms); 'pseudodementia' is an older term",
+                icd: "6A70/6A71 Depressive disorder",
+                supports: "Abrupt onset, low mood first, 'don't know' answers, patchy deficits that improve with cues.",
+                keyQuestion: "Did low mood come before the cognitive complaints?",
+                note: "A risk marker for later dementia, not only a mimic: retest cognition after the depression is treated."
+            },
+            {
+                id: "dissociative",
+                name: "Dissociative amnesia or PTSD",
+                dsm: "Dissociative amnesia · Posttraumatic stress disorder",
+                icd: "6B61 Dissociative amnesia · 6B40 PTSD",
+                supports: "Gaps in autobiographical memory, usually around trauma or stress, with learning of new information intact.",
+                keyQuestion: "Can the person learn and retain new information normally?",
+                check: "Confirm the ICD-11 code 6B61."
+            },
+            {
+                id: "alzheimers",
+                code: "ICD-11 6D80",
+                name: "Neurocognitive disorder due to Alzheimer's disease",
+                dsm: "Major or mild neurocognitive disorder due to Alzheimer's disease (probable or possible)",
+                icd: "6D80 Dementia due to Alzheimer disease (6D71 if mild)",
+                supports: "Insidious onset, gradual progression, early and prominent episodic memory loss (rapid forgetting, repeated questions).",
+                keyQuestion: "Is memory the earliest and most prominent problem, steadily worsening without plateaus?",
+                dsmIcd: "DSM-5-TR calls major neurocognitive disorder 'dementia' in ICD-11 (6D8x); mild neurocognitive disorder is 6D71 in both."
+            },
+            {
+                id: "vascular",
+                code: "ICD-11 6D81",
+                name: "Vascular neurocognitive disorder",
+                dsm: "Major or mild vascular neurocognitive disorder",
+                icd: "6D81 Dementia due to cerebrovascular disease",
+                supports: "Onset linked to strokes or stepwise decline; executive dysfunction and slowing more than memory loss; focal signs; imaging evidence of cerebrovascular disease.",
+                keyQuestion: "Is there a temporal link to strokes, or imaging evidence of significant vascular disease?"
+            },
+            {
+                id: "lewy",
+                code: "ICD-11 6D82",
+                name: "Neurocognitive disorder with Lewy bodies",
+                dsm: "Major or mild neurocognitive disorder with Lewy bodies (probable or possible)",
+                icd: "6D82 Dementia due to Lewy body disease",
+                supports: "Core: fluctuating cognition, recurrent well-formed visual hallucinations, parkinsonism starting after the cognitive decline. Suggestive: REM sleep behaviour disorder, severe sensitivity to antipsychotics.",
+                keyQuestion: "Are there fluctuations, visual hallucinations or parkinsonism?",
+                dsmIcd: "DSM-5-TR: probable with 2 core features, or 1 core plus 1 suggestive. The 2017 Lewy body consortium criteria count REM sleep behaviour disorder as a core feature.",
+                note: "Severe antipsychotic sensitivity: avoid antipsychotics where possible."
+            },
+            {
+                id: "ftd",
+                code: "ICD-11 6D83",
+                name: "Frontotemporal neurocognitive disorder",
+                dsm: "Major or mild frontotemporal neurocognitive disorder (behavioural or language variant)",
+                icd: "6D83 Dementia due to frontotemporal lobar degeneration",
+                supports: "Early disinhibition, apathy, loss of empathy, compulsive behaviour or dietary change; or early, prominent language decline. Memory relatively spared early. Often young onset.",
+                keyQuestion: "Did behaviour or language change before memory?",
+                check: "Confirm the ICD-11 code 6D83."
+            },
+            {
+                id: "parkinson",
+                code: "ICD-11 6D85",
+                name: "Neurocognitive disorder due to Parkinson's disease",
+                dsm: "Major or mild neurocognitive disorder due to Parkinson's disease",
+                icd: "6D85 Dementia due to diseases classified elsewhere",
+                supports: "Established Parkinson's disease, with cognitive decline starting at least a year later.",
+                keyQuestion: "Did the parkinsonism start more than a year before the cognitive decline? If not, consider Lewy body disease.",
+                check: "Confirm the ICD-11 code 6D85."
+            },
+            {
+                id: "tbi",
+                code: "ICD-11 6D85",
+                name: "Neurocognitive disorder due to traumatic brain injury",
+                dsm: "Major or mild neurocognitive disorder due to traumatic brain injury",
+                icd: "6D85 Dementia due to diseases classified elsewhere",
+                supports: "Head injury with loss of consciousness, post-traumatic amnesia, disorientation or neurological signs, with decline straight after.",
+                keyQuestion: "Did the decline start immediately after the injury (or once consciousness recovered)?",
+                check: "Confirm the ICD-11 code 6D85."
+            },
+            {
+                id: "other-medical",
+                code: "ICD-11 6D85",
+                name: "Neurocognitive disorder due to another medical condition",
+                dsm: "Major or mild neurocognitive disorder due to HIV, prion disease, Huntington's disease or another medical condition",
+                icd: "6D85 Dementia due to diseases classified elsewhere",
+                supports: "e.g. normal pressure hydrocephalus (gait, incontinence), HIV, neurosyphilis, Huntington's disease, prion disease (rapid, with myoclonus), B12 deficiency, hypothyroidism.",
+                keyQuestion: "Is there a medical condition whose timing and features explain the decline?",
+                check: "Confirm the ICD-11 code 6D85."
+            },
+            {
+                id: "multiple",
+                name: "Neurocognitive disorder due to multiple causes",
+                dsm: "Major or mild neurocognitive disorder due to multiple etiologies",
+                icd: "e.g. 6D80.2 Alzheimer disease, mixed type with cerebrovascular disease",
+                supports: "More than one cause contributing, most often Alzheimer's with vascular disease.",
+                keyQuestion: "Does each cause add something the others don't explain?"
+            },
+            {
+                id: "unspecified",
+                name: "Neurocognitive disorder, cause not yet known",
+                dsm: "Major or mild neurocognitive disorder due to unknown etiology",
+                icd: "6D8Z Dementia, unknown or unspecified cause",
+                supports: "Clear decline, but the cause isn't yet established.",
+                keyQuestion: "What work-up is outstanding: imaging, bloods, neuropsychology, specialist review?",
+                check: "Confirm the ICD-11 code 6D8Z."
+            },
+            {
+                id: "idd",
+                name: "Intellectual developmental disorder",
+                dsm: "Intellectual developmental disorder",
+                icd: "6A00 Disorders of intellectual development",
+                supports: "Lifelong difficulties starting in the developmental period, without decline.",
+                keyQuestion: "Has there been a decline from the person's previous level? If so, a neurocognitive disorder can be added.",
+                check: "Confirm the ICD-11 code 6A00."
+            },
+            {
+                id: "normal",
+                name: "No disorder: normal ageing or subjective decline",
+                dsm: "Age-related cognitive decline (a condition for clinical attention)",
+                icd: "",
+                supports: "Slower processing with normal testing and preserved function.",
+                keyQuestion: "Is testing normal for age and education, and is everyday function unchanged?"
+            },
+            {
+                id: "feigning",
+                code: "ICD-11 QC30 / 6D50",
+                name: "Feigned symptoms (malingering or factitious disorder)",
+                dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+                icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+                supports: "Performance worse than in severe dementia on simple tasks, inconsistent with everyday function, or an external incentive (legal, compensation).",
+                keyQuestion: "Do performance validity tests and everyday function match the test results?"
+            }
+        ]
+    }
+});

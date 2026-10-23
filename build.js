@@ -25,6 +25,7 @@ const FILES = [
     "reasoning-flow-kit.js",
     "reasoning-flow-mood.js",
     "reasoning-flow-anxiety.js",
+    "reasoning-flow-cognitive.js",
     "reasoning-ui.js",
     "mha-data.js",
     "mha.js",

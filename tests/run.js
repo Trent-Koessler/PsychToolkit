@@ -450,8 +450,8 @@ async function testReasoning(browser, baseUrl) {
 
     // Differential: statuses and For text go under "# Differentials:".
     const rule = name => `#oca-reasoning-body select[aria-label="${name} status"]`;
-    await page.selectOption(rule("Delirium"), "Excluded");
-    await page.selectOption(rule("Autoimmune encephalitis"), "Investigating");
+    await page.selectOption(rule("Delirium (rule-out)"), "Excluded");
+    await page.selectOption(rule("Autoimmune encephalitis (rule-out)"), "Investigating");
     await page.selectOption(rule("Substance/medication-induced psychotic disorder"), "Leading");
     await page.selectOption(rule("Schizophreniform disorder"), "Possible");
     await page.selectOption(rule("Delusional disorder"), "Excluded");
@@ -496,7 +496,7 @@ async function testReasoning(browser, baseUrl) {
     await page.click("#oca-undo-btn");
     expect("undo removes formulation", (await note()).includes("Suicide risk formulation:"), false);
     await page.click("#oca-reset-btn");
-    expect("reset clears differential", await page.inputValue(rule("Delirium")), "Not assessed");
+    expect("reset clears differential", await page.inputValue(rule("Delirium (rule-out)")), "Not assessed");
     expect("reset clears chips", await page.$$eval("#oca-reasoning-body label.rz-chip.on", l => l.length), 0);
 
     // The safety plan button opens the template.
@@ -581,7 +581,7 @@ async function testPsychosisFlowScreen(browser, baseUrl) {
     expect("flow: applied leading", await status("Schizophreniform disorder"), "Leading");
     expect("flow: applied possible", await status("Schizophrenia"), "Possible");
     expect("flow: applied excluded", await status("Substance/medication-induced psychotic disorder"), "Excluded");
-    expect("flow: rule-out applied", await status("Delirium"), "Excluded");
+    expect("flow: rule-out applied", await status("Delirium (rule-out)"), "Excluded");
     expect("flow: answers kept after apply", await page.isChecked('#oca-reasoning-body fieldset[data-q="duration"] input[value="1-3m"]'), true);
 
     await page.click("#rz-dx-insert");
@@ -755,6 +755,67 @@ async function testAnxietyCatatoniaScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+// Guided cognitive impairment questions.
+function testCognitiveRules() {
+    const flow = require(path.join(ROOT, "reasoning-flow-cognitive.js")).cognitive;
+    const g = { explained: "decline", delirium: "no", wernicke: "no", rapid: "no", feigned: "no", substance: "no", depression: "no", dissociative: "no" };
+    const major = { independence: "yes", testing: "substantial", lewy: ["none"] };
+    const cases = [
+        ["probable Alzheimer's", { ...g, ...major, domains: ["memory", "language"], course: "gradual", features: ["memory-first"] }, "alzheimers", /Major .*Alzheimer's disease \(probable\).*6D80/],
+        ["mild, possible Alzheimer's", { ...g, ...major, independence: "no", testing: "modest", domains: ["memory"], course: "gradual", features: ["memory-first"] }, "alzheimers", /Mild .*\(possible\).*6D71/],
+        ["mixed Alzheimer's and vascular", { ...g, ...major, domains: ["memory", "executive"], course: "gradual", features: ["memory-first", "vascular"] }, "multiple", /multiple causes/],
+        ["probable Lewy bodies", { ...g, ...major, domains: ["attention"], course: "gradual", features: [], lewy: ["fluctuation", "hallucinations"] }, "lewy", /Lewy bodies \(probable\)/],
+        ["possible Lewy bodies", { ...g, ...major, domains: ["attention"], course: "gradual", features: [], lewy: ["rbd"] }, "lewy", /\(possible\)/],
+        ["Parkinson's disease dementia", { ...g, ...major, domains: ["executive"], course: "gradual", features: ["parkinson"], lewy: ["hallucinations"] }, "parkinson", /Parkinson's disease/],
+        ["frontotemporal", { ...g, ...major, domains: ["executive", "social"], course: "gradual", features: ["ftd-behaviour"] }, "ftd", /behavioural variant/],
+        ["Korsakoff", { ...g, ...major, substance: "yes", subTiming: "persists", amnestic: "yes", domains: ["memory"], course: "other", features: [] }, "alcohol", /Korsakoff/],
+        ["traumatic brain injury", { ...g, ...major, independence: "no", testing: "modest", domains: ["attention"], course: "injury", features: [] }, "tbi", /traumatic brain injury/],
+        ["cause unknown", { ...g, ...major, domains: ["memory"], course: "other", features: [] }, "unspecified", /not yet known/],
+        ["delirium", { ...g, delirium: "yes" }, "delirium", /6D70/],
+        ["depression", { ...g, depression: "yes" }, "depression", /depression/],
+        ["medication effect", { ...g, substance: "yes", subTiming: "acute" }, "medication", /reassess/],
+        ["mild with normal testing", { ...g, independence: "no", testing: "normal" }, "normal", /subjective/],
+        ["lifelong", { explained: "lifelong" }, "idd", /Intellectual developmental disorder/]
+    ];
+    cases.forEach(([name, answers, cardId, label]) => {
+        const r = flow.evaluate(answers);
+        expect(`cognitive flow: ${name}`, r.suggestion && r.suggestion.cardId, cardId);
+        checks++;
+        if (!(r.suggestion && label.test(r.suggestion.label))) failures.push(`cognitive flow: ${name} label: got ${JSON.stringify(r.suggestion && r.suggestion.label)}`);
+    });
+    const mixed = flow.evaluate({ ...g, ...major, domains: ["memory", "executive"], course: "gradual", features: ["memory-first", "vascular"] });
+    expect("cognitive flow: mixed causes listed", mixed.additional, ["alzheimers", "vascular"]);
+    const wernicke = flow.evaluate({ ...g, wernicke: "yes" });
+    expect("cognitive flow: Wernicke urgent", [wernicke.suggestion.cardId, /thiamine/.test(wernicke.urgent)], ["alcohol", true]);
+    const rapid = flow.evaluate({ ...g, rapid: "yes", ...major, domains: ["memory"], course: "other", features: ["prion"] });
+    expectIncludes("cognitive flow: rapid decline urgent", rapid.urgent, "refer urgently");
+}
+
+async function testCognitiveScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "cognitive");
+    await answer("explained", "Decline from a previous level");
+    for (const [q, l] of [["delirium", "No"], ["wernicke", "No"], ["rapid", "No"], ["feigned", "No"], ["substance", "No"], ["depression", "No"], ["dissociative", "No"], ["independence", "Yes"], ["testing", "Substantial"]]) await answer(q, l);
+    await answer("domains", "Learning and memory");
+    await answer("domains", "Executive function");
+    await answer("course", "Insidious onset");
+    await answer("features", "Early, prominent memory loss");
+    await answer("features", "Strokes, focal signs");
+    await answer("lewy", "None");
+    expectIncludes("cognitive screen: suggestion", await page.textContent(".rz-result-title"), "multiple causes");
+    await page.click("#rz-flow-apply");
+    const status = name => page.inputValue(`#oca-reasoning-body select[aria-label="${name} status"]`);
+    expect("cognitive screen: Alzheimer's leading", await status("Neurocognitive disorder due to Alzheimer's disease"), "Leading");
+    expect("cognitive screen: vascular leading", await status("Vascular neurocognitive disorder"), "Leading");
+    expect("cognitive screen: delirium excluded", await status("Delirium"), "Excluded");
+    expect("cognitive screen: delirium rule-out excluded", await status("Delirium (rule-out)"), "Excluded");
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -869,6 +930,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testMoodFlowScreen(browser, baseUrl);
         testAnxietyCatatoniaRules();
         await testAnxietyCatatoniaScreen(browser, baseUrl);
+        testCognitiveRules();
+        await testCognitiveScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

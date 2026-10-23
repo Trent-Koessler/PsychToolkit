@@ -413,7 +413,7 @@
             head.appendChild(statusSelect(RULE_OUT_STATUSES, dx.ruleOut[r.id] || "Not assessed", value => {
                 dx.ruleOut[r.id] = value;
                 update();
-            }, r.name + " status"));
+            }, r.name + " (rule-out) status"));
             row.appendChild(head);
             row.appendChild(el("div", "rz-hint", r.clues));
             row.appendChild(el("div", "rz-hint rz-tests", "Tests: " + r.tests));
