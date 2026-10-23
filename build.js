@@ -22,6 +22,7 @@ const FILES = [
     "note-templates.js",
     "reasoning-content.js",
     "reasoning-flow.js",
+    "reasoning-flow-mood.js",
     "reasoning-ui.js",
     "mha-data.js",
     "mha.js",

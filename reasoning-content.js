@@ -283,3 +283,338 @@ window.REASONING_CONTENT = {
         "Starzer MSK, Nordentoft M, Hjorthøj C. Rates and predictors of conversion to schizophrenia or bipolar disorder following substance-induced psychosis. Am J Psychiatry 2018;175(4):343-50."
     ]
 };
+
+/* Mood presentations. Same shape as the psychosis entry above; card ids are
+   local to each presenting problem and match the guided questions in
+   reasoning-flow-mood.js. */
+Object.assign(window.REASONING_CONTENT.differentials, {
+    depressed: {
+        name: "Depressed mood",
+        ruleOut: [
+            {
+                id: "substance",
+                name: "Substances",
+                clues: "Alcohol (the commonest cause in practice), stimulant withdrawal crash, cannabis, opioids, sedatives. Map use and withdrawal against the timeline.",
+                tests: "UDS, BAL, LFT/GGT, collateral on use; reassess after about a month of abstinence where safe."
+            },
+            {
+                id: "medication",
+                name: "Medications",
+                clues: "Interferon-alpha, corticosteroids, efavirenz, levetiracetam, isotretinoin, hormonal contraceptives, finasteride.",
+                tests: "Medication review, including recent starts and dose changes."
+            },
+            {
+                id: "endocrine",
+                name: "Endocrine",
+                clues: "Hypothyroidism, Cushing's syndrome, Addison's disease, hyperparathyroidism.",
+                tests: "TSH, calcium, glucose; cortisol if indicated."
+            },
+            {
+                id: "neuro",
+                name: "Neurological",
+                clues: "Stroke, Parkinson's disease, multiple sclerosis, Huntington's disease, head injury, dementia. Late first onset raises suspicion.",
+                tests: "Neurological examination, cognitive screen; neuroimaging if signs or late onset."
+            },
+            {
+                id: "sleep",
+                name: "Sleep apnoea",
+                clues: "Snoring, witnessed apnoeas, daytime sleepiness, obesity. Treating it can resolve the low mood.",
+                tests: "STOP-BANG; sleep study."
+            },
+            {
+                id: "other-medical",
+                name: "Other medical causes",
+                clues: "B12 or folate deficiency, anaemia, cancer (e.g. pancreatic), HIV, SLE, chronic pain.",
+                tests: "FBC, UEC, B12, folate; HIV and syphilis serology if indicated."
+            },
+            {
+                id: "delirium",
+                name: "Delirium",
+                clues: "Fluctuating attention and awareness; hypoactive delirium is often mistaken for depression.",
+                tests: "4AT or CAM."
+            },
+            {
+                id: "bipolarity",
+                name: "Past hypomania or mania (check for it)",
+                clues: "Periods of reduced need for sleep, high energy, overspending or risk-taking. Often missed: ask family.",
+                tests: "Collateral history; mood charting."
+            }
+        ],
+        differentials: [
+            {
+                id: "substance-induced",
+                code: "ICD-11 6C4x.70, by substance",
+                name: "Substance/medication-induced depressive disorder",
+                dsm: "Substance/medication-induced depressive disorder",
+                icd: "Substance-induced mood disorder, e.g. 6C40.70 alcohol-induced mood disorder",
+                supports: "Onset during or soon after intoxication, withdrawal or a new medication; improves within weeks of stopping.",
+                keyQuestion: "Did the low mood start before the substance use, or last about a month after stopping?",
+                note: "Induced does not mean benign: suicide risk is high, especially early in abstinence.",
+                check: "Confirm the ICD-11 codes for substances other than alcohol (6C40.70 was confirmed)."
+            },
+            {
+                id: "medical",
+                code: "ICD-11 6E62",
+                name: "Depressive disorder due to another medical condition",
+                dsm: "Depressive disorder due to another medical condition",
+                icd: "6E62 Secondary mood syndrome",
+                supports: "A medical condition that causes depression directly, with matching timing.",
+                keyQuestion: "Is this the direct effect of the illness, or a psychological reaction to it (adjustment disorder)?",
+                check: "Confirm the ICD-11 code 6E62."
+            },
+            {
+                id: "mdd",
+                code: "ICD-11 6A70/6A71",
+                name: "Major depressive disorder",
+                dsm: "Major depressive disorder, single episode or recurrent",
+                icd: "6A70 Single episode or 6A71 Recurrent depressive disorder",
+                supports: "Five or more of nine symptoms (including low mood or loss of interest) for 2 weeks, with impairment; never manic or hypomanic.",
+                keyQuestion: "Has there ever been a hypomanic or manic episode? Ask family as well as the patient.",
+                dsmIcd: "ICD-11 counts hopelessness among the depressive symptoms; DSM-5-TR does not."
+            },
+            {
+                id: "pdd",
+                code: "ICD-11 6A72",
+                name: "Persistent depressive disorder (dysthymia)",
+                dsm: "Persistent depressive disorder",
+                icd: "6A72 Dysthymic disorder",
+                supports: "Low mood more days than not for 2 years or more, never well for more than 2 months at a time.",
+                keyQuestion: "Have full depressive episode criteria been met during those 2 years?",
+                dsmIcd: "DSM-5-TR folds chronic major depression into persistent depressive disorder (and adds major depressive disorder when a full episode occurs). ICD-11 keeps dysthymic disorder for chronic low mood without a full depressive episode in the first 2 years.",
+                check: "Confirm the ICD-11 code 6A72."
+            },
+            {
+                id: "bipolar1",
+                code: "ICD-11 6A60",
+                name: "Bipolar I disorder, current episode depressed",
+                dsm: "Bipolar I disorder",
+                icd: "6A60 Bipolar type I disorder",
+                supports: "At least one manic episode at any time; depressive episodes are common but not required.",
+                keyQuestion: "Has there ever been a week of elevated or irritable mood with increased energy, or an admission for it?"
+            },
+            {
+                id: "bipolar2",
+                code: "ICD-11 6A61",
+                name: "Bipolar II disorder, current episode depressed",
+                dsm: "Bipolar II disorder",
+                icd: "6A61 Bipolar type II disorder",
+                supports: "At least one hypomanic and one major depressive episode, never manic.",
+                keyQuestion: "Was there a period of at least 4 days of elevated mood and energy that others noticed?",
+                dsmIcd: "DSM-5-TR hypomania lasts at least 4 days; ICD-11 says several days."
+            },
+            {
+                id: "other-bipolar",
+                code: "ICD-11 6A6Y",
+                name: "Other specified bipolar disorder",
+                dsm: "Other specified bipolar and related disorder",
+                icd: "6A6Y Other specified bipolar or related disorder",
+                supports: "Depressive episodes with hypomanic periods that are too short (2-3 days) or have too few symptoms.",
+                keyQuestion: "How long did the high periods last, and how many manic symptoms were there?",
+                check: "Confirm the ICD-11 code 6A6Y."
+            },
+            {
+                id: "cyclothymic",
+                code: "ICD-11 6A62",
+                name: "Cyclothymic disorder",
+                dsm: "Cyclothymic disorder",
+                icd: "6A62 Cyclothymic disorder",
+                supports: "2 years or more of many high and low periods that never meet full episode criteria, never well for more than 2 months.",
+                keyQuestion: "Has there ever been a full depressive, hypomanic or manic episode? If so, it isn't cyclothymia.",
+                check: "Confirm the ICD-11 code 6A62."
+            },
+            {
+                id: "pmdd",
+                code: "ICD-11 GA34.41",
+                name: "Premenstrual dysphoric disorder",
+                dsm: "Premenstrual dysphoric disorder",
+                icd: "GA34.41 Premenstrual dysphoric disorder (genitourinary chapter)",
+                supports: "Mood symptoms in the final week before menses that ease within a few days of onset, in most cycles over the past year.",
+                keyQuestion: "Is it confirmed by daily ratings over at least two cycles, and is it more than a premenstrual worsening of another disorder?"
+            },
+            {
+                id: "adjustment",
+                code: "ICD-11 6B43",
+                name: "Adjustment disorder",
+                dsm: "Adjustment disorder, with depressed mood",
+                icd: "6B43 Adjustment disorder",
+                supports: "Distress out of proportion to an identifiable stressor, starting within 3 months, not meeting criteria for another disorder.",
+                keyQuestion: "Are full major depressive episode criteria met? If so, that diagnosis takes priority."
+            },
+            {
+                id: "pgd",
+                code: "ICD-11 6B42",
+                name: "Prolonged grief disorder",
+                dsm: "Prolonged grief disorder",
+                icd: "6B42 Prolonged grief disorder",
+                supports: "Intense yearning for, or preoccupation with, the person who died, most days, beyond cultural norms.",
+                keyQuestion: "How long since the death?",
+                dsmIcd: "DSM-5-TR needs at least 12 months since the death (6 in children); ICD-11 at least 6 months.",
+                note: "Grief does not rule out a major depressive episode: pervasive worthlessness and self-loathing point to depression, while waves of yearning with self-esteem intact point to grief."
+            },
+            {
+                id: "psychotic",
+                name: "Schizoaffective or a primary psychotic disorder",
+                dsm: "Schizoaffective disorder, schizophrenia and related disorders",
+                icd: "6A21 Schizoaffective disorder, 6A20 Schizophrenia",
+                supports: "Delusions or hallucinations that also occur outside mood episodes.",
+                keyQuestion: "Has there been psychosis without mood symptoms? Use the Psychosis questions to work it through."
+            },
+            {
+                id: "other-depressive",
+                code: "ICD-11 6A7Y",
+                name: "Other specified depressive disorder",
+                dsm: "Other specified (or unspecified) depressive disorder",
+                icd: "6A7Y Other specified depressive disorder",
+                supports: "Clinically significant depression that doesn't meet full criteria, e.g. too few symptoms or too short.",
+                keyQuestion: "Which criterion is missing, and might it be met with time?",
+                check: "Confirm the ICD-11 code 6A7Y."
+            },
+            {
+                id: "feigning",
+                code: "ICD-11 QC30 / 6D50",
+                name: "Feigned symptoms (malingering or factitious disorder)",
+                dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+                icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+                supports: "Reported symptoms that don't match observed behaviour, or an external incentive.",
+                keyQuestion: "Do the reported symptoms match what is observed over time and by others?"
+            }
+        ]
+    },
+
+    elevated: {
+        name: "Elevated or irritable mood",
+        ruleOut: [
+            {
+                id: "substance",
+                name: "Substances",
+                clues: "Stimulants (amphetamines, cocaine), high-potency cannabis, anabolic steroids; alcohol or sedative withdrawal.",
+                tests: "UDS, collateral on use."
+            },
+            {
+                id: "medication",
+                name: "Medications",
+                clues: "Corticosteroids, antidepressants (venlafaxine and tricyclics more than SSRIs), levodopa and dopamine agonists, thyroxine, isoniazid, efavirenz, baclofen, ketamine.",
+                tests: "Medication review, including recent starts and dose increases."
+            },
+            {
+                id: "endocrine",
+                name: "Endocrine",
+                clues: "Hyperthyroidism, Cushing's syndrome.",
+                tests: "TSH; cortisol if indicated."
+            },
+            {
+                id: "neuro",
+                name: "Neurological",
+                clues: "Right-sided or frontal stroke, head injury, multiple sclerosis, frontotemporal dementia, Huntington's disease, epilepsy, brain tumour. First episode after about 50, neurological signs or cognitive change are red flags.",
+                tests: "Neurological examination, cognitive screen; MRI and EEG if late onset or neurological features."
+            },
+            {
+                id: "infection",
+                name: "Infection and inflammation",
+                clues: "HIV, neurosyphilis, SLE, autoimmune encephalitis.",
+                tests: "HIV and syphilis serology; further tests with neurology if red flags."
+            },
+            {
+                id: "metabolic",
+                name: "Metabolic",
+                clues: "B12 deficiency, uraemia.",
+                tests: "B12, UEC."
+            },
+            {
+                id: "delirium",
+                name: "Delirium",
+                clues: "Fluctuating attention and awareness, disorientation.",
+                tests: "4AT or CAM."
+            }
+        ],
+        differentials: [
+            {
+                id: "substance-induced",
+                code: "ICD-11 6C4x.70, by substance",
+                name: "Substance/medication-induced bipolar disorder",
+                dsm: "Substance/medication-induced bipolar and related disorder",
+                icd: "Substance-induced mood disorder (with manic symptoms), e.g. 6C46.70 stimulants",
+                supports: "Onset during or soon after intoxication, withdrawal or a new medication; settles once the effect wears off.",
+                keyQuestion: "Did it start before the substance, or last about a month after stopping?",
+                note: "A full episode that starts on an antidepressant or ECT and persists beyond the treatment's effect counts as true mania or hypomania (bipolar I or II).",
+                check: "Confirm the ICD-11 code 6C46.70 (6C40.70 for alcohol was confirmed)."
+            },
+            {
+                id: "medical",
+                code: "ICD-11 6E62",
+                name: "Bipolar and related disorder due to another medical condition",
+                dsm: "Bipolar and related disorder due to another medical condition",
+                icd: "6E62 Secondary mood syndrome",
+                supports: "A medical cause with matching timing; late first onset, neurological signs or cognitive change.",
+                keyQuestion: "Is this the first episode after about age 50, or are there neurological signs?",
+                check: "Confirm the ICD-11 code 6E62."
+            },
+            {
+                id: "bipolar1",
+                code: "ICD-11 6A60",
+                name: "Bipolar I disorder",
+                dsm: "Bipolar I disorder, current episode manic",
+                icd: "6A60 Bipolar type I disorder",
+                supports: "At least 1 week of elevated, expansive or irritable mood with increased energy (any duration if admitted), plus 3 or more manic symptoms (4 if only irritable), with marked impairment, admission or psychosis.",
+                keyQuestion: "Has it caused marked impairment, needed admission, or included psychotic symptoms?",
+                dsmIcd: "DSM-5-TR uses a 'with mixed features' specifier. ICD-11 has a separate mixed episode type."
+            },
+            {
+                id: "bipolar2",
+                code: "ICD-11 6A61",
+                name: "Bipolar II disorder",
+                dsm: "Bipolar II disorder, current episode hypomanic",
+                icd: "6A61 Bipolar type II disorder",
+                supports: "At least 4 days of the same symptoms, noticeable to others, without marked impairment, admission or psychosis, plus at least one major depressive episode.",
+                keyQuestion: "Has there ever been a major depressive episode?",
+                dsmIcd: "DSM-5-TR hypomania lasts at least 4 days; ICD-11 says several days."
+            },
+            {
+                id: "other-bipolar",
+                code: "ICD-11 6A6Y",
+                name: "Other specified bipolar disorder",
+                dsm: "Other specified bipolar and related disorder",
+                icd: "6A6Y Other specified bipolar or related disorder",
+                supports: "Hypomanic periods that are too short or have too few symptoms, or hypomania without any depressive episode.",
+                keyQuestion: "Which criterion is missing: duration, symptom count, or a past depressive episode?",
+                check: "Confirm the ICD-11 code 6A6Y."
+            },
+            {
+                id: "cyclothymic",
+                code: "ICD-11 6A62",
+                name: "Cyclothymic disorder",
+                dsm: "Cyclothymic disorder",
+                icd: "6A62 Cyclothymic disorder",
+                supports: "2 years or more of many high and low periods that never meet full episode criteria, never well for more than 2 months.",
+                keyQuestion: "Has there ever been a full depressive, hypomanic or manic episode?",
+                check: "Confirm the ICD-11 code 6A62."
+            },
+            {
+                id: "psychotic",
+                name: "Schizoaffective or a primary psychotic disorder",
+                dsm: "Schizoaffective disorder, schizophrenia and related disorders",
+                icd: "6A21 Schizoaffective disorder, 6A20 Schizophrenia",
+                supports: "Delusions or hallucinations that also occur outside mood episodes.",
+                keyQuestion: "Has there been psychosis without mood symptoms? Use the Psychosis questions to work it through."
+            },
+            {
+                id: "other",
+                name: "Borderline personality disorder or ADHD",
+                dsm: "Borderline personality disorder · ADHD",
+                icd: "6D11.5 Borderline pattern (personality disorder) · 6A05 ADHD",
+                supports: "Borderline: mood shifts over hours, triggered by relationships, without sustained increased energy. ADHD: lifelong restlessness and distractibility, not episodic.",
+                keyQuestion: "Is this a distinct episode, a change from the person's usual self, lasting days?",
+                check: "Confirm the ICD-11 codes 6D11.5 and 6A05."
+            },
+            {
+                id: "feigning",
+                code: "ICD-11 QC30 / 6D50",
+                name: "Feigned symptoms (malingering or factitious disorder)",
+                dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+                icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+                supports: "Reported symptoms that don't match observed behaviour, or an external incentive.",
+                keyQuestion: "Do the reported symptoms match what is observed over time and by others?"
+            }
+        ]
+    }
+});

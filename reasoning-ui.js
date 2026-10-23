@@ -164,7 +164,20 @@
 
     // The guided questions exist only for presenting problems that have a flow.
     function flowFor(problem) {
-        return problem === "psychosis" ? window.PSYCHOSIS_FLOW : null;
+        return (window.REASONING_FLOWS || {})[problem] || null;
+    }
+
+    // Answers that mean the same in every flow, carried over when one flow
+    // hands the case to another (e.g. mood with psychosis outside episodes).
+    const SHARED_ANSWERS = ["feigned", "substance", "subTiming", "delirium", "cognitive", "medical"];
+    function carryAnswers(from, toProblem) {
+        const to = flowFor(toProblem);
+        const carried = toProblem === "psychosis" ? { explained: "none" } : { explained: "clinical" };
+        SHARED_ANSWERS.forEach(id => {
+            const q = to && to.questions.find(question => question.id === id);
+            if (q && from[id] !== undefined && q.options.some(o => o.value === from[id])) carried[id] = from[id];
+        });
+        return carried;
     }
 
     function flowResult() {
@@ -212,7 +225,7 @@
     // Builds every question once and shows or hides them as answers change,
     // so typing or ticking never loses focus. Answers to questions that become
     // hidden are cleared, so they can't steer the result unseen.
-    function renderFlow(flow, onChange, onApply) {
+    function renderFlow(flow, onChange, onApply, onSwitch) {
         const wrap = el("div", "rz-flow");
         const rows = [];
         const stepHeads = {};
@@ -323,6 +336,11 @@
                 why.appendChild(steps);
                 result.appendChild(why);
             }
+            if (r.switchTo && C.differentials[r.switchTo]) {
+                const go = el("button", "btn-secondary rz-switch", `Open the ${C.differentials[r.switchTo].name} questions`);
+                go.addEventListener("click", () => onSwitch(r.switchTo));
+                result.appendChild(go);
+            }
             apply.disabled = !r.suggestion;
             onChange();
         }
@@ -377,6 +395,9 @@
                 renderDifferential(section);
                 const cards = section.querySelector(".rz-step-cards");
                 if (cards) cards.scrollIntoView({ block: "start" });
+            }, target => {
+                dx = { problem: target, ruleOut: {}, items: {}, flow: carryAnswers(dx.flow, target) };
+                renderDifferential(section);
             }));
         }
 

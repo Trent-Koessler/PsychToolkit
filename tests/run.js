@@ -551,7 +551,9 @@ async function testPsychosisFlowScreen(browser, baseUrl) {
     const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
     page.on("dialog", d => d.accept());
     await page.click('[data-oca-tab="oca-reasoning-panel"]');
-    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip:has-text("${label}")`);
+    // Short answers ("No") must match exactly, or they also hit "Red flags, not yet confirmed".
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
     const visible = q => page.isVisible(`#oca-reasoning-body fieldset[data-q="${q}"]`);
 
     expect("flow: later steps hidden at first", await visible("feigned"), false);
@@ -591,6 +593,89 @@ async function testPsychosisFlowScreen(browser, baseUrl) {
 
     await page.click("#oca-reset-btn");
     expect("flow: reset clears answers", await page.isChecked('#oca-reasoning-body fieldset[data-q="explained"] input[value="none"]'), false);
+    await page.context().close();
+}
+
+// Guided mood questions: expected suggestions for textbook presentations,
+// and the hand-over to the psychosis questions on screen.
+function testMoodFlowRules() {
+    const flows = require(path.join(ROOT, "reasoning-flow-mood.js"));
+    const gates = { explained: "clinical", feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no" };
+    const five = ["mood", "anhedonia", "sleep", "energy", "guilt"];
+    const mde = { depSx: five, twoWeeks: "yes", impair: "yes" };
+    const manic = ["grandiosity", "sleep", "talkative", "racing"];
+    const cases = [
+        ["depressed", "MDD single episode", { ...mde, maniaHistory: "none", previous: "no", psychosis: "none", chronic: "no" }, "mdd", /single episode/],
+        ["depressed", "MDD recurrent, psychotic", { ...mde, maniaHistory: "none", previous: "yes", psychosis: "during", chronic: "no" }, "mdd", /recurrent, with psychotic features/],
+        ["depressed", "bipolar II", { ...mde, maniaHistory: "hypomania" }, "bipolar2", /current episode depressed/],
+        ["depressed", "bipolar I from past mania", { ...mde, maniaHistory: "mania" }, "bipolar1", /6A60/],
+        ["depressed", "PDD with MDD", { ...mde, maniaHistory: "none", chronic: "yes", persistentMDE: "yes" }, "pdd", /persistent major depressive episode, plus major depressive disorder/],
+        ["depressed", "dysthymia", { depSx: ["mood", "energy"], twoWeeks: "yes", impair: "yes", maniaHistory: "none", chronic: "yes" }, "pdd", /pure dysthymic/],
+        ["depressed", "PMDD", { depSx: ["mood"], twoWeeks: "no", impair: "yes", maniaHistory: "none", chronic: "no", pmdd: "yes" }, "pmdd", /GA34.41/],
+        ["depressed", "prolonged grief", { depSx: ["mood"], twoWeeks: "yes", impair: "yes", maniaHistory: "none", chronic: "no", pmdd: "na", grief: "prolonged" }, "pgd", /6B42/],
+        ["depressed", "adjustment", { depSx: ["mood", "sleep"], twoWeeks: "yes", impair: "yes", maniaHistory: "none", chronic: "no", pmdd: "no", grief: "no", stressor: "yes" }, "adjustment", /6B43/],
+        ["depressed", "short hypomania with depression", { ...mde, maniaHistory: "subthreshold" }, "other-bipolar", /short-duration/],
+        ["depressed", "medical cause", { medical: "yes" }, "medical", /due to another medical condition/],
+        ["depressed", "substance during", { substance: "yes", subTiming: "during" }, "substance-induced", /depressive disorder/],
+        ["elevated", "mania", { moodType: "elevated", energy: "yes", manSx: manic, duration: "1w+", severe: "yes", psychosis: "none" }, "bipolar1", /current episode manic/],
+        ["elevated", "mania when admitted early", { moodType: "elevated", energy: "yes", manSx: manic, duration: "admitted", severe: "yes", psychosis: "during" }, "bipolar1", /with psychotic features/],
+        ["elevated", "hypomania, past depression", { moodType: "elevated", energy: "yes", manSx: manic, duration: "4-6d", severe: "no", previous: "yes" }, "bipolar2", /current episode hypomanic/],
+        ["elevated", "hypomania, no depression", { moodType: "elevated", energy: "yes", manSx: manic, duration: "1w+", severe: "no", previous: "no" }, "other-bipolar", /without a major depressive episode/],
+        ["elevated", "irritable needs 4", { moodType: "irritable", energy: "yes", manSx: ["sleep", "talkative", "racing"], duration: "1w+", severe: "yes", previous: "no", chronic: "no" }, "other-bipolar", /6A6Y/],
+        ["elevated", "cyclothymia", { moodType: "elevated", energy: "no", manSx: ["talkative"], duration: "lt4d", severe: "no", previous: "no", chronic: "yes" }, "cyclothymic", /6A62/],
+        ["elevated", "antidepressant-emergent, persisting", { substance: "yes", subTiming: "treatment", moodType: "elevated", energy: "yes", manSx: manic, duration: "1w+", severe: "yes", psychosis: "none" }, "bipolar1", /6A60/],
+        ["elevated", "borderline fits better", { moodType: "irritable", energy: "no", manSx: ["talkative"], duration: "lt4d", severe: "no", previous: "no", chronic: "no", otherFit: ["bpd"] }, "other", /Borderline/]
+    ];
+    cases.forEach(([flow, name, answers, cardId, label]) => {
+        const r = flows[flow].evaluate(Object.assign({}, gates, answers));
+        expect(`mood flow: ${name}`, r.suggestion && r.suggestion.cardId, cardId);
+        checks++;
+        if (!(r.suggestion && label.test(r.suggestion.label))) failures.push(`mood flow: ${name} label: got ${JSON.stringify(r.suggestion && r.suggestion.label)}`);
+    });
+    // Hypomania without knowing about depressive episodes waits rather than guessing unipolar.
+    const waiting = flows.depressed.evaluate(Object.assign({}, gates, { depSx: ["mood", "sleep"], twoWeeks: "yes", impair: "yes", maniaHistory: "hypomania" }));
+    expect("mood flow: waits on bipolar question", [waiting.suggestion, waiting.pending.some(p => p.includes("major depressive episode"))], [null, true]);
+    // Psychosis outside mood episodes hands over to the psychosis questions.
+    const handover = flows.depressed.evaluate(Object.assign({}, gates, mde, { psychosis: "outside" }));
+    expect("mood flow: psychosis hand-over", handover.switchTo, "psychosis");
+    // Too early to tell after a substance: provisional, with the mood disorder as the alternative.
+    const early = flows.elevated.evaluate(Object.assign({}, gates, { substance: "yes", subTiming: "early", moodType: "elevated", energy: "yes", manSx: manic, duration: "1w+", severe: "yes", psychosis: "none" }));
+    expect("mood flow: provisional substance", [early.suggestion.cardId, early.suggestion.provisional, early.alternatives.includes("bipolar1")], ["substance-induced", true, true]);
+}
+
+async function testMoodFlowScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    await page.selectOption("#rz-problem", "depressed");
+    // Short answers ("No") must match exactly, or they also hit "Red flags, not yet confirmed".
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await answer("explained", "Clinically significant low mood");
+    await answer("feigned", "No");
+    await answer("substance", "Yes");
+    await answer("subTiming", "Began before the substance use");
+    await answer("delirium", "No");
+    await answer("cognitive", "No");
+    await answer("medical", "No");
+    for (const s of ["Depressed mood", "Loss of interest", "Sleeping too little", "Fatigue", "Worthlessness"]) await answer("depSx", s);
+    await answer("twoWeeks", "Yes");
+    await answer("impair", "Yes");
+    await answer("maniaHistory", "No");
+    await answer("previous", "Yes");
+    await answer("psychosis", "None");
+    await answer("chronic", "No");
+    expectIncludes("mood screen: suggestion", await page.textContent(".rz-result-title"), "Major depressive disorder, recurrent");
+    await page.click("#rz-flow-apply");
+    expect("mood screen: card applied", await page.inputValue('#oca-reasoning-body select[aria-label="Major depressive disorder status"]'), "Leading");
+    expect("mood screen: bipolar excluded", await page.inputValue('#oca-reasoning-body select[aria-label="Bipolar II disorder, current episode depressed status"]'), "Excluded");
+
+    // Psychosis outside mood episodes: switch to the psychosis questions, keeping shared answers.
+    await answer("psychosis", "Also outside mood episodes");
+    await page.click("text=Open the Psychosis questions");
+    expect("mood screen: switched problem", await page.inputValue("#rz-problem"), "psychosis");
+    expect("mood screen: carried substance answer", await page.isChecked('#oca-reasoning-body fieldset[data-q="subTiming"] input[value="before"]'), true);
+    expect("mood screen: carried medical answer", await page.isChecked('#oca-reasoning-body fieldset[data-q="medical"] input[value="no"]'), true);
     await page.context().close();
 }
 
@@ -704,6 +789,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testReasoning(browser, baseUrl);
         testPsychosisFlowRules();
         await testPsychosisFlowScreen(browser, baseUrl);
+        testMoodFlowRules();
+        await testMoodFlowScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

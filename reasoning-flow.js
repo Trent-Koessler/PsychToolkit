@@ -549,5 +549,6 @@
 
     const api = { questions: QUESTIONS, evaluate, labels: LABELS };
     root.PSYCHOSIS_FLOW = api;
+    root.REASONING_FLOWS = Object.assign(root.REASONING_FLOWS || {}, { psychosis: api });
     if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
