@@ -317,6 +317,144 @@ async function testAppShell(browser, baseUrl) {
     await context.close();
 }
 
+// Note templates: editing and saving, the workspace picker, draft recovery,
+// tDose import and sync (against a stand-in server).
+async function testNoteTemplates(browser, baseUrl) {
+    const context = await browser.newContext({ acceptDownloads: true });
+    const open = async (hash) => {
+        const page = await context.newPage();
+        page.on("pageerror", err => failures.push(`Page error: ${err.message}`));
+        page.on("dialog", d => d.type() === "prompt" ? d.accept(page.promptAnswer || "") : d.accept());
+        await page.addInitScript(() => {
+            sessionStorage.setItem("unlocked", "true");
+            localStorage.setItem("disclaimer_accepted", "1");
+        });
+        await page.goto(baseUrl + "/index.html" + hash);
+        return page;
+    };
+    const optionNames = (page, sel) => page.$$eval(sel + " option", os => os.map(o => o.textContent));
+
+    // The workspace starts from the OCA template.
+    let page = await open("#oca-assessment-page");
+    expectIncludes("workspace starts with OCA template", await page.inputValue("#oca-editor"), "Registrar Initial Review");
+
+    // Edit and save the OCA template; a new tab starts from the edited text.
+    await page.goto(baseUrl + "/index.html#generators-page");
+    await page.click('[data-tab="gen-templates"]');
+    expect("manager opens OCA template", await page.inputValue("#template-select"), "oca");
+    await page.fill("#template-note-out", "EDITED OCA\nMSE\nPhysical examination:");
+    expect("unsaved state shown", await page.textContent("#template-save-state"), "Unsaved changes");
+    await page.click("#template-save-btn");
+    expect("saved state shown", await page.textContent("#template-save-state"), "Saved");
+    expect("edited template marked", (await optionNames(page, "#template-select"))[0].includes("(edited)"), true);
+    await page.close();
+    page = await open("#oca-assessment-page");
+    expect("workspace uses edited template", await page.inputValue("#oca-editor"), "EDITED OCA\nMSE\nPhysical examination:");
+
+    // A new template appears in the workspace picker and loads while the note is untouched.
+    await page.goto(baseUrl + "/index.html#generators-page");
+    await page.click('[data-tab="gen-templates"]');
+    page.promptAnswer = "Ward review";
+    await page.click("#template-new-btn");
+    await page.fill("#template-note-out", "WARD REVIEW BODY");
+    await page.click("#template-save-btn");
+    await page.close();
+    page = await open("#oca-assessment-page");
+    expect("new template in workspace picker", (await optionNames(page, "#oca-template-select")).includes("Ward review"), true);
+    const wardId = await page.$eval("#oca-template-select", s => [...s.options].find(o => o.textContent === "Ward review").value);
+    await page.selectOption("#oca-template-select", wardId);
+    expect("untouched note switches template", await page.inputValue("#oca-editor"), "WARD REVIEW BODY");
+
+    // Typed notes survive a reload in the same tab, and are never put in localStorage.
+    await page.fill("#oca-editor", "Patient note in progress");
+    await page.reload();
+    expect("draft restored after reload", await page.inputValue("#oca-editor"), "Patient note in progress");
+    const inLocal = await page.evaluate(() => Object.values(localStorage).some(v => v.includes("Patient note in progress")));
+    expect("note kept out of localStorage", inLocal, false);
+    // Start from template replaces the note (after the confirm) and Undo brings it back.
+    await page.selectOption("#oca-template-select", "oca");
+    expect("typed note not replaced by picking", await page.inputValue("#oca-editor"), "Patient note in progress");
+    await page.click("#oca-template-load-btn");
+    expect("start from template", await page.inputValue("#oca-editor"), "EDITED OCA\nMSE\nPhysical examination:");
+    await page.click("#oca-undo-btn");
+    expect("undo restores note", await page.inputValue("#oca-editor"), "Patient note in progress");
+
+    // tDose's templates.json imports; importing it twice does not duplicate.
+    await page.goto(baseUrl + "/index.html#generators-page");
+    await page.click('[data-tab="gen-templates"]');
+    const tdose = { name: "templates.json", mimeType: "application/json",
+        buffer: Buffer.from(JSON.stringify({ safety_plan: "SAFETY PLAN BODY", gp_letter: "Dear Dr", worst: 3 })) };
+    await page.setInputFiles("#template-import-file", tdose);
+    await page.setInputFiles("#template-import-file", tdose);
+    const names = await optionNames(page, "#template-select");
+    expect("tDose templates imported once", names.filter(n => n === "Safety Plan").length, 1);
+    expect("tDose letters imported", names.includes("Letters"), true);
+    expect("tDose non-text values skipped", names.length, 4 + 1 + 2);
+
+    // Export, wipe and re-import restores the templates.
+    const [download] = await Promise.all([page.waitForEvent("download"), page.click("#template-export-btn")]);
+    const exported = fs.readFileSync(await download.path(), "utf8");
+    await page.evaluate(() => { localStorage.removeItem("psych_note_templates"); });
+    await page.reload();
+    await page.click('[data-tab="gen-templates"]');
+    expect("templates cleared", (await optionNames(page, "#template-select")).length, 4);
+    await page.setInputFiles("#template-import-file", { name: "export.json", mimeType: "application/json", buffer: Buffer.from(exported) });
+    expect("export round trip", (await optionNames(page, "#template-select")).length, 7);
+
+    // Reset to default brings back the built-in text.
+    await page.selectOption("#template-select", "oca");
+    await page.click("#template-delete-btn");
+    expectIncludes("reset to default", await page.inputValue("#template-note-out"), "Registrar Initial Review");
+
+    // Sync: off without a key; with a key it pulls new templates and pushes local ones.
+    expectIncludes("sync off by default", await page.textContent("#template-sync-status"), "Sync is off");
+    let pushed = null;
+    let authHeader = null;
+    await page.route("**/api/templates", async route => {
+        authHeader = route.request().headers()["authorization"];
+        if (authHeader !== "Bearer right-key") return route.fulfill({ status: 401, body: "{}" });
+        if (route.request().method() === "PUT") {
+            pushed = JSON.parse(route.request().postData());
+            return route.fulfill({ status: 200, contentType: "application/json", body: "{\"ok\":true}" });
+        }
+        return route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ version: 1, records: {
+            "custom-remote": { id: "custom-remote", name: "From other device", body: "REMOTE", updatedAt: Date.now() + 1000, deleted: false }
+        } }) });
+    });
+    await page.click(".tpl-sync-settings summary");
+    await page.fill("#template-sync-key", "wrong-key");
+    await page.click("#template-sync-save-btn");
+    await page.waitForFunction(() => document.getElementById("template-sync-status").dataset.state === "error");
+    expectIncludes("wrong sync key reported", await page.textContent("#template-sync-status"), "not accepted");
+    await page.fill("#template-sync-key", "right-key");
+    await page.click("#template-sync-save-btn");
+    await page.waitForFunction(() => document.getElementById("template-sync-status").dataset.state === "ok");
+    expect("remote template pulled", (await optionNames(page, "#template-select")).includes("From other device"), true);
+    expect("local templates pushed", pushed && Object.values(pushed.records).some(r => r.name === "Safety Plan"), true);
+    expect("sync key kept out of the page", await page.inputValue("#template-sync-key"), "");
+    await context.close();
+}
+
+// The Cloudflare Pages function that stores synced templates.
+async function testTemplateFunction() {
+    const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
+    const { onRequest } = await import("data:text/javascript," + encodeURIComponent(src));
+    const kv = new Map();
+    const env = { SYNC_TOKEN: "secret", TEMPLATES: { get: async k => kv.get(k) || null, put: async (k, v) => { kv.set(k, v); } } };
+    const call = (method, token, body) => onRequest({ env, request: new Request("https://x/api/templates", {
+        method, body, headers: token ? { Authorization: "Bearer " + token } : {}
+    }) });
+    expect("function: no key", (await call("GET")).status, 401);
+    expect("function: wrong key", (await call("GET", "nope")).status, 401);
+    expect("function: not configured", (await onRequest({ env: {}, request: new Request("https://x/api/templates") })).status, 503);
+    expect("function: empty store", (await (await call("GET", "secret")).json()).records, {});
+    const records = { a: { id: "a", name: "A", body: "Body", updatedAt: 5, deleted: false } };
+    expect("function: save", (await call("PUT", "secret", JSON.stringify({ records }))).status, 200);
+    expect("function: read back", (await (await call("GET", "secret")).json()).records, records);
+    expect("function: rejects bad data", (await call("PUT", "secret", JSON.stringify({ records: { a: { name: 1 } } }))).status, 400);
+    expect("function: rejects other methods", (await call("DELETE", "secret")).status, 405);
+}
+
 // Mental Health Act: the pathway maps are drawn without overlapping boxes,
 // clipped text or hidden Yes/No labels (desktop and phone layouts), and the
 // guided pathway does not ask about the first examination twice.
@@ -402,6 +540,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testEctHelper(browser, baseUrl);
         await testAppShell(browser, baseUrl);
         await testMhaPathway(browser, baseUrl);
+        await testNoteTemplates(browser, baseUrl);
+        await testTemplateFunction();
     } finally {
         await browser.close();
         server.close();

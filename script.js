@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.5.2";
+    const APP_VERSION = "1.6.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -2939,7 +2939,8 @@ document.addEventListener("DOMContentLoaded", () => {
         loadFormulationDraft();
     }
 
-    // 3. Clinical Templates Note Selector
+    // 3. Note templates. These are the built-in defaults; the user's own edits
+    // and additions live in templateStore (note-templates.js).
     const templates = {
         addiction: `Addiction Medicine Clinic Consultation Note\n\nBackground:\nLives with:\nFamily:\nWork/Finances:\nGP/Pharmacy:\n\nDrug & Alcohol History:\n- Alcohol:\n- Tobacco:\n- Cannabis:\n- Opioids:\n- Stimulants (Methamphetamine/Cocaine):\n\nPhysical & Lab Checks (LFTs, EUC, BAC):\n\nImpression & Treatment Plan:\n- Pharmacological Support:\n- Psychosocial Referral:\n- Follow-up details:`,
         otp: `OTP Clinic Review Note\n\nCurrent Medication Type: Methadone / Suboxone / Buvidal\nCurrent daily dose: _____mg\nLast injection date (LAI): __/__/____\n\nAdverse effects screening (Constipation, Sedation, Dental check):\nCravings / Withdrawal check:\nUrine Drug Screen (UDS) results:\nSafety & Takeaway storage verified: Yes/No\n\nImpression:\nPlan & Dosing updates:`,
@@ -3246,23 +3247,192 @@ Dr Trent Koessler
 Psychiatry Registrar`
     };
 
+    const templateStore = NoteTemplates.createStore({
+        builtIns: [
+            { id: "oca", name: "OCA template (Registrar Initial Review)", body: templates.oca },
+            { id: "review", name: "Psychiatry Initial / Admission Review", body: templates.review },
+            { id: "addiction", name: "Addiction Medicine Consultation", body: templates.addiction },
+            { id: "otp", name: "OTP Clinic Consultation", body: templates.otp }
+        ],
+        storage: localStorage
+    });
+
     const templateSelect = document.getElementById("template-select");
+    const templateName = document.getElementById("template-name");
     const templateNoteOut = document.getElementById("template-note-out");
+    const templateDeleteBtn = document.getElementById("template-delete-btn");
+    const templateSaveState = document.getElementById("template-save-state");
+    const templateSyncStatus = document.getElementById("template-sync-status");
+    let editingTemplateId = "oca";
+
+    function fillTemplateOptions(select, selectedId) {
+        select.innerHTML = "";
+        templateStore.list().forEach(t => {
+            const option = document.createElement("option");
+            option.value = t.id;
+            option.textContent = t.name + (t.edited ? " (edited)" : "");
+            select.appendChild(option);
+        });
+        select.value = templateStore.get(selectedId) ? selectedId : "oca";
+    }
+
+    function templateIsDirty() {
+        const saved = templateStore.get(editingTemplateId);
+        return !!saved && (templateName.value.trim() !== saved.name || templateNoteOut.value !== saved.body);
+    }
+
+    function showTemplateSaveState(text) {
+        templateSaveState.textContent = text;
+    }
+
+    function openTemplateInEditor(id) {
+        const t = templateStore.get(id) || templateStore.get("oca");
+        editingTemplateId = t.id;
+        templateSelect.value = t.id;
+        templateName.value = t.name;
+        templateNoteOut.value = t.body;
+        templateDeleteBtn.textContent = t.builtIn ? "↺ Reset to default" : "🗑 Delete";
+        templateDeleteBtn.disabled = t.builtIn && !t.edited;
+        showTemplateSaveState("");
+    }
+
+    // Leaving a template with unsaved edits asks first, rather than losing them.
+    function confirmLeaveTemplate() {
+        return !templateIsDirty() || confirm("Discard your unsaved changes to this template?");
+    }
 
     if (templateSelect && templateNoteOut) {
+        fillTemplateOptions(templateSelect, editingTemplateId);
+        openTemplateInEditor(editingTemplateId);
+
         templateSelect.addEventListener("change", () => {
-            const selected = templateSelect.value;
-            templateNoteOut.value = templates[selected] || "";
+            if (!confirmLeaveTemplate()) {
+                templateSelect.value = editingTemplateId;
+                return;
+            }
+            openTemplateInEditor(templateSelect.value);
         });
 
-        document.getElementById("template-copy-btn").addEventListener("click", () => {
-            templateNoteOut.select();
-            copyToClipboard(templateNoteOut.value);
+        [templateName, templateNoteOut].forEach(el => el.addEventListener("input", () => {
+            showTemplateSaveState(templateIsDirty() ? "Unsaved changes" : "");
+        }));
+
+        document.getElementById("template-save-btn").addEventListener("click", () => {
+            try {
+                templateStore.save(editingTemplateId, { name: templateName.value, body: templateNoteOut.value });
+                openTemplateInEditor(editingTemplateId);
+                showTemplateSaveState("Saved");
+            } catch (err) {
+                alert(err.message);
+            }
         });
 
-        // Load default
-        templateNoteOut.value = templates[templateSelect.value] || "";
+        document.getElementById("template-new-btn").addEventListener("click", () => {
+            if (!confirmLeaveTemplate()) return;
+            const name = prompt("Name for the new template:");
+            if (!name || !name.trim()) return;
+            openTemplateInEditor(templateStore.create({ name, body: "" }).id);
+            templateNoteOut.focus();
+        });
+
+        document.getElementById("template-duplicate-btn").addEventListener("click", () => {
+            if (!confirmLeaveTemplate()) return;
+            const source = templateStore.get(editingTemplateId);
+            openTemplateInEditor(templateStore.create({ name: source.name + " (copy)", body: source.body }).id);
+        });
+
+        templateDeleteBtn.addEventListener("click", () => {
+            const t = templateStore.get(editingTemplateId);
+            const question = t.builtIn
+                ? `Reset "${t.name}" to the default text? Your edits to it will be lost.`
+                : `Delete the template "${t.name}"?`;
+            if (!confirm(question)) return;
+            templateStore.remove(t.id);
+            openTemplateInEditor(t.builtIn ? t.id : "oca");
+        });
+
+        document.getElementById("template-copy-btn").addEventListener("click", async () => {
+            const ok = await copyToClipboard(templateNoteOut.value);
+            showTemplateSaveState(ok ? "Copied" : "Could not copy. Select the text and copy it by hand.");
+        });
+
+        document.getElementById("template-export-btn").addEventListener("click", () => {
+            const blob = new Blob([templateStore.exportJson()], { type: "application/json" });
+            const link = document.createElement("a");
+            link.href = URL.createObjectURL(blob);
+            link.download = `PsychToolkit-templates-${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+        });
+
+        const importFile = document.getElementById("template-import-file");
+        document.getElementById("template-import-btn").addEventListener("click", () => {
+            if (confirmLeaveTemplate()) importFile.click();
+        });
+        importFile.addEventListener("change", async () => {
+            const file = importFile.files[0];
+            importFile.value = "";
+            if (!file) return;
+            try {
+                const { added, updated } = templateStore.importJson(await file.text());
+                openTemplateInEditor(editingTemplateId);
+                alert(`Imported templates: ${added} added, ${updated} updated.`);
+            } catch (err) {
+                alert(err.message);
+            }
+        });
     }
+
+    // Template sync (Cloudflare only). The status line explains why it is off
+    // or failing, so a silent failure never looks like a successful sync.
+    const templateSync = NoteTemplates.createSync({
+        store: templateStore,
+        endpoint: "api/templates",
+        storage: localStorage,
+        onStatus: ({ state, message }) => {
+            if (!templateSyncStatus) return;
+            templateSyncStatus.textContent = message;
+            templateSyncStatus.dataset.state = state;
+        }
+    });
+
+    if (templateSyncStatus) {
+        const syncKeyInput = document.getElementById("template-sync-key");
+        document.getElementById("template-sync-now-btn").addEventListener("click", () => templateSync.syncNow());
+        document.getElementById("template-sync-save-btn").addEventListener("click", () => {
+            if (!syncKeyInput.value.trim()) return;
+            templateSync.setKey(syncKeyInput.value.trim());
+            syncKeyInput.value = "";
+            templateSync.syncNow();
+        });
+        document.getElementById("template-sync-off-btn").addEventListener("click", () => {
+            templateSync.setKey("");
+            templateSync.syncNow();
+        });
+        templateSync.syncNow();
+        // Pick up edits made on another device when coming back to this tab.
+        document.addEventListener("visibilitychange", () => {
+            if (document.visibilityState === "visible" && templateSync.enabled()) templateSync.syncNow();
+        });
+        window.addEventListener("online", () => {
+            if (templateSync.enabled()) templateSync.syncNow();
+        });
+    }
+
+    // Keep every template list current when templates change, here or by sync.
+    // The editor is only refreshed if it holds no unsaved edits.
+    templateStore.onChange(() => {
+        if (!templateSelect) return;
+        const dirty = templateIsDirty();
+        fillTemplateOptions(templateSelect, editingTemplateId);
+        if (!dirty) {
+            const keepState = templateSaveState.textContent;
+            openTemplateInEditor(editingTemplateId);
+            showTemplateSaveState(keepState);
+        }
+    });
 
     // =================================================================
     // PHARMACOKINETICS VISUALISER
@@ -3955,10 +4125,69 @@ Psychiatry Registrar`
     // =================================================================
 
     const ocaEditor = document.getElementById("oca-editor");
+    const ocaTemplateSelect = document.getElementById("oca-template-select");
 
-    // 1. Navigation & Default Template Load
-    if (ocaEditor && !ocaEditor.value.trim()) {
-        ocaEditor.value = templates.oca || "";
+    // 1. Starting template and draft recovery.
+    // The note in progress is copied to sessionStorage as it changes, so a
+    // refresh or accidental navigation does not lose it. sessionStorage is wiped
+    // when the tab closes, so the note does not linger on a shared computer.
+    const OCA_DRAFT_KEY = "psych_oca_draft";
+    const OCA_TEMPLATE_PREF = "psych_oca_template";
+    // The template text the note started from. While the note still matches it
+    // there is nothing to lose, so no warnings are needed.
+    let ocaBaseline = "";
+
+    function chosenOcaTemplateId() {
+        try {
+            return localStorage.getItem(OCA_TEMPLATE_PREF) || "oca";
+        } catch (err) {
+            return "oca";
+        }
+    }
+
+    function saveOcaDraft() {
+        if (!ocaEditor) return;
+        try {
+            sessionStorage.setItem(OCA_DRAFT_KEY, JSON.stringify({
+                text: ocaEditor.value,
+                templateId: ocaTemplateSelect ? ocaTemplateSelect.value : "oca"
+            }));
+        } catch (err) {
+            console.warn("Could not keep a draft of the note", err);
+        }
+    }
+
+    function startOcaFromTemplate(id) {
+        const t = templateStore.get(id) || templateStore.get("oca");
+        ocaBaseline = t.body;
+        ocaEditor.value = t.body;
+        saveOcaDraft();
+    }
+
+    function ocaHasUnsavedText() {
+        return !!ocaEditor && ocaEditor.value !== ocaBaseline;
+    }
+
+    if (ocaTemplateSelect) {
+        fillTemplateOptions(ocaTemplateSelect, chosenOcaTemplateId());
+        templateStore.onChange(() => fillTemplateOptions(ocaTemplateSelect, ocaTemplateSelect.value));
+    }
+
+    if (ocaEditor) {
+        let draft = null;
+        try {
+            draft = JSON.parse(sessionStorage.getItem(OCA_DRAFT_KEY) || "null");
+        } catch (err) {
+            draft = null;
+        }
+        if (draft && typeof draft.text === "string") {
+            if (ocaTemplateSelect && templateStore.get(draft.templateId)) ocaTemplateSelect.value = draft.templateId;
+            const t = templateStore.get(draft.templateId) || templateStore.get("oca");
+            ocaBaseline = t.body;
+            ocaEditor.value = draft.text;
+        } else {
+            startOcaFromTemplate(ocaTemplateSelect ? ocaTemplateSelect.value : "oca");
+        }
     }
 
     // 2. Sidebar Tab Toggling
@@ -3998,7 +4227,11 @@ Psychiatry Registrar`
     }
 
     let saveTimeout = null;
+    // True while the connected file holds the current text of the note.
+    let ocaFileSaved = false;
     function triggerAutoSave() {
+        saveOcaDraft();
+        ocaFileSaved = false;
         if (!ocaFileHandle) return;
 
         ocaSaveStatus.className = "oca-save-status-saving";
@@ -4007,7 +4240,9 @@ Psychiatry Registrar`
         if (saveTimeout) clearTimeout(saveTimeout);
         saveTimeout = setTimeout(async () => {
             if (!ocaFileHandle) return;
-            const success = await writeToFile(ocaFileHandle, ocaEditor.value);
+            const text = ocaEditor.value;
+            const success = await writeToFile(ocaFileHandle, text);
+            if (success && text === ocaEditor.value) ocaFileSaved = true;
             if (success) {
                 ocaSaveStatus.className = "oca-save-status-success";
                 ocaStatusText.textContent = "Auto-saved";
@@ -4089,8 +4324,10 @@ Psychiatry Registrar`
                     ocaUndoSnapshot = ocaEditor.value;
                     ocaUndoBtn.disabled = false;
                     ocaEditor.value = contents;
+                    saveOcaDraft();
                     // Re-use this handle for auto-saving too
                     ocaFileHandle = fileHandle;
+                    ocaFileSaved = true;
                     ocaSaveStatus.className = "oca-save-status-success";
                     ocaStatusText.textContent = `Loaded: ${file.name}`;
                 }
@@ -4124,6 +4361,63 @@ Psychiatry Registrar`
 
     if (ocaEditor) {
         ocaEditor.addEventListener("input", triggerAutoSave);
+    }
+
+    // Warn before the tab is closed or the site left with a note that exists
+    // only on screen (not in a connected file). The browser shows its own wording.
+    window.addEventListener("beforeunload", (e) => {
+        saveOcaDraft();
+        if (ocaHasUnsavedText() && !(ocaFileHandle && ocaFileSaved)) {
+            e.preventDefault();
+            e.returnValue = "";
+        }
+    });
+
+    // Choosing a template loads it straight away while the note is untouched;
+    // once something has been written, "Start from template" asks first.
+    function loadOcaTemplateWithConfirm(id) {
+        const t = templateStore.get(id);
+        if (!t || !ocaEditor) return;
+        if (ocaHasUnsavedText() &&
+            !confirm(`Replace the current note with "${t.name}"? You can use Undo to get the note back.`)) return;
+        saveUndoSnapshot();
+        startOcaFromTemplate(id);
+        triggerAutoSave();
+    }
+
+    if (ocaTemplateSelect) {
+        ocaTemplateSelect.addEventListener("change", () => {
+            try {
+                localStorage.setItem(OCA_TEMPLATE_PREF, ocaTemplateSelect.value);
+            } catch (err) { /* the choice just will not be remembered */ }
+            if (!ocaHasUnsavedText()) loadOcaTemplateWithConfirm(ocaTemplateSelect.value);
+            else saveOcaDraft();
+        });
+        document.getElementById("oca-template-load-btn").addEventListener("click", () => {
+            loadOcaTemplateWithConfirm(ocaTemplateSelect.value);
+        });
+        document.getElementById("oca-template-edit-btn").addEventListener("click", () => {
+            showPage("generators-page");
+            const tab = document.querySelector('#generators-page .tab-button[data-tab="gen-templates"]');
+            if (tab) tab.click();
+            if (confirmLeaveTemplate()) openTemplateInEditor(ocaTemplateSelect.value);
+        });
+    }
+
+    const templateUseBtn = document.getElementById("template-use-btn");
+    if (templateUseBtn && ocaTemplateSelect) {
+        templateUseBtn.addEventListener("click", () => {
+            if (templateIsDirty()) {
+                showTemplateSaveState("Save the template first.");
+                return;
+            }
+            ocaTemplateSelect.value = editingTemplateId;
+            try {
+                localStorage.setItem(OCA_TEMPLATE_PREF, editingTemplateId);
+            } catch (err) { /* the choice just will not be remembered */ }
+            showPage("oca-assessment-page");
+            loadOcaTemplateWithConfirm(editingTemplateId);
+        });
     }
 
     // Session Timer
@@ -5284,7 +5578,7 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 ocaSaveStatus.className = "oca-save-status-idle";
                 ocaStatusText.textContent = "Not connected (Auto-save offline)";
 
-                if (ocaEditor) ocaEditor.value = templates.oca || "";
+                if (ocaEditor) startOcaFromTemplate(ocaTemplateSelect ? ocaTemplateSelect.value : "oca");
 
                 // Reset HCR-20 checkboxes
                 ocaHcrInputIds.forEach(id => {

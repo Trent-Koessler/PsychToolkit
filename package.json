@@ -1,8 +1,9 @@
 {
   "name": "psychtoolkit",
   "private": true,
-  "description": "Automated checks for the PsychToolkit calculators. The site itself needs no build step.",
+  "description": "Automated checks for PsychToolkit, and the build step that prepares the site for Cloudflare Pages (npm run build).",
   "scripts": {
+    "build": "node build.js",
     "test": "node tests/run.js"
   },
   "devDependencies": {

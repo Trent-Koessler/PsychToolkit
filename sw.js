@@ -2,7 +2,7 @@
 // release evicts the previous cache. This app ships clinical content (doses,
 // thresholds, monitoring advice), so a stale cached copy is a safety problem —
 // see the fetch strategy below.
-const APP_VERSION = "1.5.2";
+const APP_VERSION = "1.6.0";
 const CACHE_NAME = `psychtoolkit-cache-v${APP_VERSION}`;
 
 // The app shell. Kept in sync with the assets index.html actually references.
@@ -15,6 +15,7 @@ const ASSETS = [
   "./mha.js",
   "./mha-ui.js",
   "./ect.js",
+  "./note-templates.js",
   "./vendor/chart.umd.js",
   "./manifest.json",
   "./icons/icon.svg",
@@ -98,6 +99,9 @@ async function cacheFirst(request) {
 // Fetch Event
 self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
+  // Template sync must always reach the server; a cached reply would hide
+  // edits made on other devices.
+  if (new URL(e.request.url).pathname.includes("/api/")) return;
 
   e.respondWith(
     isAppShell(e.request) ? networkFirst(e.request) : cacheFirst(e.request)
