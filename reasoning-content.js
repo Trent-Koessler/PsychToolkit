@@ -1216,3 +1216,288 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         ]
     }
 });
+
+/* Problematic substance use, and suicidal, self-harm or aggressive behaviour.
+   Card ids match reasoning-flow-substance.js and reasoning-flow-risk.js. */
+(function () {
+    const feigning = {
+        id: "feigning",
+        code: "ICD-11 QC30 / 6D50",
+        name: "Feigned symptoms (malingering or factitious disorder)",
+        dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+        icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+        supports: "Symptoms or behaviour that don't match observation, or an external incentive (drugs, prescriptions, housing, avoiding charges).",
+        keyQuestion: "Do the reported symptoms match what is observed over time and by others?"
+    };
+
+    Object.assign(window.REASONING_CONTENT.differentials, {
+        substance: {
+            name: "Problematic substance use",
+            ruleOut: [
+                {
+                    id: "withdrawal",
+                    name: "Withdrawal risk (check for it)",
+                    clues: "Time of last use, past withdrawal seizures or delirium tremens. Alcohol and sedative withdrawal can be dangerous; opioid withdrawal is rarely dangerous itself.",
+                    tests: "CIWA-Ar or AWS (alcohol), COWS (opioids); breathalyser; thiamine before glucose in heavy drinkers."
+                },
+                {
+                    id: "overdose",
+                    name: "Overdose risk (check for it)",
+                    clues: "Reduced tolerance after detox, prison release or discharge; mixing opioids, benzodiazepines, alcohol or sedating medicines.",
+                    tests: "Naloxone and overdose education."
+                },
+                {
+                    id: "medical",
+                    name: "Physical health",
+                    clues: "Liver disease, blood-borne viruses, injecting complications, nutrition, head injury.",
+                    tests: "LFT, GGT, MCV, CDT if available; HIV, hepatitis B and C serology; injection site check."
+                },
+                {
+                    id: "mental",
+                    name: "Co-occurring mental health problems",
+                    clues: "Depression, anxiety, PTSD, psychosis, ADHD and personality disorders are common alongside substance use.",
+                    tests: "Screen both ways (e.g. K10, PHQ-9); map symptom onset against use and abstinence."
+                },
+                {
+                    id: "safety",
+                    name: "Safety (check for it)",
+                    clues: "Driving, dependent children, pregnancy, domestic violence, suicide risk (higher with intoxication).",
+                    tests: "βhCG where relevant; child safety and driving questions."
+                },
+                {
+                    id: "screen",
+                    name: "Drug screen",
+                    clues: "Confirms recent use, including substances not disclosed.",
+                    tests: "UDS where it changes management; confirmatory testing for medicolegal use."
+                }
+            ],
+            differentials: [
+                {
+                    id: "sud",
+                    name: "Substance use disorder",
+                    dsm: "[Substance] use disorder, mild (2-3 criteria), moderate (4-5) or severe (6 or more), within 12 months",
+                    icd: "6C4x.2 dependence, or 6C4x.1 harmful pattern of use, by substance",
+                    supports: "A problematic pattern of use with impaired control, social impairment, risky use, or tolerance and withdrawal.",
+                    keyQuestion: "Which of the 11 criteria have been present in the same 12 months?",
+                    dsmIcd: "DSM-5-TR has one disorder graded by the number of criteria. ICD-11 separates dependence (impaired control, increasing precedence over other activities, physiological features) from a harmful pattern of use (use that has caused harm, without dependence).",
+                    check: "Confirm the ICD-11 dependence threshold (two or more of the three central features) and the substance codes other than alcohol (6C40)."
+                },
+                {
+                    id: "intoxication",
+                    name: "Intoxication or withdrawal only",
+                    dsm: "Substance intoxication or withdrawal",
+                    icd: "6C4x.3 intoxication or 6C4x.4 withdrawal, by substance",
+                    supports: "Problems limited to an episode of intoxication or withdrawal, without a pattern of use that meets criteria.",
+                    keyQuestion: "Is there a pattern over 12 months, or a single episode?",
+                    dsmIcd: "ICD-11 can also code a single 'episode of harmful use' (6C4x.0).",
+                    check: "Confirm the ICD-11 intoxication and withdrawal subcodes (.3 and .4)."
+                },
+                {
+                    id: "induced",
+                    name: "Substance-induced mental disorder",
+                    dsm: "Substance/medication-induced psychotic, mood, anxiety, sleep or neurocognitive disorder",
+                    icd: "e.g. 6C46.6 stimulant-induced psychotic disorder, 6C40.70 alcohol-induced mood disorder",
+                    supports: "Psychiatric symptoms that predominate and need attention in their own right, during or soon after use.",
+                    keyQuestion: "Did the symptoms start before the use, or persist about a month after stopping?"
+                },
+                {
+                    id: "independent",
+                    name: "Co-occurring independent mental disorder",
+                    dsm: "Any independent mental disorder diagnosed alongside the use disorder",
+                    icd: "",
+                    supports: "Symptoms that preceded the use, persist through about a month of abstinence, or occur in non-using periods.",
+                    keyQuestion: "What were symptoms like during the longest period without use?",
+                    note: "Co-occurring problems are the expectation: treat both together, and don't make mental health care conditional on abstinence."
+                },
+                {
+                    id: "gambling",
+                    code: "ICD-11 6C50",
+                    name: "Gambling disorder",
+                    dsm: "Gambling disorder (4 or more of 9 criteria in 12 months)",
+                    icd: "6C50 Gambling disorder",
+                    supports: "Impaired control over gambling, increasing priority over other activities, and continuing despite harm (e.g. chasing losses, lying, borrowing).",
+                    keyQuestion: "Has gambling only happened during manic episodes? If so, it isn't gambling disorder.",
+                    note: "Suicide risk is markedly raised, especially with debt and legal problems."
+                },
+                {
+                    id: "no-disorder",
+                    name: "Use without a disorder",
+                    dsm: "No disorder (hazardous use may still warrant brief intervention)",
+                    icd: "QE10 Hazardous alcohol use (a factor influencing health, not a disorder)",
+                    supports: "Use without impaired control, harm or distress.",
+                    keyQuestion: "Is there any harm, risk or loss of control?",
+                    check: "Confirm the ICD-11 code QE10 and its equivalents for other substances."
+                },
+                feigning
+            ]
+        },
+
+        risk: {
+            name: "Suicidal, self-harm or aggressive behaviour",
+            ruleOut: [
+                {
+                    id: "danger",
+                    name: "Immediate danger (check for it)",
+                    clues: "Ongoing intent with access to means, an interrupted attempt, a weapon, or active violence.",
+                    tests: "Safety first: the person doesn't leave unaccompanied while this is unresolved; call for help early."
+                },
+                {
+                    id: "medical",
+                    name: "Medical causes of agitation",
+                    clues: "Hypoglycaemia, hypoxia, sepsis, head injury; hyperthermia with agitation (serotonin toxicity, NMS, stimulant toxicity). Pain, urinary retention or constipation in people who can't say.",
+                    tests: "BGL in everyone; vital signs and temperature; neurological examination."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "Fluctuating attention and awareness, especially in older or medically unwell people, or a first episode of aggression with no psychiatric history.",
+                    tests: "4AT or CAM."
+                },
+                {
+                    id: "substance",
+                    name: "Intoxication or withdrawal",
+                    clues: "Stimulant intoxication (dilated pupils, hypertension, paranoia); alcohol or benzodiazepine withdrawal (tremor, sweats); nicotine withdrawal drives much ward agitation.",
+                    tests: "Breathalyser, UDS, timing of last use; offer nicotine replacement."
+                },
+                {
+                    id: "akathisia",
+                    name: "Akathisia",
+                    clues: "Restlessness and agitation after starting or increasing an antipsychotic or antidepressant.",
+                    tests: "Medication review; giving more of the drug makes it worse."
+                },
+                {
+                    id: "overdose",
+                    name: "Overdose or self-poisoning",
+                    clues: "Any overdose, whatever the person says they took.",
+                    tests: "Paracetamol and salicylate levels, EUC, LFT, ECG, drug levels where relevant."
+                },
+                {
+                    id: "safeguarding",
+                    name: "Safeguarding (check for it)",
+                    clues: "Dependent children, domestic and family violence, named potential victims.",
+                    tests: "Collateral history; child protection and duty-to-warn obligations under local policy."
+                }
+            ],
+            differentials: [
+                {
+                    id: "psychotic",
+                    name: "Psychotic disorder",
+                    dsm: "e.g. schizophrenia, schizoaffective, or a mood disorder with psychotic features",
+                    icd: "6A20-6A2Z primary psychotic disorders",
+                    supports: "Behaviour driven by command hallucinations, persecutory or nihilistic delusions.",
+                    keyQuestion: "Is the behaviour a response to delusions or hallucinations? Use the Psychosis questions."
+                },
+                {
+                    id: "depression",
+                    name: "Depressive disorder",
+                    dsm: "Major depressive disorder, persistent depressive disorder, or bipolar depression",
+                    icd: "6A70/6A71, 6A72, 6A60/6A61",
+                    supports: "Hopelessness, worthlessness, guilt, insomnia and agitation during a depressive episode.",
+                    keyQuestion: "Is there a current depressive episode? Use the Depressed mood questions."
+                },
+                {
+                    id: "mania",
+                    name: "Manic, hypomanic or mixed episode",
+                    dsm: "Bipolar I or II disorder (mixed features carry high suicide risk)",
+                    icd: "6A60/6A61",
+                    supports: "Irritability, disinhibition and impulsivity during an elevated or mixed episode.",
+                    keyQuestion: "Is there an elevated, irritable or mixed episode? Use the Elevated mood questions."
+                },
+                {
+                    id: "substance",
+                    name: "Substance use disorder or intoxication",
+                    dsm: "Substance intoxication or withdrawal; substance use disorder",
+                    icd: "6C40-6C4Z by substance",
+                    supports: "Behaviour during intoxication or withdrawal; aggression to obtain drugs or money.",
+                    keyQuestion: "Was the person intoxicated or withdrawing? Reassess when sober. Use the Substance use questions."
+                },
+                {
+                    id: "ptsd",
+                    code: "ICD-11 6B40",
+                    name: "Post-traumatic stress disorder",
+                    dsm: "Posttraumatic stress disorder",
+                    icd: "6B40 PTSD · 6B41 Complex PTSD",
+                    supports: "Reckless or self-destructive behaviour, irritability and outbursts, with re-experiencing and hyperarousal after trauma.",
+                    keyQuestion: "Is the behaviour tied to trauma reminders or hyperarousal?",
+                    check: "Confirm the ICD-11 codes 6B40 and 6B41."
+                },
+                {
+                    id: "bpd",
+                    code: "ICD-11 6D11.5",
+                    name: "Borderline personality disorder",
+                    dsm: "Borderline personality disorder (5 or more of 9 criteria)",
+                    icd: "Personality disorder (6D10, mild, moderate or severe) with borderline pattern (6D11.5)",
+                    supports: "Self-harm to relieve distress, emptiness or dissociation; unstable relationships and self-image; intense anger; impulsivity.",
+                    keyQuestion: "Is this a long-standing pattern since adolescence or early adulthood, across situations?",
+                    dsmIcd: "ICD-11 replaces personality disorder types with a severity rating plus trait domains; 'borderline pattern' is an optional qualifier.",
+                    check: "Confirm the ICD-11 codes 6D10 and 6D11.5."
+                },
+                {
+                    id: "aspd",
+                    code: "ICD-11 6D11.2",
+                    name: "Antisocial personality disorder",
+                    dsm: "Antisocial personality disorder (age 18 or over, with conduct disorder before 15)",
+                    icd: "Personality disorder (6D10) with prominent dissociality (6D11.2)",
+                    supports: "Pervasive disregard for others' rights since adolescence: deceit, impulsivity, aggression, recklessness, lack of remorse.",
+                    keyQuestion: "Were there conduct problems before age 15?",
+                    dsmIcd: "ICD-11 has no antisocial type: it codes personality disorder severity with a dissociality trait.",
+                    check: "Confirm the ICD-11 code 6D11.2."
+                },
+                {
+                    id: "ied",
+                    code: "ICD-11 6C73",
+                    name: "Intermittent explosive disorder",
+                    dsm: "Intermittent explosive disorder",
+                    icd: "6C73 Intermittent explosive disorder",
+                    supports: "Recurrent impulsive outbursts out of proportion to provocation, not premeditated, with distress or consequences afterwards.",
+                    keyQuestion: "Are the outbursts better explained by another disorder (mood, psychosis, personality, substance)?"
+                },
+                {
+                    id: "neurodevelopmental",
+                    name: "Neurodevelopmental condition",
+                    dsm: "Autism, intellectual developmental disorder, ADHD",
+                    icd: "6A02 Autism spectrum disorder · 6A00 Intellectual development · 6A05 ADHD",
+                    supports: "Self-injury or aggression when overwhelmed, in pain, or unable to communicate; impulsive aggression in ADHD.",
+                    keyQuestion: "What is the behaviour communicating? Look for pain, sensory overload and changes in routine.",
+                    check: "Confirm the ICD-11 codes 6A02, 6A00 and 6A05."
+                },
+                {
+                    id: "bfrb",
+                    name: "Body-focused repetitive behaviour",
+                    dsm: "Trichotillomania · Excoriation (skin-picking) disorder",
+                    icd: "6B25.0 Trichotillomania · 6B25.1 Excoriation disorder",
+                    supports: "Repeated hair-pulling or skin-picking causing damage, with attempts to stop.",
+                    keyQuestion: "Is the aim to relieve tension or an urge, rather than to hurt?",
+                    check: "Confirm the ICD-11 codes 6B25.0 and 6B25.1."
+                },
+                {
+                    id: "medical",
+                    name: "Delirium or another medical cause",
+                    dsm: "Delirium; personality change due to another medical condition; neurocognitive disorder with behavioural disturbance",
+                    icd: "6D70 Delirium · 6E68 Secondary personality change",
+                    supports: "New aggression or self-harm with fluctuating awareness, head injury, cognitive decline or medical illness.",
+                    keyQuestion: "Is this a change from the person's usual self, with a medical explanation?",
+                    check: "Confirm the ICD-11 code 6E68."
+                },
+                {
+                    id: "adjustment",
+                    code: "ICD-11 6B43",
+                    name: "Adjustment disorder",
+                    dsm: "Adjustment disorder (with disturbance of conduct, or with mixed features)",
+                    icd: "6B43 Adjustment disorder",
+                    supports: "A response to a recent identifiable stressor, not meeting criteria for another disorder.",
+                    keyQuestion: "Are criteria met for another disorder? If so, that takes priority."
+                },
+                {
+                    id: "none",
+                    name: "No mental disorder",
+                    dsm: "Adult antisocial behaviour; current suicidal behaviour or non-suicidal self-injury (recorded as conditions for clinical attention)",
+                    icd: "",
+                    supports: "Planned, instrumental aggression for gain or revenge, or self-harm in a crisis, without a mental disorder.",
+                    keyQuestion: "Has a mental disorder been carefully excluded, including with collateral history?"
+                },
+                feigning
+            ]
+        }
+    });
+})();

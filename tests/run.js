@@ -816,6 +816,70 @@ async function testCognitiveScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+// Guided substance use and risk behaviour questions.
+function testSubstanceRiskRules() {
+    const S = require(path.join(ROOT, "reasoning-flow-substance.js")).substance;
+    const R = require(path.join(ROOT, "reasoning-flow-risk.js")).risk;
+    const base = { explained: "pattern", withdrawalNow: "no", overdose: "no", feigned: "no", continuous: "continuous", remission: "current", setting: ["none"], induced: ["none"], cooccurring: ["none"] };
+    const label = (name, r, re) => { checks++; if (!(r.suggestion && re.test(r.suggestion.label))) failures.push(`${name}: got ${JSON.stringify(r.suggestion && r.suggestion.label)}`); };
+
+    let r = S.evaluate({ ...base, substance: "alcohol", criteria: ["larger", "cutdown", "craving", "time", "givenup", "despite", "tolerance", "withdrawal"] });
+    label("substance flow: severe alcohol, dependence", r, /Alcohol use disorder, severe \(ICD-11 6C40.2 Alcohol dependence\)/);
+    r = S.evaluate({ ...base, substance: "cannabis", criteria: ["roles", "hazard"] });
+    label("substance flow: mild, harmful pattern", r, /Cannabis use disorder, mild \(ICD-11 6C41.1 Harmful pattern/);
+    r = S.evaluate({ ...base, substance: "opioids", prescribed: "yes", criteria: ["tolerance", "withdrawal"] });
+    expect("substance flow: prescribed tolerance not counted", r.suggestion.cardId, "no-disorder");
+    r = S.evaluate({ ...base, substance: "opioids", prescribed: "no", criteria: ["larger", "craving", "time", "withdrawal", "tolerance"], remission: "early", setting: ["maintenance"] });
+    label("substance flow: remission and maintenance", r, /moderate, in early remission, on maintenance therapy/);
+    r = S.evaluate({ ...base, substance: "alcohol", withdrawalNow: "yes", criteria: ["larger", "craving"] });
+    expectIncludes("substance flow: withdrawal urgent", r.urgent, "Thiamine before any glucose load");
+    r = S.evaluate({ ...base, substance: "stimulants", prescribed: "no", criteria: ["larger", "craving", "time"], induced: ["psychosis"], cooccurring: ["ptsd"] });
+    expect("substance flow: induced psychosis hand-over, co-occurring", [r.switchTo, r.additional], ["psychosis", ["independent"]]);
+    r = S.evaluate({ explained: "pattern", substance: "gambling", gamblingCriteria: ["more", "chasing", "lies", "bailout"], maniaOnly: "no" });
+    label("substance flow: gambling", r, /Gambling disorder, mild \(ICD-11 6C50\)/);
+    r = S.evaluate({ explained: "pattern", substance: "gambling", maniaOnly: "yes" });
+    expect("substance flow: gambling only in mania", r.switchTo, "elevated");
+    r = S.evaluate({ explained: "episode", substance: "alcohol" });
+    expect("substance flow: single episode", r.suggestion.cardId, "intoxication");
+
+    const rb = { danger: "no", feigned: "no", intoxicated: "no", sud: "no", delirium: "no", medical: "no", akathisia: "no" };
+    r = R.evaluate({ ...rb, behaviour: ["suicidal"], intoxicated: "yes", sud: "yes", drivers: ["bpd"] });
+    expect("risk flow: BPD with substance use", [r.suggestion.cardId, r.additional], ["bpd", ["substance"]]);
+    r = R.evaluate({ ...rb, behaviour: ["aggression"], danger: "yes", drivers: ["psychotic"] });
+    expect("risk flow: psychotic aggression", [r.suggestion.cardId, r.switchTo, /Check a BGL/.test(r.urgent)], ["psychotic", "psychosis", true]);
+    r = R.evaluate({ ...rb, behaviour: ["aggression"], medical: "yes" });
+    expect("risk flow: medical cause first", r.suggestion.cardId, "medical");
+    r = R.evaluate({ ...rb, behaviour: ["suicidal"], drivers: ["depression", "stressor"] });
+    expect("risk flow: adjustment dropped when depression explains it", [r.suggestion.cardId, r.additional, r.excluded.includes("adjustment")], ["depression", [], true]);
+    r = R.evaluate({ ...rb, behaviour: ["nssi"], drivers: ["stressor"] });
+    expect("risk flow: adjustment alone", r.suggestion.cardId, "adjustment");
+    r = R.evaluate({ ...rb, behaviour: ["aggression"], drivers: ["instrumental"] });
+    expect("risk flow: instrumental aggression", r.suggestion.cardId, "none");
+    r = R.evaluate({ ...rb, behaviour: ["nssi"], drivers: ["bpd"] });
+    expect("risk flow: points to suicide formulation", r.also.some(n => n.includes("Suicide risk formulation")), true);
+}
+
+async function testSubstanceScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "substance");
+    await answer("explained", "A pattern of use");
+    await answer("substance", "Stimulant (amphetamine-type)");
+    for (const [q, l] of [["withdrawalNow", "No"], ["overdose", "No"], ["feigned", "No"], ["prescribed", "No"]]) await answer(q, l);
+    for (const c of ["Larger amounts", "Craving", "Much time spent", "Failing major roles"]) await answer("criteria", c);
+    await answer("continuous", "Daily or almost daily");
+    await answer("remission", "Current problem use");
+    await answer("induced", "Psychosis");
+    expectIncludes("substance screen: suggestion", await page.textContent(".rz-result-title"), "Stimulant (amphetamine-type) use disorder, moderate");
+    await page.click("text=Open the Psychosis questions");
+    expect("substance screen: switched", await page.inputValue("#rz-problem"), "psychosis");
+    expect("substance screen: substance carried as yes", await page.isChecked('#oca-reasoning-body fieldset[data-q="substance"] input[value="yes"]'), true);
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -932,6 +996,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testAnxietyCatatoniaScreen(browser, baseUrl);
         testCognitiveRules();
         await testCognitiveScreen(browser, baseUrl);
+        testSubstanceRiskRules();
+        await testSubstanceScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

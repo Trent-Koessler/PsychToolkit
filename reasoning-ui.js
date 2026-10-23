@@ -177,6 +177,11 @@
             const q = to && to.questions.find(question => question.id === id);
             if (q && from[id] !== undefined && q.options.some(o => o.value === from[id])) carried[id] = from[id];
         });
+        // The substance questions name the substance; elsewhere "substance"
+        // just asks whether one is involved.
+        const named = from.substance && !["yes", "no", "unsure"].includes(from.substance);
+        const target = to && to.questions.find(question => question.id === "substance");
+        if (named && target && target.options.some(o => o.value === "yes")) carried.substance = "yes";
         return carried;
     }
 
