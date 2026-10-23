@@ -4017,6 +4017,7 @@ button.btn-primary:hover,
 }
 
 .rz-chip {
+    position: relative;
     display: inline-flex;
     align-items: center;
     font-size: 12px;
@@ -4117,4 +4118,96 @@ button.btn-primary:hover,
 
 .rz-sources summary {
     cursor: pointer;
+}
+
+/* Reasoning tab: guided questions */
+.rz-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--card-bg);
+}
+
+.rz-flow-step {
+    font-size: 12.5px;
+    font-weight: 700;
+    margin-top: 6px;
+    padding-bottom: 2px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.rz-flow-step[hidden],
+.rz-q[hidden] {
+    display: none;
+}
+
+.rz-q {
+    border: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rz-q legend {
+    font-size: 13px;
+    font-weight: 600;
+    padding: 0;
+    margin-bottom: 4px;
+}
+
+.rz-result {
+    margin-top: 6px;
+    padding: 10px 12px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--primary-color);
+    background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rz-result-title {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.rz-result-empty {
+    font-weight: 500;
+    color: var(--text-muted);
+}
+
+.rz-provisional {
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 999px;
+    color: #fff;
+    background: var(--warning-color);
+}
+
+.rz-also {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 12.5px;
+}
+
+.rz-why {
+    font-size: 12.5px;
+}
+
+.rz-why summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.rz-why ol {
+    margin: 6px 0 0;
+    padding-left: 20px;
 }

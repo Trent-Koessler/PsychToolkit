@@ -166,6 +166,26 @@ window.REASONING_CONTENT = {
                     check: "Confirm the ICD-11 code 6E61."
                 },
                 {
+                    id: "other-specified",
+                    code: "ICD-11 6A2Y",
+                    name: "Other specified psychotic disorder",
+                    dsm: "Other specified (or unspecified) schizophrenia spectrum and other psychotic disorder",
+                    icd: "6A2Y Other specified primary psychotic disorder",
+                    supports: "Clinically significant psychosis that doesn't meet full criteria for a specific disorder, e.g. persistent hallucinations alone, or delusions with mood episodes that aren't brief.",
+                    keyQuestion: "Which criterion is missing, and could more time or information settle it?",
+                    check: "Confirm the ICD-11 code 6A2Y."
+                },
+                {
+                    id: "feigning",
+                    code: "ICD-11 QC30 / 6D50",
+                    name: "Feigned symptoms (malingering or factitious disorder)",
+                    dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+                    icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+                    supports: "Symptoms that look textbook or stereotyped, change with who is watching, or don't match observed behaviour; an external incentive (malingering) or none obvious (factitious).",
+                    keyQuestion: "Is there an external gain, and do the reported symptoms match what is observed over time?",
+                    note: "Feigning can sit alongside genuine illness. Record the observations behind the concern, not just the label."
+                },
+                {
                     id: "schizotypal",
                     code: "ICD-11 6A22",
                     name: "Schizotypal disorder",

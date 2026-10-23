@@ -462,7 +462,7 @@ async function testReasoning(browser, baseUrl) {
     expectIncludes("leading differential first", text, "1. Substance/medication-induced psychotic disorder (ICD-11 6C4x.6, by substance): leading. For: onset during daily methamphetamine use.");
     expectIncludes("second differential", text, "2. Schizophreniform disorder (DSM-5-TR only): possible.");
     expectIncludes("excluded listed", text, "Considered and excluded: Delusional disorder.");
-    expectIncludes("medical causes line", text, "Medical and substance causes - excluded: delirium; investigating: autoimmune encephalitis.");
+    expectIncludes("medical causes line", text, "Rule-out checks - excluded: delirium; investigating: autoimmune encephalitis.");
 
     // Inserting again updates the block instead of adding a second one.
     await page.selectOption(rule("Schizophreniform disorder"), "Less likely");
@@ -502,6 +502,95 @@ async function testReasoning(browser, baseUrl) {
     // The safety plan button opens the template.
     await page.click("text=Open safety plan template");
     expect("safety plan template opens", await page.inputValue("#template-select"), "safety-plan");
+    await page.context().close();
+}
+
+// Guided psychosis questions: the rules give the expected suggestion for
+// textbook presentations (checked without a browser), and the screen applies
+// the result to the cards and the note.
+function testPsychosisFlowRules() {
+    const flow = require(path.join(ROOT, "reasoning-flow.js"));
+    const base = { explained: "none", feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no", catatonia: ["none"] };
+    const cases = [
+        ["schizophrenia", { symptoms: ["delusions", "hallucinations", "negative"], duration: "6m+", function: "yes", mood: "none" }, "schizophrenia", false],
+        ["schizophreniform", { symptoms: ["delusions", "hallucinations"], duration: "3-6m", function: "yes", mood: "none" }, "schizophreniform", false],
+        ["brief, recovered", { symptoms: ["delusions", "speech"], duration: "1d-1m", returned: "yes", function: "yes", mood: "none" }, "brief", false],
+        ["brief, not yet recovered", { symptoms: ["hallucinations"], duration: "1d-1m", returned: "not-yet", function: "yes", mood: "none" }, "brief", true],
+        ["psychotic depression", { symptoms: ["delusions"], ocdBdd: "no", duration: "1-3m", function: "yes", mood: "depressive", moodOnly: "yes" }, "depression", false],
+        ["bipolar with psychosis", { symptoms: ["delusions", "speech"], duration: "1-3m", function: "yes", mood: "manic", moodOnly: "yes" }, "bipolar", false],
+        ["schizoaffective", { symptoms: ["delusions", "hallucinations"], duration: "6m+", function: "yes", mood: "manic", moodOnly: "no", psychWithoutMood: "yes", moodShare: "yes" }, "schizoaffective", false],
+        ["delusional", { symptoms: ["delusions", "hallucinations"], halMinor: "yes", ocdBdd: "no", duration: "3-6m", function: "no", mood: "none" }, "delusional", false],
+        ["delusions, impaired", { symptoms: ["delusions"], ocdBdd: "no", duration: "6m+", function: "yes", mood: "none" }, "other-specified", false],
+        ["OCD content", { symptoms: ["delusions"], ocdBdd: "yes" }, "other", false],
+        ["substance during", { substance: "yes", subTiming: "during" }, "substance-induced", false],
+        ["substance too early", { substance: "yes", subTiming: "early", symptoms: ["delusions", "hallucinations"], duration: "1-3m", function: "yes", mood: "none" }, "substance-induced", true],
+        ["medical cause", { medical: "yes" }, "medical", false],
+        ["malingering only", { feigned: "external" }, "feigning", false]
+    ];
+    cases.forEach(([name, answers, cardId, provisional]) => {
+        const r = flow.evaluate(Object.assign({}, base, answers));
+        expect(`flow: ${name}`, r.suggestion && r.suggestion.cardId, cardId);
+        expect(`flow: ${name} provisional`, !!(r.suggestion && r.suggestion.provisional), provisional);
+    });
+    // Delirium outranks a primary psychotic disorder, and feigning is recorded alongside one.
+    const delirium = flow.evaluate(Object.assign({}, base, { delirium: "yes", symptoms: ["delusions", "hallucinations"], duration: "6m+" }));
+    expectIncludes("flow: delirium first", delirium.suggestion.label, "Delirium");
+    const both = flow.evaluate(Object.assign({}, base, { feigned: "external", symptoms: ["delusions", "hallucinations"], duration: "6m+", function: "yes", mood: "none" }));
+    expect("flow: feigning alongside illness", [both.suggestion.cardId, both.alternatives.includes("feigning")], ["schizophrenia", true]);
+    // Schizophrenia with mood episodes outside the illness adds the mood diagnosis.
+    const mood = flow.evaluate(Object.assign({}, base, { symptoms: ["delusions", "hallucinations"], duration: "6m+", function: "yes", mood: "depressive", moodOnly: "no", psychWithoutMood: "yes", moodShare: "no", moodOutside: "yes" }));
+    expect("flow: comorbid mood", [mood.suggestion.cardId, mood.also.some(n => n.includes("add the full mood diagnosis"))], ["schizophrenia", true]);
+    // Three catatonic signs adds catatonia.
+    const cat = flow.evaluate(Object.assign({}, base, { symptoms: ["delusions", "behaviour"], duration: "6m+", function: "yes", mood: "none", catatonia: ["mutism", "posturing", "negativism"] }));
+    expect("flow: catatonia noted", cat.also.some(n => n.includes("Catatonia (3 or more signs)")), true);
+    // Nothing answered: no suggestion, and it says where to start.
+    expect("flow: empty", [flow.evaluate({}).suggestion, flow.evaluate({}).pending.length > 0], [null, true]);
+}
+
+async function testPsychosisFlowScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip:has-text("${label}")`);
+    const visible = q => page.isVisible(`#oca-reasoning-body fieldset[data-q="${q}"]`);
+
+    expect("flow: later steps hidden at first", await visible("feigned"), false);
+    await answer("explained", "None: this is a psychotic experience");
+    await answer("feigned", "No");
+    await answer("substance", "Yes");
+    expect("flow: timeline question appears", await visible("subTiming"), true);
+    await answer("substance", "No");
+    expect("flow: timeline question hides again", await visible("subTiming"), false);
+    await answer("delirium", "No");
+    await answer("cognitive", "No");
+    await answer("medical", "No");
+    await answer("symptoms", "Delusions");
+    await answer("symptoms", "Hallucinations");
+    await answer("halMinor", "No, they're prominent");
+    await answer("ocdBdd", "No");
+    await answer("duration", "1 to under 3 months");
+    await answer("function", "Yes");
+    await answer("mood", "None");
+    await answer("catatonia", "None");
+    expectIncludes("flow: suggestion shown", await page.textContent(".rz-result-title"), "Schizophreniform disorder");
+
+    await page.click("#rz-flow-apply");
+    const status = name => page.inputValue(`#oca-reasoning-body select[aria-label="${name} status"]`);
+    expect("flow: applied leading", await status("Schizophreniform disorder"), "Leading");
+    expect("flow: applied possible", await status("Schizophrenia"), "Possible");
+    expect("flow: applied excluded", await status("Substance/medication-induced psychotic disorder"), "Excluded");
+    expect("flow: rule-out applied", await status("Delirium"), "Excluded");
+    expect("flow: answers kept after apply", await page.isChecked('#oca-reasoning-body fieldset[data-q="duration"] input[value="1-3m"]'), true);
+
+    await page.click("#rz-dx-insert");
+    const text = await page.inputValue("#oca-editor");
+    expectIncludes("flow: note has suggestion", text, "Guided assessment suggests: Schizophreniform disorder");
+    expectIncludes("flow: note has reasoning", text, "Reasoning: Psychotic experience, not explained by culture");
+    expectIncludes("flow: note has ICD-11 point", text, "Note: ICD-11 would code schizophrenia (6A20)");
+    expectIncludes("flow: note lists cards", text, "1. Schizophreniform disorder (DSM-5-TR only): leading.");
+
+    await page.click("#oca-reset-btn");
+    expect("flow: reset clears answers", await page.isChecked('#oca-reasoning-body fieldset[data-q="explained"] input[value="none"]'), false);
     await page.context().close();
 }
 
@@ -613,6 +702,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testNoteTemplates(browser, baseUrl);
         await testTemplateFunction();
         await testReasoning(browser, baseUrl);
+        testPsychosisFlowRules();
+        await testPsychosisFlowScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

@@ -28,7 +28,7 @@
     let sr;
 
     function freshState() {
-        dx = { problem: "psychosis", ruleOut: {}, items: {} };
+        dx = { problem: "psychosis", ruleOut: {}, items: {}, flow: {} };
         sr = { acute: {}, status: {}, state: {}, baseline: "", resources: {}, plan: {},
             narrative: "", intent: "", words: "", changes: "", means: "", followUp: "" };
     }
@@ -162,9 +162,25 @@
 
     /* ----------------------------------------------- differential diagnosis */
 
+    // The guided questions exist only for presenting problems that have a flow.
+    function flowFor(problem) {
+        return problem === "psychosis" ? window.PSYCHOSIS_FLOW : null;
+    }
+
+    function flowResult() {
+        const flow = flowFor(dx.problem);
+        return flow ? flow.evaluate(dx.flow) : null;
+    }
+
     function differentialLines() {
         const p = C.differentials[dx.problem];
         const lines = [];
+        const guided = flowResult();
+        if (guided && guided.suggestion) {
+            lines.push(`Guided assessment suggests: ${guided.suggestion.label}${guided.suggestion.provisional ? " (provisional)" : ""}.`);
+            lines.push(`Reasoning: ${guided.trail.join(" ")}`);
+            guided.also.forEach(note => lines.push(`Note: ${note}`));
+        }
         const order = ["Leading", "Possible", "Less likely"];
         const chosen = p.differentials
             .filter(d => order.includes((dx.items[d.id] || {}).status))
@@ -182,13 +198,150 @@
         const groups = {};
         p.ruleOut.forEach(r => {
             const status = dx.ruleOut[r.id];
-            if (status && status !== "Not assessed") (groups[status] = groups[status] || []).push(lowerFirst(r.name));
+            if (status && status !== "Not assessed") (groups[status] = groups[status] || []).push(lowerFirst(r.name.replace(/\s*\(.*\)$/, "")));
         });
         const organic = ["Excluded", "Possible", "Investigating"]
             .filter(s => groups[s])
             .map(s => `${s.toLowerCase()}: ${groups[s].join(", ")}`);
-        if (organic.length) lines.push(`Medical and substance causes - ${organic.join("; ")}.`);
+        if (organic.length) lines.push(`Rule-out checks - ${organic.join("; ")}.`);
         return lines;
+    }
+
+    /* ------------------------------------------------- guided questions */
+
+    // Builds every question once and shows or hides them as answers change,
+    // so typing or ticking never loses focus. Answers to questions that become
+    // hidden are cleared, so they can't steer the result unseen.
+    function renderFlow(flow, onChange, onApply) {
+        const wrap = el("div", "rz-flow");
+        const rows = [];
+        const stepHeads = {};
+
+        flow.questions.forEach(q => {
+            if (!stepHeads[q.step]) {
+                stepHeads[q.step] = el("div", "rz-flow-step", q.step);
+                wrap.appendChild(stepHeads[q.step]);
+            }
+            const box = el("fieldset", "rz-q");
+            box.dataset.q = q.id;
+            box.appendChild(el("legend", null, q.text));
+            if (q.hint) box.appendChild(el("div", "rz-hint", q.hint));
+            const group = el("div", "rz-chips");
+            const inputs = [];
+            q.options.forEach(opt => {
+                const label = el("label", "rz-chip");
+                const input = el("input");
+                input.type = q.type === "multi" ? "checkbox" : "radio";
+                input.name = "rz-flow-" + q.id;
+                input.value = opt.value;
+                const current = dx.flow[q.id];
+                input.checked = q.type === "multi" ? Array.isArray(current) && current.includes(opt.value) : current === opt.value;
+                label.classList.toggle("on", input.checked);
+                input.addEventListener("change", () => {
+                    if (q.type === "multi") {
+                        let picked = inputs.filter(i => i.checked).map(i => i.value);
+                        // "None" can't be ticked alongside anything else.
+                        if (opt.value === "none" && input.checked) picked = ["none"];
+                        else picked = picked.filter(v => v !== "none");
+                        inputs.forEach(i => { i.checked = picked.includes(i.value); });
+                        dx.flow[q.id] = picked;
+                    } else {
+                        dx.flow[q.id] = opt.value;
+                    }
+                    inputs.forEach(i => i.parentNode.classList.toggle("on", i.checked));
+                    refresh();
+                });
+                inputs.push(input);
+                label.appendChild(input);
+                label.appendChild(document.createTextNode(opt.label));
+                group.appendChild(label);
+            });
+            box.appendChild(group);
+            wrap.appendChild(box);
+            rows.push({ q, box, inputs });
+        });
+
+        const result = el("div", "rz-result");
+        result.setAttribute("aria-live", "polite");
+        wrap.appendChild(result);
+        const buttons = el("div", "rz-btns");
+        const apply = el("button", "btn-primary", "Apply to the cards below");
+        apply.id = "rz-flow-apply";
+        apply.addEventListener("click", onApply);
+        const clear = el("button", "btn-secondary", "Start the questions again");
+        clear.addEventListener("click", () => {
+            dx.flow = {};
+            rows.forEach(row => row.inputs.forEach(i => { i.checked = false; i.parentNode.classList.remove("on"); }));
+            refresh();
+        });
+        buttons.appendChild(apply);
+        buttons.appendChild(clear);
+        wrap.appendChild(buttons);
+
+        function refresh() {
+            // Hiding a question can hide others that depended on it, so repeat
+            // until nothing changes.
+            let changed = true;
+            while (changed) {
+                changed = false;
+                rows.forEach(({ q, inputs }) => {
+                    const visible = !q.showIf || q.showIf(dx.flow);
+                    if (!visible && dx.flow[q.id] !== undefined) {
+                        delete dx.flow[q.id];
+                        inputs.forEach(i => { i.checked = false; i.parentNode.classList.remove("on"); });
+                        changed = true;
+                    }
+                });
+            }
+            const shownSteps = new Set();
+            rows.forEach(({ q, box }) => {
+                box.hidden = !!q.showIf && !q.showIf(dx.flow);
+                if (!box.hidden) shownSteps.add(q.step);
+            });
+            Object.keys(stepHeads).forEach(step => { stepHeads[step].hidden = !shownSteps.has(step); });
+
+            const r = flow.evaluate(dx.flow);
+            result.innerHTML = "";
+            if (r.suggestion) {
+                const title = el("div", "rz-result-title", "Suggests: " + r.suggestion.label);
+                if (r.suggestion.provisional) title.appendChild(el("span", "rz-provisional", "provisional"));
+                result.appendChild(title);
+            } else {
+                result.appendChild(el("div", "rz-result-title rz-result-empty", "Answer the questions to see a suggestion."));
+            }
+            if (r.pending.length) result.appendChild(el("div", "rz-hint", "Still to answer: " + r.pending.join(" ")));
+            if (r.also.length) {
+                const list = el("ul", "rz-also");
+                r.also.forEach(note => list.appendChild(el("li", null, note)));
+                result.appendChild(list);
+            }
+            if (r.trail.length) {
+                const why = el("details", "rz-why");
+                why.appendChild(el("summary", null, "Why"));
+                const steps = el("ol");
+                r.trail.forEach(t => steps.appendChild(el("li", null, t)));
+                why.appendChild(steps);
+                result.appendChild(why);
+            }
+            apply.disabled = !r.suggestion;
+            onChange();
+        }
+        refresh();
+        return wrap;
+    }
+
+    // Sets the rule-out rows and differential cards from the guided result.
+    // Cards the result says nothing about keep whatever the clinician chose.
+    function applyFlow(r) {
+        if (!r) return;
+        Object.keys(r.ruleOut).forEach(id => { dx.ruleOut[id] = r.ruleOut[id]; });
+        const set = (id, status) => {
+            const item = dx.items[id] || (dx.items[id] = { status: "Not considered", forText: "", againstText: "" });
+            item.status = status;
+        };
+        r.excluded.forEach(id => set(id, "Excluded"));
+        r.alternatives.forEach(id => set(id, "Possible"));
+        if (r.suggestion && r.suggestion.cardId) set(r.suggestion.cardId, "Leading");
     }
 
     function renderDifferential(section) {
@@ -203,7 +356,7 @@
         Object.keys(C.differentials).forEach(key => problem.appendChild(new Option(C.differentials[key].name, key)));
         problem.value = dx.problem;
         problem.addEventListener("change", () => {
-            dx = { problem: problem.value, ruleOut: {}, items: {} };
+            dx = { problem: problem.value, ruleOut: {}, items: {}, flow: {} };
             renderDifferential(section);
         });
         content.appendChild(problemLabel);
@@ -216,7 +369,18 @@
                 : "Set a status on the causes and differentials above to build this.";
         };
 
-        content.appendChild(el("div", "rz-step", "1 · Rule out first"));
+        const flow = flowFor(dx.problem);
+        if (flow) {
+            content.appendChild(el("div", "rz-step", "1 · Guided questions"));
+            content.appendChild(renderFlow(flow, update, () => {
+                applyFlow(flowResult());
+                renderDifferential(section);
+                const cards = section.querySelector(".rz-step-cards");
+                if (cards) cards.scrollIntoView({ block: "start" });
+            }));
+        }
+
+        content.appendChild(el("div", "rz-step", (flow ? "2" : "1") + " · Rule out first"));
         p.ruleOut.forEach(r => {
             const row = el("div", "rz-rule");
             const head = el("div", "rz-row");
@@ -231,7 +395,7 @@
             content.appendChild(row);
         });
 
-        content.appendChild(el("div", "rz-step", "2 · Differentials (DSM-5-TR · ICD-11)"));
+        content.appendChild(el("div", "rz-step rz-step-cards", (flow ? "3" : "2") + " · Differentials (DSM-5-TR · ICD-11)"));
         p.differentials.forEach(d => {
             const item = dx.items[d.id] || (dx.items[d.id] = { status: "Not considered", forText: "", againstText: "" });
             const card = el("div", "rz-card");
@@ -260,7 +424,7 @@
             content.appendChild(card);
         });
 
-        content.appendChild(el("div", "rz-step", "3 · Goes into the note"));
+        content.appendChild(el("div", "rz-step", (flow ? "4" : "3") + " · Goes into the note"));
         content.appendChild(preview);
         const buttons = el("div", "rz-btns");
         const insert = el("button", "btn-primary", "Insert into Differentials");
