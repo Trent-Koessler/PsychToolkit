@@ -269,6 +269,7 @@
                             <button class="oca-tab-btn active" data-oca-tab="oca-mse-panel">MSE Live Builder</button>
                             <button class="oca-tab-btn" data-oca-tab="oca-formulation-panel">Formulation
                                 Builder</button>
+                            <button class="oca-tab-btn" data-oca-tab="oca-reasoning-panel">Reasoning</button>
                         </div>
 
                         <!-- MSE builder panel -->
@@ -1057,6 +1058,15 @@
                                     </div>
                                 </details>
                             </div>
+                        </div>
+
+                        <!-- Clinical reasoning panel: built by reasoning-ui.js from reasoning-content.js -->
+                        <div id="oca-reasoning-panel" class="oca-panel-content">
+                            <div class="oca-panel-subheader rz-header">
+                                <h5>Clinical Reasoning</h5>
+                                <button id="oca-reasoning-width-btn" class="btn-secondary">⤡ Narrow panel</button>
+                            </div>
+                            <div class="oca-drawer-scrollable" id="oca-reasoning-body"></div>
                         </div>
                     </div>
                 </div>
@@ -3998,6 +4008,8 @@
     <script src="mha-ui.js"></script>
     <script src="ect.js"></script>
     <script src="note-templates.js"></script>
+    <script src="reasoning-content.js"></script>
+    <script src="reasoning-ui.js"></script>
     <script src="script.js"></script>
 </body>
 

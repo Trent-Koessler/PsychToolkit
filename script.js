@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.6.0";
+    const APP_VERSION = "1.7.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -3244,7 +3244,44 @@ Plan:
 -Leave: nil
 
 Dr Trent Koessler
-Psychiatry Registrar`
+Psychiatry Registrar`,
+        // Stanley-Brown Safety Planning Intervention, in our own words. Written
+        // with the person, in their language, not handed to them.
+        safetyPlan: `Safety Plan
+
+What matters most to me (my reasons for living):
+
+
+1. My warning signs (thoughts, feelings, situations or behaviours that come before a crisis):
+-
+
+2. Things I can do on my own to take my mind off things:
+-
+
+3. People and places that help distract me:
+- Name and phone:
+- Place:
+
+4. People I can ask for help:
+- Name and phone:
+- Name and phone:
+
+5. Professionals and services I can contact:
+- My treating team / clinician:
+- My GP:
+- NSW Mental Health Line: 1800 011 511
+- Lifeline: 13 11 14
+- Suicide Call Back Service: 1300 659 467
+- Emergency: 000
+
+6. Making my environment safer (specific steps, and who will do them):
+-
+
+Alcohol and other drugs (how I will reduce risk):
+-
+
+Where I keep this plan (phone photo, Beyond Now app, paper copy):
+`
     };
 
     const templateStore = NoteTemplates.createStore({
@@ -3252,7 +3289,8 @@ Psychiatry Registrar`
             { id: "oca", name: "OCA template (Registrar Initial Review)", body: templates.oca },
             { id: "review", name: "Psychiatry Initial / Admission Review", body: templates.review },
             { id: "addiction", name: "Addiction Medicine Consultation", body: templates.addiction },
-            { id: "otp", name: "OTP Clinic Consultation", body: templates.otp }
+            { id: "otp", name: "OTP Clinic Consultation", body: templates.otp },
+            { id: "safety-plan", name: "Safety Plan (Stanley-Brown)", body: templates.safetyPlan }
         ],
         storage: localStorage
     });
@@ -4361,7 +4399,18 @@ Psychiatry Registrar`
 
     if (ocaEditor) {
         ocaEditor.addEventListener("input", triggerAutoSave);
+        // The Reasoning tab (reasoning-ui.js) fires this before it changes the
+        // note, so Undo can take the insertion back.
+        ocaEditor.addEventListener("oca-before-insert", saveUndoSnapshot);
     }
+
+    // The Reasoning tab's "Open safety plan template" button.
+    document.addEventListener("open-note-template", (e) => {
+        showPage("generators-page");
+        const tab = document.querySelector('#generators-page .tab-button[data-tab="gen-templates"]');
+        if (tab) tab.click();
+        if (confirmLeaveTemplate()) openTemplateInEditor(e.detail.id);
+    });
 
     // Warn before the tab is closed or the site left with a note that exists
     // only on screen (not in a connected file). The browser shows its own wording.
@@ -5640,6 +5689,9 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 if (siDescCont) siDescCont.style.display = "none";
                 const delDescCont = document.getElementById("oca-mse-delusion-desc-container");
                 if (delDescCont) delDescCont.style.display = "none";
+
+                // Clear the Reasoning tab (reasoning-ui.js)
+                document.dispatchEvent(new Event("oca-reset"));
 
                 // Prompt user to save/connect a new file
                 await connectNewFile();

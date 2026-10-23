@@ -3872,3 +3872,249 @@ button.btn-primary:hover,
     font-size: 14px;
     margin: 6px 0;
 }
+
+/* Patient Review Workspace: Reasoning tab (reasoning-ui.js) */
+@media (min-width: 1025px) {
+    .oca-split-view.oca-wide {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+.rz-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+}
+
+.rz-header .btn-secondary {
+    padding: 5px 10px;
+    font-size: 12px;
+}
+
+.rz-banner {
+    font-size: 12.5px;
+    padding: 8px 12px;
+    margin-bottom: 12px;
+    border-radius: var(--radius-sm);
+    border-left: 4px solid var(--warning-color);
+    background: color-mix(in srgb, var(--warning-color) 12%, transparent);
+}
+
+.rz-step {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--primary-color);
+    margin: 12px 0 2px;
+}
+
+.rz-hint {
+    font-size: 12px;
+    color: var(--text-muted);
+    line-height: 1.45;
+}
+
+.rz-tests {
+    font-style: italic;
+}
+
+.rz-rule {
+    padding: 6px 0 8px;
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.rz-row,
+.rz-card-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+}
+
+.rz-rule-name,
+.rz-card-name {
+    font-size: 13.5px;
+    font-weight: 600;
+}
+
+.oca-details-content select.rz-status {
+    width: auto;
+    flex: 0 0 auto;
+    padding: 4px 8px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 999px;
+}
+
+.rz-status[data-status="Excluded"] { color: var(--success-color); border-color: var(--success-color); }
+.rz-status[data-status="Possible"] { color: var(--danger-color); border-color: var(--danger-color); }
+.rz-status[data-status="Investigating"],
+.rz-status[data-status="Less likely"] { color: var(--primary-color); border-color: var(--primary-color); }
+.rz-status[data-status="Leading"] { color: #fff; background: var(--primary-color); border-color: var(--primary-color); }
+
+.rz-card {
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 12px;
+    background: var(--card-bg);
+}
+
+.rz-card-body {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.rz-card-body[hidden] {
+    display: none;
+}
+
+.rz-codes {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: 3px;
+}
+
+.rz-fa {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+}
+
+@media (max-width: 600px) {
+    .rz-fa {
+        grid-template-columns: 1fr;
+    }
+}
+
+.rz-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rz-key {
+    font-size: 12.5px;
+    font-weight: 600;
+    color: var(--accent-color);
+}
+
+.rz-diff {
+    font-size: 12px;
+    padding: 5px 9px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--primary-color) 10%, transparent);
+}
+
+.rz-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rz-chip {
+    display: inline-flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 999px;
+    background: var(--bg-color);
+    color: var(--text-color);
+    cursor: pointer;
+    user-select: none;
+}
+
+.oca-details-content label.rz-chip {
+    margin-top: 0;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+/* The real tick box stays focusable for keyboard users but is not drawn. */
+.rz-chip input {
+    position: absolute;
+    opacity: 0;
+    width: 1px;
+    height: 1px;
+}
+
+.rz-chip:focus-within {
+    outline: 2px solid var(--primary-color);
+    outline-offset: 2px;
+}
+
+.rz-chip-target {
+    border-style: dashed;
+}
+
+.oca-details-content label.rz-chip.on {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.oca-details-content label.rz-chip-protect.on {
+    background: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+.oca-details-content label.rz-chip-acute.on {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.rz-acute {
+    font-size: 12.5px;
+    font-weight: 600;
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    color: var(--danger-color);
+    border-left: 4px solid var(--danger-color);
+    background: color-mix(in srgb, var(--danger-color) 10%, transparent);
+}
+
+.rz-acute[hidden] {
+    display: none;
+}
+
+.rz-preview {
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    padding: 8px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    background: var(--bg-color);
+}
+
+.rz-btns {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.rz-btns button {
+    padding: 7px 12px;
+    font-size: 12.5px;
+}
+
+.rz-insert-status {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.rz-sources {
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.rz-sources summary {
+    cursor: pointer;
+}

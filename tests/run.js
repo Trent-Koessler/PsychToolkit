@@ -389,7 +389,7 @@ async function testNoteTemplates(browser, baseUrl) {
     const names = await optionNames(page, "#template-select");
     expect("tDose templates imported once", names.filter(n => n === "Safety Plan").length, 1);
     expect("tDose letters imported", names.includes("Letters"), true);
-    expect("tDose non-text values skipped", names.length, 4 + 1 + 2);
+    expect("tDose non-text values skipped", names.length, 5 + 1 + 2);
 
     // Export, wipe and re-import restores the templates.
     const [download] = await Promise.all([page.waitForEvent("download"), page.click("#template-export-btn")]);
@@ -397,9 +397,9 @@ async function testNoteTemplates(browser, baseUrl) {
     await page.evaluate(() => { localStorage.removeItem("psych_note_templates"); });
     await page.reload();
     await page.click('[data-tab="gen-templates"]');
-    expect("templates cleared", (await optionNames(page, "#template-select")).length, 4);
+    expect("templates cleared", (await optionNames(page, "#template-select")).length, 5);
     await page.setInputFiles("#template-import-file", { name: "export.json", mimeType: "application/json", buffer: Buffer.from(exported) });
-    expect("export round trip", (await optionNames(page, "#template-select")).length, 7);
+    expect("export round trip", (await optionNames(page, "#template-select")).length, 8);
 
     // Reset to default brings back the built-in text.
     await page.selectOption("#template-select", "oca");
@@ -433,6 +433,76 @@ async function testNoteTemplates(browser, baseUrl) {
     expect("local templates pushed", pushed && Object.values(pushed.records).some(r => r.name === "Safety Plan"), true);
     expect("sync key kept out of the page", await page.inputValue("#template-sync-key"), "");
     await context.close();
+}
+
+// Reasoning tab: differential helper and suicide risk formulation write into
+// the right place in the note, update rather than duplicate, and Undo/Reset work.
+async function testReasoning(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    expect("reasoning tab widens panel", await page.$eval(".oca-split-view", e => e.classList.contains("oca-wide")), true);
+    const note = () => page.inputValue("#oca-editor");
+    const lineAfter = (text, heading) => {
+        const lines = text.split("\n");
+        return lines[lines.findIndex(l => l.trim() === heading) + 1];
+    };
+
+    // Differential: statuses and For text go under "# Differentials:".
+    const rule = name => `#oca-reasoning-body select[aria-label="${name} status"]`;
+    await page.selectOption(rule("Delirium"), "Excluded");
+    await page.selectOption(rule("Autoimmune encephalitis"), "Investigating");
+    await page.selectOption(rule("Substance/medication-induced psychotic disorder"), "Leading");
+    await page.selectOption(rule("Schizophreniform disorder"), "Possible");
+    await page.selectOption(rule("Delusional disorder"), "Excluded");
+    await page.fill('#oca-reasoning-body .rz-card:has-text("Substance/medication-induced") input >> nth=0', "onset during daily methamphetamine use");
+    await page.click("#rz-dx-insert");
+    let text = await note();
+    expect("differential under heading", lineAfter(text, "# Differentials:"), "Differential diagnosis:");
+    expectIncludes("leading differential first", text, "1. Substance/medication-induced psychotic disorder (ICD-11 6C4x.6, by substance): leading. For: onset during daily methamphetamine use.");
+    expectIncludes("second differential", text, "2. Schizophreniform disorder (DSM-5-TR only): possible.");
+    expectIncludes("excluded listed", text, "Considered and excluded: Delusional disorder.");
+    expectIncludes("medical causes line", text, "Medical and substance causes - excluded: delirium; investigating: autoimmune encephalitis.");
+
+    // Inserting again updates the block instead of adding a second one.
+    await page.selectOption(rule("Schizophreniform disorder"), "Less likely");
+    await page.click("#rz-dx-insert");
+    text = await note();
+    expect("differential not duplicated", text.split("Differential diagnosis:").length - 1, 1);
+    expectIncludes("differential updated", text, "2. Schizophreniform disorder (DSM-5-TR only): less likely.");
+
+    // Suicide risk formulation: no risk tier, goes under "Risk to Self:".
+    const tick = label => page.click(`#oca-reasoning-body label.rz-chip:has-text("${label}")`);
+    await tick("Previous suicide attempt");
+    await tick("Current suicidal ideation");
+    await tick("Insomnia");
+    await tick("Family or social support");
+    await tick("Safety plan completed with the person (Stanley-Brown)");
+    await page.selectOption("#rz-sr-baseline", "Raised");
+    await page.click("#rz-sr-insert");
+    text = await note();
+    expect("formulation under Risk to Self", lineAfter(text, "Risk to Self:"), "Suicide risk formulation:");
+    expectIncludes("risk status line", text, "Why this person (compared with others): previous suicide attempt.");
+    expectIncludes("risk state line", text, "Why now (compared with their usual: raised): current suicidal ideation; insomnia.");
+    expectIncludes("modifiable targets", text, "Modifiable drivers to target: insomnia.");
+    const block = text.slice(text.indexOf("Suicide risk formulation:"), text.indexOf("Suicide risk formulation:") + 600);
+    expect("no risk tier in formulation", /\b(low|moderate|high) risk\b/i.test(block), false);
+
+    // Acute features show the act-now warning.
+    await tick("Command hallucinations, nihilistic delusions or agitated psychotic depression");
+    expect("acute warning shown", await page.isVisible(".rz-acute"), true);
+
+    // Undo removes the last insertion; Reset clears the tab.
+    await page.click("#oca-undo-btn");
+    expect("undo removes formulation", (await note()).includes("Suicide risk formulation:"), false);
+    await page.click("#oca-reset-btn");
+    expect("reset clears differential", await page.inputValue(rule("Delirium")), "Not assessed");
+    expect("reset clears chips", await page.$$eval("#oca-reasoning-body label.rz-chip.on", l => l.length), 0);
+
+    // The safety plan button opens the template.
+    await page.click("text=Open safety plan template");
+    expect("safety plan template opens", await page.inputValue("#template-select"), "safety-plan");
+    await page.context().close();
 }
 
 // The Cloudflare Pages function that stores synced templates.
@@ -542,6 +612,7 @@ async function testMhaPathway(browser, baseUrl) {
         await testMhaPathway(browser, baseUrl);
         await testNoteTemplates(browser, baseUrl);
         await testTemplateFunction();
+        await testReasoning(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

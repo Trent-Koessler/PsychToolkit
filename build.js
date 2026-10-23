@@ -20,6 +20,8 @@ const FILES = [
     "sw.js",
     "script.js",
     "note-templates.js",
+    "reasoning-content.js",
+    "reasoning-ui.js",
     "mha-data.js",
     "mha.js",
     "mha-ui.js",
