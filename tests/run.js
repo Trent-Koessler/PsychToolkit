@@ -679,6 +679,82 @@ async function testMoodFlowScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+// Guided anxiety and catatonia questions.
+function testAnxietyCatatoniaRules() {
+    const flows = require(path.join(ROOT, "reasoning-flow-anxiety.js"));
+    const g = { explained: "clinical", feigned: "no", substance: "no", akathisia: "no", delirium: "no", cognitive: "no", medical: "no", withinMood: "no", withinPsychosis: "no", impair: "yes" };
+    const c = { danger: "no", drba: "no", feigned: "no", intox: "no", withdrawal: "no", delirium: "no", seizures: "no", medical: "no" };
+    const three = ["mutism", "negativism", "posturing"];
+    const cases = [
+        ["anxiety", "GAD", { ...g, focus: ["worry"], worrySx: "yes", months6: "yes" }, "gad"],
+        ["anxiety", "GAD under 6 months", { ...g, focus: ["worry"], worrySx: "yes", months6: "no" }, "other-anxiety"],
+        ["anxiety", "panic disorder", { ...g, focus: ["panic"], panicUnexpected: "yes", panicMonth: "yes" }, "panic"],
+        ["anxiety", "social with cued panic", { ...g, focus: ["social", "panic"], panicUnexpected: "no", months6: "yes", performanceOnly: "no" }, "social"],
+        ["anxiety", "specific phobia", { ...g, focus: ["specific"], months6: "yes" }, "specific"],
+        ["anxiety", "PTSD", { ...g, focus: ["trauma"], traumaTime: "long", traumaSx: "yes", complex: "no" }, "ptsd"],
+        ["anxiety", "acute stress", { ...g, focus: ["trauma"], traumaTime: "short", traumaSx: "yes" }, "acute-stress"],
+        ["anxiety", "OCD", { ...g, focus: ["obsessions"], ocdTime: "yes", insight: "good" }, "ocd"],
+        ["anxiety", "illness anxiety", { ...g, focus: ["health"], healthSomatic: "no", months6: "yes" }, "health"],
+        ["anxiety", "somatic symptom", { ...g, focus: ["health"], healthSomatic: "yes", months6: "yes" }, "somatic"],
+        ["anxiety", "adjustment", { ...g, focus: ["stressor"], stressorRecent: "yes" }, "adjustment"],
+        ["anxiety", "akathisia", { ...g, akathisia: "yes" }, "akathisia"],
+        ["anxiety", "medical", { ...g, medical: "yes" }, "medical"],
+        ["anxiety", "substance during", { ...g, substance: "yes", subTiming: "during" }, "substance-induced"],
+        ["catatonia", "with bipolar", { ...c, signs: three, context: "bipolar" }, "associated"],
+        ["catatonia", "benzodiazepine withdrawal", { ...c, signs: three, withdrawal: "yes" }, "induced"],
+        ["catatonia", "medical", { ...c, signs: three, medical: "yes" }, "medical"],
+        ["catatonia", "delirium", { ...c, signs: three, delirium: "yes" }, "delirium"],
+        ["catatonia", "cause unknown", { ...c, signs: three, context: "none" }, "unspecified"],
+        ["catatonia", "2 signs after antipsychotic", { ...c, signs: ["stupor", "posturing"], drba: "yes" }, "drba"]
+    ];
+    cases.forEach(([flow, name, answers, cardId]) => {
+        const r = flows[flow].evaluate(answers);
+        expect(`${flow} flow: ${name}`, r.suggestion && r.suggestion.cardId, cardId);
+    });
+    const both = flows.anxiety.evaluate({ ...g, focus: ["panic", "agoraphobia"], panicUnexpected: "yes", panicMonth: "yes", agoraTwo: "yes", months6: "yes" });
+    expect("anxiety flow: panic with agoraphobia", [both.suggestion.cardId, both.additional], ["panic", ["agoraphobia"]]);
+    const mood = flows.anxiety.evaluate({ ...g, withinMood: "yes" });
+    expect("anxiety flow: mood hand-over", mood.switchTo, "depressed");
+    const nms = flows.catatonia.evaluate({ ...c, signs: three, danger: "yes", drba: "yes", context: "psychotic" });
+    expectIncludes("catatonia flow: emergency shown", nms.urgent, "neuroleptic malignant syndrome");
+    const seizures = flows.catatonia.evaluate({ ...c, signs: three, seizures: "unsure", context: "none" });
+    expect("catatonia flow: EEG prompt, medical kept open", [seizures.also.some(n => n.includes("EEG")), seizures.excluded.includes("medical")], [true, false]);
+}
+
+async function testAnxietyCatatoniaScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    const status = name => page.inputValue(`#oca-reasoning-body select[aria-label="${name} status"]`);
+
+    await page.selectOption("#rz-problem", "anxiety");
+    await answer("explained", "Clinically significant anxiety");
+    for (const [q, label] of [["feigned", "No"], ["substance", "No"], ["akathisia", "No"], ["delirium", "No"], ["cognitive", "No"], ["medical", "No"], ["withinMood", "No"], ["withinPsychosis", "No"]]) await answer(q, label);
+    await answer("focus", "Sudden attacks");
+    await answer("focus", "Places where escape");
+    await answer("impair", "Yes");
+    await answer("panicUnexpected", "Yes");
+    await answer("panicMonth", "Yes");
+    await answer("agoraTwo", "Yes");
+    await answer("months6", "Yes");
+    expectIncludes("anxiety screen: suggestion", await page.textContent(".rz-result-title"), "Panic disorder");
+    await page.click("#rz-flow-apply");
+    expect("anxiety screen: panic leading", await status("Panic disorder"), "Leading");
+    expect("anxiety screen: agoraphobia also leading", await status("Agoraphobia"), "Leading");
+
+    await page.selectOption("#rz-problem", "catatonia");
+    for (const s of ["Mutism", "Negativism", "Posturing"]) await answer("signs", s);
+    await answer("danger", "Yes");
+    await answer("drba", "Yes");
+    expect("catatonia screen: emergency box", await page.isVisible("#oca-reasoning-body .rz-result .rz-acute"), true);
+    await answer("context", "A psychotic disorder");
+    await page.click("#rz-dx-insert");
+    expectIncludes("catatonia screen: urgent line in note", await page.inputValue("#oca-editor"), "URGENT: Fever, autonomic instability");
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -791,6 +867,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testPsychosisFlowScreen(browser, baseUrl);
         testMoodFlowRules();
         await testMoodFlowScreen(browser, baseUrl);
+        testAnxietyCatatoniaRules();
+        await testAnxietyCatatoniaScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

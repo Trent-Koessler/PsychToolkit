@@ -190,6 +190,7 @@
         const lines = [];
         const guided = flowResult();
         if (guided && guided.suggestion) {
+            if (guided.urgent) lines.push(`URGENT: ${guided.urgent}`);
             lines.push(`Guided assessment suggests: ${guided.suggestion.label}${guided.suggestion.provisional ? " (provisional)" : ""}.`);
             lines.push(`Reasoning: ${guided.trail.join(" ")}`);
             guided.also.forEach(note => lines.push(`Note: ${note}`));
@@ -315,6 +316,7 @@
 
             const r = flow.evaluate(dx.flow);
             result.innerHTML = "";
+            if (r.urgent) result.appendChild(el("div", "rz-acute", r.urgent));
             if (r.suggestion) {
                 const title = el("div", "rz-result-title", "Suggests: " + r.suggestion.label);
                 if (r.suggestion.provisional) title.appendChild(el("span", "rz-provisional", "provisional"));
@@ -359,6 +361,8 @@
         };
         r.excluded.forEach(id => set(id, "Excluded"));
         r.alternatives.forEach(id => set(id, "Possible"));
+        // Co-occurring diagnoses (e.g. panic disorder with agoraphobia) all lead.
+        (r.additional || []).forEach(id => set(id, "Leading"));
         if (r.suggestion && r.suggestion.cardId) set(r.suggestion.cardId, "Leading");
     }
 

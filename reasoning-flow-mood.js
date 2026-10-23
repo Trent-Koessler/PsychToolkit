@@ -11,9 +11,8 @@
 (function (root) {
     "use strict";
 
-    const YES_NO = [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }];
-    const YES_NO_UNSURE = [{ value: "yes", label: "Yes" }, { value: "no", label: "No" }, { value: "unsure", label: "Unsure" }];
-    const picked = (a, id) => (Array.isArray(a[id]) ? a[id].filter(v => v !== "none") : []);
+    const K = root.REASONING_FLOW_KIT || require("./reasoning-flow-kit.js");
+    const { YES_NO, YES_NO_UNSURE, picked, primaryReachable, newResult, helpers } = K;
 
     const DEPRESSIVE_SYMPTOMS = [
         { value: "mood", label: "Depressed mood most of the day" },
@@ -48,192 +47,33 @@
 
     /* ----------------------------------------------- shared steps 1 to 3 */
 
-    // Steps 1-3 are the same idea for both moods; only the wording differs.
-    function gateQuestions(kind) {
-        const mood = kind === "elevated" ? "elevated or irritable mood" : "low mood";
-        const timing = [
-            { value: "during", label: "Began during or soon after use, and hasn't outlasted it by about a month" },
-            { value: "before", label: "Began before the substance use" },
-            { value: "persisted", label: "Has lasted about a month or more after stopping" },
-            { value: "early", label: "Too early to tell (still using, or stopped under a month ago)" }
-        ];
-        if (kind === "elevated") {
-            timing.splice(3, 0, { value: "treatment", label: "Began on an antidepressant or ECT, and persists at full strength beyond the treatment's effect" });
+    // Steps 1-3 live in reasoning-flow-kit.js; this is the mood wording.
+    const MOOD_SPECS = {
+        depressed: {
+            subject: "low mood",
+            change: "the mood change",
+            disorder: "mood disorder",
+            medicalHint: "For example hypothyroidism, Cushing's or Addison's disease, stroke, Parkinson's disease, MS, sleep apnoea, cancer. A psychological reaction to an illness is not 'due to' it.",
+            extraTiming: null,
+            induced: "Substance/medication-induced depressive disorder (ICD-11 6C4x.70, by substance)",
+            medical: "Depressive disorder due to another medical condition (ICD-11 6E62)",
+            dementia: "Major or mild neurocognitive disorder with mood symptoms",
+            inducedNote: "Reassess about a month after stopping. Suicide risk is high, especially early in abstinence or withdrawal."
+        },
+        elevated: {
+            subject: "elevated or irritable mood",
+            change: "the mood change",
+            disorder: "mood disorder",
+            medicalHint: "For example hyperthyroidism, Cushing's syndrome, right-sided or frontal stroke, head injury, MS, frontotemporal dementia. Red flags: first episode after about 50, neurological signs, cognitive change.",
+            extraTiming: { value: "treatment", label: "Began on an antidepressant or ECT, and persists at full strength beyond the treatment's effect" },
+            induced: "Substance/medication-induced bipolar disorder (ICD-11 6C4x.70, by substance)",
+            medical: "Bipolar and related disorder due to another medical condition (ICD-11 6E62)",
+            dementia: "Major or mild neurocognitive disorder with mood symptoms",
+            inducedNote: "Reassess about a month after stopping. Suicide risk is high, especially early in abstinence or withdrawal."
         }
-        const reachable = a => a.explained === "clinical";
-        return [
-            {
-                id: "feigned", step: "1 · Feigned symptoms", type: "choice",
-                text: "Is there evidence the symptoms are deliberately produced or exaggerated?",
-                hint: "Clues: symptoms that don't match observed behaviour, or change with who is watching; a legal, housing, disability or drug-seeking context. Feigning can sit alongside genuine illness.",
-                options: [
-                    { value: "no", label: "No" }, { value: "unclear", label: "Unclear" },
-                    { value: "external", label: "Yes, for an external gain" },
-                    { value: "internal", label: "Yes, without an obvious external gain" }
-                ],
-                showIf: reachable
-            },
-            {
-                id: "substance", step: "2 · Substance or medication", type: "choice",
-                text: `Was there substance use, withdrawal, or a medication that can cause ${mood}, around the time it began?`,
-                options: YES_NO_UNSURE,
-                showIf: reachable
-            },
-            {
-                id: "subTiming", step: "2 · Substance or medication", type: "choice",
-                text: "Which best fits the timeline?",
-                options: timing,
-                showIf: a => reachable(a) && a.substance === "yes"
-            },
-            {
-                id: "delirium", step: "3 · Medical condition", type: "choice",
-                text: "Is attention and awareness disturbed, and does it fluctuate (delirium)?",
-                options: YES_NO_UNSURE,
-                showIf: reachable
-            },
-            {
-                id: "cognitive", step: "3 · Medical condition", type: "choice",
-                text: "Has there been a decline in memory or other thinking skills, from before the mood change?",
-                options: YES_NO_UNSURE,
-                showIf: a => reachable(a) && a.delirium !== "yes"
-            },
-            {
-                id: "medical", step: "3 · Medical condition", type: "choice",
-                text: `Is there a medical condition whose timing and nature could directly cause the ${mood}?`,
-                hint: kind === "elevated"
-                    ? "For example hyperthyroidism, Cushing's syndrome, right-sided or frontal stroke, head injury, MS, frontotemporal dementia. Red flags: first episode after about 50, neurological signs, cognitive change."
-                    : "For example hypothyroidism, Cushing's or Addison's disease, stroke, Parkinson's disease, MS, sleep apnoea, cancer. A psychological reaction to an illness is not 'due to' it.",
-                options: [
-                    { value: "yes", label: "Yes" },
-                    { value: "flags", label: "Red flags, not yet confirmed" },
-                    { value: "no", label: "No" }
-                ],
-                showIf: a => reachable(a) && a.delirium !== "yes" && a.cognitive !== "yes"
-            }
-        ];
-    }
-
-    // Whether the specific-disorder questions still matter.
-    function primaryReachable(a) {
-        if (a.explained !== "clinical") return false;
-        if (a.delirium === "yes" || a.cognitive === "yes" || a.medical === "yes") return false;
-        if (a.substance === "yes" && a.subTiming === "during") return false;
-        return true;
-    }
-
-    function newResult() {
-        return { suggestion: null, also: [], alternatives: [], excluded: [], ruleOut: {}, trail: [], pending: [], switchTo: null };
-    }
-
-    function helpers(r) {
-        return {
-            alt: id => { if (!r.alternatives.includes(id)) r.alternatives.push(id); },
-            exclude: id => { if (!r.excluded.includes(id)) r.excluded.push(id); },
-            suggest: (cardId, label, provisional) => ({ cardId, label, provisional: !!provisional })
-        };
-    }
-
-    // Steps 1-3. Returns "stop" when a substance, delirium, dementia or
-    // medical cause explains the picture, "provisional" when the substance
-    // question can't be settled yet, otherwise null.
-    function evaluateGates(a, r, h, kind) {
-        const labels = kind === "elevated"
-            ? { induced: "Substance/medication-induced bipolar disorder (ICD-11 6C4x.70, by substance)",
-                medical: "Bipolar and related disorder due to another medical condition (ICD-11 6E62)",
-                dementia: "Major or mild neurocognitive disorder with mood symptoms" }
-            : { induced: "Substance/medication-induced depressive disorder (ICD-11 6C4x.70, by substance)",
-                medical: "Depressive disorder due to another medical condition (ICD-11 6E62)",
-                dementia: "Major or mild neurocognitive disorder with mood symptoms" };
-
-        if (a.feigned === "external") {
-            r.also.push("Feigning for external gain suggests malingering (DSM-5-TR: a condition for clinical attention, not a mental disorder; ICD-11 QC30). It can co-exist with genuine illness.");
-            r.trail.push("Evidence of feigning for external gain.");
-            h.alt("feigning");
-        } else if (a.feigned === "internal") {
-            r.also.push("Feigning without obvious external gain suggests factitious disorder imposed on self (ICD-11 6D50).");
-            r.trail.push("Evidence of feigning without obvious external gain.");
-            h.alt("feigning");
-        } else if (a.feigned === "unclear") {
-            r.trail.push("Feigning not excluded.");
-            h.alt("feigning");
-        } else if (a.feigned === "no") {
-            r.trail.push("No evidence of feigning.");
-            h.exclude("feigning");
-        } else {
-            r.pending.push("Step 1: feigned symptoms.");
-        }
-
-        let state = null;
-        if (a.substance === "no") {
-            r.trail.push("No relevant substance or medication.");
-            r.ruleOut.substance = "Excluded";
-            r.ruleOut.medication = "Excluded";
-            h.exclude("substance-induced");
-        } else if (a.substance === "unsure") {
-            r.trail.push("Substance or medication role unknown.");
-            r.ruleOut.substance = "Investigating";
-            h.alt("substance-induced");
-        } else if (a.substance === "yes") {
-            if (a.subTiming === "during") {
-                r.trail.push("Began during or soon after substance or medication exposure and has not outlasted it.");
-                r.ruleOut.substance = "Possible";
-                r.suggestion = h.suggest("substance-induced", labels.induced);
-                r.also.push("Reassess about a month after stopping. Suicide risk is high, especially early in abstinence or withdrawal.");
-                state = "stop";
-            } else if (a.subTiming === "before" || a.subTiming === "persisted") {
-                r.trail.push(a.subTiming === "before"
-                    ? "Began before the substance use, so an independent mood disorder is likely."
-                    : "Has lasted about a month or more after stopping, so an independent mood disorder is likely.");
-                r.ruleOut.substance = "Excluded";
-                h.exclude("substance-induced");
-            } else if (a.subTiming === "treatment") {
-                r.trail.push("Began on an antidepressant or ECT but persists at full strength beyond its effect: this counts as a true episode.");
-                r.ruleOut.medication = "Excluded";
-                h.exclude("substance-induced");
-            } else if (a.subTiming === "early") {
-                r.trail.push("Too early to separate a substance-induced from an independent mood disorder.");
-                r.ruleOut.substance = "Possible";
-                state = "provisional";
-            } else {
-                r.pending.push("Step 2: the substance timeline.");
-            }
-        } else {
-            r.pending.push("Step 2: substance or medication.");
-        }
-
-        if (a.delirium === "yes") {
-            r.trail.push("Disturbed, fluctuating attention and awareness: the mood change belongs to the delirium.");
-            r.ruleOut.delirium = "Possible";
-            r.suggestion = h.suggest(null, "Delirium (substance-related or due to a medical condition)");
-            return "stop";
-        }
-        if (a.delirium === "no") r.ruleOut.delirium = "Excluded";
-        if (a.delirium === "unsure") r.ruleOut.delirium = "Investigating";
-        if (!a.delirium) r.pending.push("Step 3: delirium.");
-
-        if (a.cognitive === "yes") {
-            r.trail.push("Cognitive decline predates the mood change.");
-            r.ruleOut.neuro = "Investigating";
-            r.suggestion = h.suggest(null, labels.dementia);
-            return "stop";
-        }
-        if (a.medical === "yes") {
-            r.trail.push("A medical condition directly explains the mood change.");
-            r.suggestion = h.suggest("medical", labels.medical);
-            return "stop";
-        }
-        if (a.medical === "flags") {
-            r.trail.push("Red flags for a medical cause: investigate before settling on a primary mood disorder.");
-            r.ruleOut.neuro = "Investigating";
-            h.alt("medical");
-        } else if (a.medical === "no") {
-            r.trail.push("No medical cause identified.");
-            h.exclude("medical");
-        } else if (a.cognitive !== "yes") {
-            r.pending.push("Step 3: a medical cause.");
-        }
-        return state;
-    }
+    };
+    const gateQuestions = kind => K.gateQuestions(MOOD_SPECS[kind]);
+    const evaluateGates = (a, r, h, kind) => K.evaluateGates(a, r, h, MOOD_SPECS[kind]);
 
     // Shared ending: specifiers, other conditions, tidy-up.
     function finish(a, r, h) {

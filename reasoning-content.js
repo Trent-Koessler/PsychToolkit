@@ -618,3 +618,375 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         ]
     }
 });
+
+/* Anxiety and catatonia presentations. Card ids match the guided questions in
+   reasoning-flow-anxiety.js. */
+(function () {
+    const feigning = {
+        id: "feigning",
+        code: "ICD-11 QC30 / 6D50",
+        name: "Feigned symptoms (malingering or factitious disorder)",
+        dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+        icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+        supports: "Reported symptoms that don't match observed behaviour, or an external incentive.",
+        keyQuestion: "Do the reported symptoms match what is observed over time and by others?"
+    };
+
+    Object.assign(window.REASONING_CONTENT.differentials, {
+        anxiety: {
+            name: "Anxiety",
+            ruleOut: [
+                {
+                    id: "substance",
+                    name: "Substances",
+                    clues: "Caffeine (including pre-workout supplements), stimulants (including prescribed dexamfetamine), cannabis. Alcohol used as an anxiolytic causes rebound anxiety the next morning.",
+                    tests: "UDS, caffeine and alcohol history."
+                },
+                {
+                    id: "withdrawal",
+                    name: "Withdrawal",
+                    clues: "Alcohol, benzodiazepines, GHB, opioids. Anxiety with tremor, sweats and tachycardia in a drinker is withdrawal until proven otherwise.",
+                    tests: "Withdrawal scale (e.g. CIWA-Ar), timeline of last use."
+                },
+                {
+                    id: "medication",
+                    name: "Medications and akathisia",
+                    clues: "Salbutamol, corticosteroids, thyroxine. Akathisia after starting or increasing an antipsychotic or antidepressant is often mistaken for anxiety.",
+                    tests: "Medication review, including recent changes; Barnes Akathisia Rating Scale."
+                },
+                {
+                    id: "endocrine",
+                    name: "Endocrine and metabolic",
+                    clues: "Thyrotoxicosis, hypoglycaemia, phaeochromocytoma (rare, but the one that gets missed).",
+                    tests: "TSH, BGL; urine or plasma metanephrines if paroxysmal hypertension."
+                },
+                {
+                    id: "cardiorespiratory",
+                    name: "Cardiac and respiratory",
+                    clues: "Arrhythmia, pulmonary embolism, asthma or COPD, hypoxia. Red flags: first panic attack over 45, syncope, chest pain.",
+                    tests: "ECG, oxygen saturation; further work-up only if the history points there."
+                },
+                {
+                    id: "neuro",
+                    name: "Neurological",
+                    clues: "Seizures (ictal fear), focal neurology, new symptoms in later life.",
+                    tests: "Neurological examination; EEG if paroxysmal."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "Fluctuating attention and awareness, disorientation.",
+                    tests: "4AT or CAM."
+                }
+            ],
+            differentials: [
+                {
+                    id: "substance-induced",
+                    code: "ICD-11 6C4x.71, by substance",
+                    name: "Substance/medication-induced anxiety disorder",
+                    dsm: "Substance/medication-induced anxiety disorder",
+                    icd: "Substance-induced anxiety disorder, by substance",
+                    supports: "Anxiety or panic during or soon after intoxication, withdrawal or a new medication; settles once it wears off.",
+                    keyQuestion: "Did it start before the substance use, or last about a month after stopping?",
+                    check: "Confirm the ICD-11 codes for substance-induced anxiety disorders (6C4x.71)."
+                },
+                {
+                    id: "medical",
+                    code: "ICD-11 6E63",
+                    name: "Anxiety disorder due to another medical condition",
+                    dsm: "Anxiety disorder due to another medical condition",
+                    icd: "6E63 Secondary anxiety syndrome",
+                    supports: "A medical condition that causes anxiety directly, with matching timing.",
+                    keyQuestion: "Is this the direct effect of the illness, or a psychological reaction to it?"
+                },
+                {
+                    id: "akathisia",
+                    name: "Medication-induced akathisia",
+                    dsm: "Medication-induced acute akathisia",
+                    icd: "",
+                    supports: "Inner restlessness and an urge to move, soon after starting or increasing an antipsychotic or antidepressant.",
+                    keyQuestion: "Did it start after a medication change, and is the restlessness mainly in the legs?",
+                    note: "Giving more of the causative drug makes it worse."
+                },
+                {
+                    id: "panic",
+                    code: "ICD-11 6B01",
+                    name: "Panic disorder",
+                    dsm: "Panic disorder",
+                    icd: "6B01 Panic disorder",
+                    supports: "Recurrent unexpected panic attacks, followed by a month or more of worry about further attacks or changes in behaviour to avoid them.",
+                    keyQuestion: "Do some attacks come out of the blue, or only in feared situations?",
+                    dsmIcd: "Attacks that only happen in feared situations are recorded as 'with panic attacks' on the other diagnosis, not as panic disorder."
+                },
+                {
+                    id: "agoraphobia",
+                    code: "ICD-11 6B02",
+                    name: "Agoraphobia",
+                    dsm: "Agoraphobia",
+                    icd: "6B02 Agoraphobia",
+                    supports: "Fear or avoidance of 2 or more situations where escape or help might be hard: public transport, open spaces, enclosed spaces, queues or crowds, being out alone.",
+                    keyQuestion: "Is the fear about escape or help being hard if panic-like symptoms start, rather than scrutiny (social) or one specific thing (phobia)?",
+                    dsmIcd: "Both systems let agoraphobia and panic disorder be diagnosed separately or together. DSM-5-TR needs 6 months; ICD-11 says several months."
+                },
+                {
+                    id: "social",
+                    code: "ICD-11 6B04",
+                    name: "Social anxiety disorder",
+                    dsm: "Social anxiety disorder",
+                    icd: "6B04 Social anxiety disorder",
+                    supports: "Fear of scrutiny or embarrassment in social or performance situations, which are avoided or endured with intense fear.",
+                    keyQuestion: "Is the fear about being judged by others?",
+                    dsmIcd: "DSM-5-TR needs 6 months; ICD-11 says several months."
+                },
+                {
+                    id: "gad",
+                    code: "ICD-11 6B00",
+                    name: "Generalised anxiety disorder",
+                    dsm: "Generalized anxiety disorder",
+                    icd: "6B00 Generalised anxiety disorder",
+                    supports: "Hard-to-control worry about many everyday matters, most days for 6 months, with physical symptoms such as restlessness, tension and poor sleep.",
+                    keyQuestion: "Is the worry spread across many areas of life, rather than one focus?",
+                    dsmIcd: "DSM-5-TR needs 6 months of worry. ICD-11 needs several months, and accepts general apprehension (free-floating anxiety) as well as worry."
+                },
+                {
+                    id: "specific",
+                    code: "ICD-11 6B03",
+                    name: "Specific phobia",
+                    dsm: "Specific phobia",
+                    icd: "6B03 Specific phobia",
+                    supports: "Marked fear of a specific object or situation (animals, heights, blood or injections, flying), avoided or endured with intense fear.",
+                    keyQuestion: "Is the fear limited to one object or situation?",
+                    dsmIcd: "DSM-5-TR needs 6 months; ICD-11 says several months."
+                },
+                {
+                    id: "separation",
+                    code: "ICD-11 6B05",
+                    name: "Separation anxiety disorder",
+                    dsm: "Separation anxiety disorder",
+                    icd: "6B05 Separation anxiety disorder",
+                    supports: "Excessive fear of separation from attachment figures (in adults often a partner or child), with worry about harm to them.",
+                    keyQuestion: "Is the fear about losing or being apart from specific people?",
+                    check: "Confirm the ICD-11 code 6B05."
+                },
+                {
+                    id: "health",
+                    code: "ICD-11 6B23",
+                    name: "Illness anxiety disorder (health anxiety)",
+                    dsm: "Illness anxiety disorder",
+                    icd: "6B23 Hypochondriasis",
+                    supports: "Preoccupation with having or getting a serious illness, with few or mild bodily symptoms, and checking or avoidance.",
+                    keyQuestion: "Are distressing bodily symptoms the focus (somatic symptom disorder), or the fear of illness itself?",
+                    dsmIcd: "DSM-5-TR places illness anxiety disorder with the somatic symptom disorders. ICD-11 places hypochondriasis with the obsessive-compulsive related disorders.",
+                    check: "Confirm the ICD-11 code 6B23."
+                },
+                {
+                    id: "somatic",
+                    code: "ICD-11 6C20",
+                    name: "Somatic symptom disorder",
+                    dsm: "Somatic symptom disorder",
+                    icd: "6C20 Bodily distress disorder",
+                    supports: "Distressing bodily symptoms with excessive thoughts, feelings or behaviours about them, for 6 months or more.",
+                    keyQuestion: "Are the physical symptoms themselves the main source of distress?",
+                    check: "Confirm the ICD-11 code 6C20."
+                },
+                {
+                    id: "ocd",
+                    code: "ICD-11 6B20",
+                    name: "Obsessive-compulsive disorder",
+                    dsm: "Obsessive-compulsive disorder",
+                    icd: "6B20 Obsessive-compulsive disorder",
+                    supports: "Intrusive unwanted thoughts, urges or images, with repetitive behaviours or mental acts to neutralise them; time-consuming (over an hour a day) or impairing.",
+                    keyQuestion: "Are the thoughts unwanted and resisted, with rituals to neutralise them?",
+                    dsmIcd: "With absent insight, it stays OCD (with absent insight / delusional beliefs), not delusional disorder.",
+                    check: "Confirm the ICD-11 code 6B20."
+                },
+                {
+                    id: "bdd",
+                    code: "ICD-11 6B21",
+                    name: "Body dysmorphic disorder",
+                    dsm: "Body dysmorphic disorder",
+                    icd: "6B21 Body dysmorphic disorder",
+                    supports: "Preoccupation with perceived flaws in appearance that others don't see or think slight, with checking, comparing or camouflaging.",
+                    keyQuestion: "Is the concern about appearance rather than weight or shape (eating disorder)?",
+                    check: "Confirm the ICD-11 code 6B21."
+                },
+                {
+                    id: "ptsd",
+                    code: "ICD-11 6B40",
+                    name: "Post-traumatic stress disorder",
+                    dsm: "Posttraumatic stress disorder",
+                    icd: "6B40 Post traumatic stress disorder · 6B41 Complex PTSD",
+                    supports: "After actual or threatened death, serious injury or sexual violence: intrusions, avoidance, negative changes in mood or beliefs, and heightened arousal, for more than a month.",
+                    keyQuestion: "Is the anxiety tied to reminders of a traumatic event?",
+                    dsmIcd: "ICD-11 PTSD centres on re-experiencing in the present, avoidance and a sense of current threat. ICD-11 complex PTSD adds lasting problems with emotion regulation, self-worth and relationships.",
+                    check: "Confirm the ICD-11 codes 6B40 and 6B41."
+                },
+                {
+                    id: "acute-stress",
+                    code: "ICD-11 QE84",
+                    name: "Acute stress disorder",
+                    dsm: "Acute stress disorder",
+                    icd: "QE84 Acute stress reaction (not a mental disorder in ICD-11)",
+                    supports: "PTSD-type symptoms from 3 days to 1 month after a traumatic event.",
+                    keyQuestion: "Has it been more than a month? If so, consider PTSD.",
+                    dsmIcd: "ICD-11 has no acute stress disorder: an acute stress reaction is treated as a normal response, coded outside the mental disorders chapter."
+                },
+                {
+                    id: "adjustment",
+                    code: "ICD-11 6B43",
+                    name: "Adjustment disorder",
+                    dsm: "Adjustment disorder, with anxiety",
+                    icd: "6B43 Adjustment disorder",
+                    supports: "Distress out of proportion to an identifiable stressor, starting within 3 months, not meeting criteria for another disorder.",
+                    keyQuestion: "Are criteria met for a specific anxiety disorder? If so, that takes priority."
+                },
+                {
+                    id: "mood",
+                    name: "Depressive or bipolar disorder with anxious distress",
+                    dsm: "Major depressive or bipolar disorder, with anxious distress",
+                    icd: "6A70/6A71 depressive or 6A60/6A61 bipolar disorder",
+                    supports: "Anxiety that occurs only within a mood episode.",
+                    keyQuestion: "Does the anxiety exist outside mood episodes? If not, use the mood questions."
+                },
+                {
+                    id: "other-anxiety",
+                    code: "ICD-11 6B0Y",
+                    name: "Other specified anxiety disorder",
+                    dsm: "Other specified (or unspecified) anxiety disorder",
+                    icd: "6B0Y Other specified anxiety or fear-related disorder",
+                    supports: "Clinically significant anxiety that doesn't meet full criteria for a specific disorder.",
+                    keyQuestion: "Which criterion is missing, and might it be met with time?",
+                    check: "Confirm the ICD-11 code 6B0Y."
+                },
+                feigning
+            ]
+        },
+
+        catatonia: {
+            name: "Catatonia",
+            ruleOut: [
+                {
+                    id: "nms",
+                    name: "Neuroleptic malignant syndrome or malignant catatonia",
+                    clues: "Fever, rigidity, autonomic instability (fast pulse, labile blood pressure, sweating), altered consciousness. Recent antipsychotic or other dopamine blocker.",
+                    tests: "Temperature, observations, CK, FBC, UEC, LFT. A medical emergency."
+                },
+                {
+                    id: "serotonin",
+                    name: "Serotonin syndrome",
+                    clues: "Clonus (inducible or spontaneous), hyperreflexia, tremor, diarrhoea after serotonergic drugs.",
+                    tests: "Examination for clonus; Hunter criteria."
+                },
+                {
+                    id: "ncse",
+                    name: "Non-convulsive status epilepticus",
+                    clues: "Fluctuating responsiveness, subtle twitching, eye deviation, history of seizures.",
+                    tests: "EEG (urgent if suspected)."
+                },
+                {
+                    id: "encephalitis",
+                    name: "Encephalitis (including autoimmune)",
+                    clues: "Rapid onset, seizures, dyskinesias, autonomic instability, fever, headache. Anti-NMDAR encephalitis often presents with catatonia.",
+                    tests: "With neurology: MRI, lumbar puncture with CSF antibodies, EEG."
+                },
+                {
+                    id: "metabolic",
+                    name: "Metabolic and other medical causes",
+                    clues: "Hyponatraemia, hypercalcaemia, diabetic ketoacidosis, hepatic or renal encephalopathy, SLE, stroke, tumour.",
+                    tests: "UEC, calcium, glucose, LFT, ammonia if indicated; MRI brain."
+                },
+                {
+                    id: "withdrawal",
+                    name: "Withdrawal",
+                    clues: "Recent stop of a benzodiazepine, clozapine or other GABA-acting drug.",
+                    tests: "Medication history, including recent changes and missed doses."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "Fluctuating attention and awareness. Catatonic features only during delirium are part of the delirium.",
+                    tests: "4AT or CAM (may be hard to complete if mute)."
+                },
+                {
+                    id: "complications",
+                    name: "Complications (check for them)",
+                    clues: "Dehydration, poor nutrition, venous thromboembolism, pressure injury, aspiration, contractures.",
+                    tests: "Fluid and food intake, UEC, VTE risk assessment, skin checks."
+                }
+            ],
+            differentials: [
+                {
+                    id: "associated",
+                    code: "ICD-11 6A40",
+                    name: "Catatonia associated with another mental disorder",
+                    dsm: "Catatonia associated with another mental disorder (e.g. bipolar, depressive or psychotic disorder, autism)",
+                    icd: "6A40 Catatonia associated with another mental disorder",
+                    supports: "3 or more of the 12 catatonic signs, occurring with a mental disorder. Mood disorders (bipolar more than depression) are the commonest cause.",
+                    keyQuestion: "Which mental disorder is it occurring with? Collateral history matters, as the person may not speak."
+                },
+                {
+                    id: "induced",
+                    code: "ICD-11 6A41",
+                    name: "Catatonia induced by substances or medications",
+                    dsm: "No separate DSM-5-TR category: recorded with the intoxication, withdrawal or medication effect",
+                    icd: "6A41 Catatonia induced by substances or medications",
+                    supports: "Onset during or soon after intoxication (e.g. PCP, ketamine, cannabis, cocaine), withdrawal (benzodiazepines, clozapine), or a medication linked to catatonia (e.g. antipsychotics, steroids, disulfiram, ciprofloxacin).",
+                    keyQuestion: "What was taken, stopped or started in the days before onset?"
+                },
+                {
+                    id: "medical",
+                    code: "ICD-11 6E69",
+                    name: "Catatonic disorder due to another medical condition",
+                    dsm: "Catatonic disorder due to another medical condition",
+                    icd: "6E69 Secondary catatonia syndrome",
+                    supports: "A medical condition that causes catatonia directly, such as encephalitis, metabolic disturbance, or a brain lesion.",
+                    keyQuestion: "Are there neurological signs, fever, abnormal bloods or an abnormal EEG?"
+                },
+                {
+                    id: "malignant",
+                    name: "Malignant catatonia or neuroleptic malignant syndrome",
+                    dsm: "Catatonia with autonomic instability · Neuroleptic malignant syndrome (medication-induced movement disorder)",
+                    icd: "",
+                    supports: "Catatonia with fever and autonomic instability; NMS follows a dopamine blocker, with rigidity and raised CK.",
+                    keyQuestion: "Is there fever, autonomic instability or a raised CK?",
+                    note: "A medical emergency. Avoid antipsychotics; high-dose lorazepam; early ECT if there's no response within 24-48 hours."
+                },
+                {
+                    id: "drba",
+                    name: "Medication-induced movement disorder",
+                    dsm: "Antipsychotic-induced parkinsonism · acute dystonia · other medication-induced movement disorder",
+                    icd: "",
+                    supports: "Rigidity, slowing, tremor or abnormal postures after starting or increasing a dopamine blocker, without the wider catatonic picture.",
+                    keyQuestion: "Did it start after a dopamine blocker, and is there tremor or cogwheeling rather than negativism or waxy flexibility?"
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    dsm: "Delirium",
+                    icd: "Delirium (6D70)",
+                    supports: "Catatonic features occurring only during a delirium are part of the delirium.",
+                    keyQuestion: "Does attention and awareness fluctuate?",
+                    check: "Confirm the ICD-11 code 6D70."
+                },
+                {
+                    id: "unspecified",
+                    code: "ICD-11 6A4Z",
+                    name: "Unspecified catatonia",
+                    dsm: "Unspecified catatonia",
+                    icd: "6A4Z Catatonia, unspecified",
+                    supports: "Clinically significant catatonia where the cause isn't yet known, or fewer than 3 signs.",
+                    keyQuestion: "What work-up is still outstanding?"
+                },
+                {
+                    id: "mimic",
+                    name: "Conditions that can look like catatonia",
+                    dsm: "e.g. severe depression with psychomotor slowing; functional neurological disorder; selective mutism or autism; akinetic mutism or locked-in syndrome",
+                    icd: "",
+                    supports: "Slowing without negativism, posturing or waxy flexibility; signs that vary with attention; communication difficulties; neurological lesions.",
+                    keyQuestion: "Are the core catatonic signs (negativism, posturing, waxy flexibility, echophenomena) really present?"
+                },
+                feigning
+            ]
+        }
+    });
+})();
