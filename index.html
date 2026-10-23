@@ -228,6 +228,14 @@
             <div id="oca-assessment-page" class="page" data-title="Patient Review Workspace (OCA)">
                 <div class="oca-header-bar">
                     <div class="oca-header-left">
+                        <span class="oca-template-picker">
+                            <label for="oca-template-select" class="visually-hidden">Template</label>
+                            <select id="oca-template-select" title="Template to start the note from"></select>
+                            <button id="oca-template-load-btn" class="btn-secondary"
+                                title="Replace the note with the chosen template">Start from template</button>
+                            <button id="oca-template-edit-btn" class="btn-secondary"
+                                title="Edit, add, import or sync templates">✎ Edit templates</button>
+                        </span>
                         <button id="oca-connect-btn" class="btn-primary">📁 Connect File</button>
                         <button id="oca-load-btn" class="btn-secondary">📂 Load File</button>
                         <span id="oca-save-status" class="oca-save-status-idle">
@@ -240,7 +248,7 @@
                         <button id="oca-undo-btn" class="btn-secondary"
                             title="Undo last auto-insertion by MSE or Formulation builder" disabled>↩ Undo
                             Insertion</button>
-                        <button id="oca-reset-btn" class="reset-btn">🔄 Reset Session</button>
+                        <button id="oca-reset-btn" class="btn-secondary reset-btn">🔄 Reset Session</button>
                     </div>
                 </div>
 
@@ -2045,7 +2053,7 @@
                     <div class="tab-buttons">
                         <button class="tab-button active" data-tab="gen-mse">MSE Note Builder</button>
                         <button class="tab-button" data-tab="gen-5ps">Formulation generator</button>
-                        <button class="tab-button" data-tab="gen-templates">Clinical Review Templates</button>
+                        <button class="tab-button" data-tab="gen-templates">Note Templates</button>
                     </div>
 
                     <!-- MSE note builder section -->
@@ -3116,22 +3124,58 @@
                         </div>
                     </section>
 
-                    <!-- Clinical Review Templates section -->
+                    <!-- Note templates: edit, add, import/export and sync -->
                     <section id="gen-templates" class="tab-content">
-                        <h3>Clinical Review Note Templates</h3>
-                        <div class="form-grid" style="grid-template-columns: 1fr;">
-                            <label for="template-select" style="font-weight: 700;">Select Template:</label>
-                            <select id="template-select">
-                                <option value="addiction">Addiction Medicine Consultation Template</option>
-                                <option value="otp">OTP Clinic Consultation Template</option>
-                                <option value="review">Psychiatry Initial review/Admissions Review Template</option>
-                                <option value="oca">OCA template</option>
-                            </select>
+                        <h3>Note Templates</h3>
+                        <p class="tpl-intro">Edit your note templates and add your own. Saved templates appear in the
+                            Patient Review Workspace. <strong>Do not put patient details in a template</strong>: templates
+                            are kept in this browser, and synced to your other devices if sync is on.</p>
+                        <div class="tpl-actions">
+                            <label for="template-select" class="tpl-label">Template</label>
+                            <select id="template-select"></select>
+                            <button id="template-new-btn" class="btn-secondary">＋ New</button>
+                            <button id="template-duplicate-btn" class="btn-secondary">⧉ Duplicate</button>
+                            <button id="template-delete-btn" class="btn-secondary">🗑 Delete</button>
                         </div>
-                        <textarea id="template-note-out" class="emr-summary"
-                            style="height: 400px; font-family: monospace; font-size:13px;"></textarea>
-                        <div class="button-group">
-                            <button id="template-copy-btn" class="copy-btn">Copy Template text</button>
+                        <label for="template-name" class="tpl-label">Name</label>
+                        <input type="text" id="template-name" class="tpl-name" maxlength="200" autocomplete="off">
+                        <textarea id="template-note-out" class="emr-summary tpl-body" spellcheck="true"></textarea>
+                        <p class="tpl-hint">The workspace's MSE builder fills the lines between a line starting
+                            <code>MSE</code> and a line starting <code>Physical examination:</code>. Keep those headings in
+                            templates you use with it.</p>
+                        <div class="tpl-actions">
+                            <button id="template-save-btn" class="btn-primary">💾 Save template</button>
+                            <button id="template-copy-btn" class="btn-secondary">Copy text</button>
+                            <button id="template-use-btn" class="btn-secondary">Open in workspace</button>
+                            <span id="template-save-state" class="tpl-save-state" role="status"></span>
+                        </div>
+
+                        <div class="tpl-panel">
+                            <h4>Backup &amp; sync</h4>
+                            <div class="tpl-actions">
+                                <button id="template-export-btn" class="btn-secondary">⬇ Export templates</button>
+                                <button id="template-import-btn" class="btn-secondary">⬆ Import templates</button>
+                                <input type="file" id="template-import-file" accept=".json,application/json" hidden>
+                            </div>
+                            <p class="tpl-hint">Import takes a PsychToolkit export, or tDose's <code>templates.json</code>
+                                (on Windows: <code>%APPDATA%\tDose\templates.json</code>).</p>
+                            <div class="tpl-actions">
+                                <span id="template-sync-status" class="tpl-sync-status" role="status"></span>
+                                <button id="template-sync-now-btn" class="btn-secondary">⟳ Sync now</button>
+                            </div>
+                            <details class="tpl-sync-settings">
+                                <summary>Sync settings</summary>
+                                <p class="tpl-hint">Sync needs the Cloudflare version of the site. The sync key is the
+                                    <code>SYNC_TOKEN</code> secret set in Cloudflare; enter it once on each device.</p>
+                                <label for="template-sync-key" class="tpl-label">Sync key</label>
+                                <input type="password" id="template-sync-key" class="tpl-name" autocomplete="off"
+                                    autocapitalize="none" spellcheck="false">
+                                <div class="tpl-actions">
+                                    <button id="template-sync-save-btn" class="btn-primary">Save key &amp; sync</button>
+                                    <button id="template-sync-off-btn" class="btn-secondary">Turn sync off on this
+                                        device</button>
+                                </div>
+                            </details>
                         </div>
                     </section>
                 </div>
@@ -3953,6 +3997,7 @@
     <script src="mha.js"></script>
     <script src="mha-ui.js"></script>
     <script src="ect.js"></script>
+    <script src="note-templates.js"></script>
     <script src="script.js"></script>
 </body>
 

@@ -1,0 +1,11 @@
+# Cloudflare Pages response headers (copied into dist/ by build.js).
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: no-referrer
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+
+# The service worker must be re-checked on every visit, so a new release is
+# picked up straight away.
+/sw.js
+  Cache-Control: no-cache

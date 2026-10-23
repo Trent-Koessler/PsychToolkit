@@ -2120,6 +2120,25 @@ button.btn-primary:hover,
     gap: 12px;
 }
 
+.oca-header-left {
+    flex-wrap: wrap;
+}
+
+/* Template picker in the workspace header */
+.oca-template-picker {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.oca-template-picker select {
+    width: auto;
+    max-width: 260px;
+    padding: 7px 10px;
+    font-size: 13px;
+}
+
 /* Secondary button — neutral outlined style for Load/Undo */
 .btn-secondary {
     padding: 8px 14px;
@@ -3781,4 +3800,75 @@ button.btn-primary:hover,
         grid-template-columns: 1fr;
         gap: 4px;
     }
+}
+
+/* Note template manager (Assessment Note Generators > Note Templates) */
+.tpl-intro,
+.tpl-hint {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 6px 0 12px;
+}
+
+.tpl-label {
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.tpl-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin: 12px 0;
+}
+
+.tpl-actions select {
+    width: auto;
+    flex: 1 1 260px;
+    max-width: 480px;
+}
+
+.tpl-name {
+    display: block;
+    width: 100%;
+    max-width: 480px;
+    margin: 6px 0 12px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-family: var(--font-sans);
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.tpl-body {
+    height: 420px;
+    font-family: monospace;
+    font-size: 13px;
+}
+
+.tpl-save-state,
+.tpl-sync-status {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.tpl-sync-status[data-state="ok"] { color: var(--success-color); }
+.tpl-sync-status[data-state="error"] { color: var(--danger-color); }
+
+.tpl-panel {
+    margin-top: 24px;
+    padding: 4px 18px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+}
+
+.tpl-sync-settings summary {
+    cursor: pointer;
+    font-weight: 600;
+    font-size: 14px;
+    margin: 6px 0;
 }

@@ -7,3 +7,6 @@ exclude:
   - package-lock.json
   - node_modules/
   - README.md
+  - build.js
+  - functions/
+  - dist/
