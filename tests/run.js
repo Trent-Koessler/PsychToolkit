@@ -492,6 +492,15 @@ async function testReasoning(browser, baseUrl) {
     await tick("Command hallucinations, nihilistic delusions or agitated psychotic depression");
     expect("acute warning shown", await page.isVisible(".rz-acute"), true);
 
+    // Clear empties one section's answers and leaves the note and the other section alone.
+    await page.click("#rz-dx-clear");
+    expect("clear empties differential", await page.inputValue(rule("Delirium (rule-out)")), "Not assessed");
+    expect("clear keeps formulation", await page.inputValue("#rz-sr-baseline"), "Raised");
+    expect("clear leaves note", (await note()).includes("Differential diagnosis:"), true);
+    await page.click("#rz-sr-clear");
+    expect("clear empties formulation", await page.inputValue("#rz-sr-baseline"), "");
+    expect("clear empties chips", await page.$$eval("#oca-reasoning-body label.rz-chip.on", l => l.length), 0);
+
     // Undo removes the last insertion; Reset clears the tab.
     await page.click("#oca-undo-btn");
     expect("undo removes formulation", (await note()).includes("Suicide risk formulation:"), false);

@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.18.2";
+    const APP_VERSION = "1.18.3";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 

@@ -27,10 +27,29 @@
     let dx;
     let sr;
 
-    function freshState() {
-        dx = { problem: "psychosis", ruleOut: {}, items: {}, flow: {} };
-        sr = { acute: {}, status: {}, state: {}, baseline: "", resources: {}, plan: {},
+    function freshDx(problem) {
+        return { problem, ruleOut: {}, items: {}, flow: {} };
+    }
+
+    function freshSr() {
+        return { acute: {}, status: {}, state: {}, baseline: "", resources: {}, plan: {},
             narrative: "", intent: "", words: "", changes: "", means: "", followUp: "" };
+    }
+
+    function freshState() {
+        dx = freshDx("psychosis");
+        sr = freshSr();
+    }
+
+    // Clears one section's answers after asking. The note is left alone.
+    function clearButton(id, question, onClear) {
+        const button = el("button", "btn-secondary", "Clear");
+        button.id = id;
+        button.title = "Clear the answers in this section";
+        button.addEventListener("click", () => {
+            if (confirm(question)) onClear();
+        });
+        return button;
     }
 
     /* --------------------------------------------------------------- utils */
@@ -397,7 +416,7 @@
         Object.keys(C.differentials).forEach(key => problem.appendChild(new Option(C.differentials[key].name, key)));
         problem.value = dx.problem;
         problem.addEventListener("change", () => {
-            dx = { problem: problem.value, ruleOut: {}, items: {}, flow: {} };
+            dx = freshDx(problem.value);
             renderDifferential(section);
         });
         content.appendChild(problemLabel);
@@ -487,6 +506,11 @@
             status.textContent = insertMessage(where, "Differentials");
         });
         buttons.appendChild(insert);
+        buttons.appendChild(clearButton("rz-dx-clear",
+            "Clear all answers in the differential diagnosis? Anything already inserted stays in the note.", () => {
+                dx = freshDx(dx.problem);
+                renderDifferential(section);
+            }));
         buttons.appendChild(status);
         content.appendChild(buttons);
         content.appendChild(sourceList(C.differentialSources));
@@ -621,6 +645,11 @@
         });
         buttons.appendChild(insert);
         buttons.appendChild(plan);
+        buttons.appendChild(clearButton("rz-sr-clear",
+            "Clear all answers in the suicide risk formulation? Anything already inserted stays in the note.", () => {
+                sr = freshSr();
+                renderSuicide(section);
+            }));
         buttons.appendChild(status);
         content.appendChild(buttons);
         content.appendChild(sourceList(S.sources));
