@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.6.0";
+    const APP_VERSION = "1.18.2";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -257,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         window.scrollTo({ top: 0, behavior: "auto" });
+        document.dispatchEvent(new CustomEvent("page-shown", { detail: pageId }));
         return true;
     }
 
@@ -3244,7 +3245,44 @@ Plan:
 -Leave: nil
 
 Dr Trent Koessler
-Psychiatry Registrar`
+Psychiatry Registrar`,
+        // Stanley-Brown Safety Planning Intervention, in our own words. Written
+        // with the person, in their language, not handed to them.
+        safetyPlan: `Safety Plan
+
+What matters most to me (my reasons for living):
+
+
+1. My warning signs (thoughts, feelings, situations or behaviours that come before a crisis):
+-
+
+2. Things I can do on my own to take my mind off things:
+-
+
+3. People and places that help distract me:
+- Name and phone:
+- Place:
+
+4. People I can ask for help:
+- Name and phone:
+- Name and phone:
+
+5. Professionals and services I can contact:
+- My treating team / clinician:
+- My GP:
+- NSW Mental Health Line: 1800 011 511
+- Lifeline: 13 11 14
+- Suicide Call Back Service: 1300 659 467
+- Emergency: 000
+
+6. Making my environment safer (specific steps, and who will do them):
+-
+
+Alcohol and other drugs (how I will reduce risk):
+-
+
+Where I keep this plan (phone photo, Beyond Now app, paper copy):
+`
     };
 
     const templateStore = NoteTemplates.createStore({
@@ -3252,7 +3290,8 @@ Psychiatry Registrar`
             { id: "oca", name: "OCA template (Registrar Initial Review)", body: templates.oca },
             { id: "review", name: "Psychiatry Initial / Admission Review", body: templates.review },
             { id: "addiction", name: "Addiction Medicine Consultation", body: templates.addiction },
-            { id: "otp", name: "OTP Clinic Consultation", body: templates.otp }
+            { id: "otp", name: "OTP Clinic Consultation", body: templates.otp },
+            { id: "safety-plan", name: "Safety Plan (Stanley-Brown)", body: templates.safetyPlan }
         ],
         storage: localStorage
     });
@@ -4320,10 +4359,10 @@ Psychiatry Registrar`
                 const file = await fileHandle.getFile();
                 const contents = await file.text();
                 if (ocaEditor) {
-                    // Store undo snapshot before loading
-                    ocaUndoSnapshot = ocaEditor.value;
-                    ocaUndoBtn.disabled = false;
+                    // Undo can bring back the note from before loading.
+                    saveUndoSnapshot();
                     ocaEditor.value = contents;
+                    refreshSectionNotices();
                     saveOcaDraft();
                     // Re-use this handle for auto-saving too
                     ocaFileHandle = fileHandle;
@@ -4337,31 +4376,142 @@ Psychiatry Registrar`
         });
     }
 
-    // Undo Last Insertion
-    let ocaUndoSnapshot = null;
+    // Undo: the note as it was before each of the last 30 insertions (MSE,
+    // Formulation and Reasoning builders, templates). Each press steps back
+    // one insertion.
+    const OCA_SECTIONS = {
+        mse: {
+            start: /^MSE\b/m, end: /^Physical examination:/m, startLine: "MSE", endLine: "Physical examination:",
+            notice: "oca-mse-notice", button: "oca-mse-add-btn", update: () => updateMseInOcaText()
+        },
+        formulation: {
+            start: /^Integrative Formulation:/m, end: /^Diagnosis/m, startLine: "Integrative Formulation:", endLine: "Diagnosis",
+            notice: "oca-formulation-notice", button: "oca-formulation-add-btn", update: () => updateFormulationInOcaText()
+        }
+    };
+
+    const OCA_UNDO_LIMIT = 30;
+    let ocaUndoStack = [];
     const ocaUndoBtn = document.getElementById("oca-undo-btn");
 
+    function showUndoState() {
+        if (!ocaUndoBtn) return;
+        ocaUndoBtn.disabled = ocaUndoStack.length === 0;
+        ocaUndoBtn.textContent = ocaUndoStack.length > 1 ? `↩ Undo (${ocaUndoStack.length})` : "↩ Undo";
+    }
+
     function saveUndoSnapshot() {
-        if (ocaEditor) {
-            ocaUndoSnapshot = ocaEditor.value;
-            if (ocaUndoBtn) ocaUndoBtn.disabled = false;
-        }
+        if (!ocaEditor) return;
+        if (ocaUndoStack[ocaUndoStack.length - 1] === ocaEditor.value) return;
+        ocaUndoStack.push(ocaEditor.value);
+        if (ocaUndoStack.length > OCA_UNDO_LIMIT) ocaUndoStack.shift();
+        showUndoState();
     }
 
     if (ocaUndoBtn) {
         ocaUndoBtn.addEventListener("click", () => {
-            if (ocaUndoSnapshot !== null && ocaEditor) {
-                ocaEditor.value = ocaUndoSnapshot;
-                ocaUndoSnapshot = null;
-                ocaUndoBtn.disabled = true;
-                triggerAutoSave();
-            }
+            if (!ocaUndoStack.length || !ocaEditor) return;
+            // Skip steps that wouldn't change anything.
+            let previous = ocaUndoStack.pop();
+            while (previous === ocaEditor.value && ocaUndoStack.length) previous = ocaUndoStack.pop();
+            ocaEditor.value = previous;
+            showUndoState();
+            refreshSectionNotices();
+            triggerAutoSave();
+        });
+    }
+
+    // The MSE and Formulation builders write between two headings in the
+    // note. Without them they can't write anything, so the panel says so and
+    // offers to add the section at the cursor.
+    function findOcaSection(text, sec) {
+        const start = text.match(sec.start);
+        if (!start) return null;
+        const end = text.slice(start.index).match(sec.end);
+        return end ? { start: start.index, end: start.index + end.index } : null;
+    }
+
+    function refreshSectionNotices() {
+        if (!ocaEditor) return;
+        Object.keys(OCA_SECTIONS).forEach(key => {
+            const notice = document.getElementById(OCA_SECTIONS[key].notice);
+            if (notice) notice.hidden = !!findOcaSection(ocaEditor.value, OCA_SECTIONS[key]);
+        });
+    }
+
+    Object.keys(OCA_SECTIONS).forEach(key => {
+        const sec = OCA_SECTIONS[key];
+        const btn = document.getElementById(sec.button);
+        if (!btn || !ocaEditor) return;
+        btn.addEventListener("click", () => {
+            saveUndoSnapshot();
+            const text = ocaEditor.value;
+            const pos = typeof ocaEditor.selectionEnd === "number" ? ocaEditor.selectionEnd : text.length;
+            const before = text.slice(0, pos);
+            const after = text.slice(pos);
+            const lead = !before || before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+            const trail = after && !after.startsWith("\n") ? "\n" : "";
+            ocaEditor.value = before + lead + sec.startLine + "\n\n" + sec.endLine + "\n" + trail + after;
+            sec.update();
+            refreshSectionNotices();
+            triggerAutoSave();
+        });
+    });
+
+    // Copy clean note: preview the note without empty fields and unfilled
+    // template prompts (note-clean.js), edit it if needed, then copy.
+    const cleanModal = document.getElementById("oca-clean-modal");
+    const cleanText = document.getElementById("oca-clean-text");
+    const cleanStatus = document.getElementById("oca-clean-status");
+    function closeCleanPreview() {
+        if (!cleanModal) return;
+        cleanModal.style.display = "none";
+        document.body.classList.remove("modal-open");
+        cleanText.value = "";
+        cleanStatus.textContent = "";
+    }
+    const copyCleanBtn = document.getElementById("oca-copy-clean-btn");
+    if (copyCleanBtn && cleanModal && ocaEditor && window.NOTE_CLEAN) {
+        copyCleanBtn.addEventListener("click", () => {
+            const chosen = ocaTemplateSelect ? templateStore.get(ocaTemplateSelect.value) : null;
+            const result = window.NOTE_CLEAN.cleanNote(ocaEditor.value, ocaBaseline || (chosen ? chosen.body : ""));
+            cleanText.value = result.text;
+            document.getElementById("oca-clean-summary").textContent =
+                `${result.removed} empty or unfilled line${result.removed === 1 ? "" : "s"} left out. ` +
+                "Check it and edit here if needed (your note isn't changed), then copy.";
+            cleanStatus.textContent = "";
+            cleanModal.style.display = "block";
+            document.body.classList.add("modal-open");
+            cleanText.focus();
+            cleanText.setSelectionRange(0, 0);
+            cleanText.scrollTop = 0;
+        });
+        document.getElementById("oca-clean-copy-btn").addEventListener("click", async () => {
+            const ok = await copyToClipboard(cleanText.value);
+            cleanStatus.textContent = ok ? "Copied." : "Couldn't copy automatically: select the text and copy it yourself.";
+        });
+        document.getElementById("oca-clean-close-btn").addEventListener("click", closeCleanPreview);
+        cleanModal.addEventListener("click", e => { if (e.target === cleanModal) closeCleanPreview(); });
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && cleanModal.style.display === "block") closeCleanPreview();
         });
     }
 
     if (ocaEditor) {
+        ocaEditor.addEventListener("input", refreshSectionNotices);
         ocaEditor.addEventListener("input", triggerAutoSave);
+        // The Reasoning tab (reasoning-ui.js) fires this before it changes the
+        // note, so Undo can take the insertion back.
+        ocaEditor.addEventListener("oca-before-insert", saveUndoSnapshot);
     }
+
+    // The Reasoning tab's "Open safety plan template" button.
+    document.addEventListener("open-note-template", (e) => {
+        showPage("generators-page");
+        const tab = document.querySelector('#generators-page .tab-button[data-tab="gen-templates"]');
+        if (tab) tab.click();
+        if (confirmLeaveTemplate()) openTemplateInEditor(e.detail.id);
+    });
 
     // Warn before the tab is closed or the site left with a note that exists
     // only on screen (not in a connected file). The browser shows its own wording.
@@ -4382,6 +4532,7 @@ Psychiatry Registrar`
             !confirm(`Replace the current note with "${t.name}"? You can use Undo to get the note back.`)) return;
         saveUndoSnapshot();
         startOcaFromTemplate(id);
+        refreshSectionNotices();
         triggerAutoSave();
     }
 
@@ -4453,15 +4604,16 @@ Psychiatry Registrar`
         });
     }
 
-    // Start timer when OCA page is navigated to
-    document.querySelectorAll(".big-button[data-page='oca-assessment-page']").forEach(btn => {
-        btn.addEventListener("click", () => startSessionTimer());
+    // Start the timer whenever the workspace is shown: home tiles, the side
+    // menu, Back/Forward or a link. Also if the page opened on it.
+    document.addEventListener("page-shown", e => {
+        if (e.detail === "oca-assessment-page") startSessionTimer();
     });
-    // Also start if already on the page on load
     const ocaPage = document.getElementById("oca-assessment-page");
     if (ocaPage && ocaPage.classList.contains("active-page")) {
         startSessionTimer();
     }
+    refreshSectionNotices();
 
     // 4. Live-updating MSE Generator Sidebar
     const ocaMseMotorChecks = ["oca-mse-motor-tremor", "oca-mse-motor-chorea", "oca-mse-motor-athetosis", "oca-mse-motor-dystonias", "oca-mse-motor-tics", "oca-mse-motor-catatonic"];
@@ -4654,15 +4806,10 @@ Psychiatry Registrar`
         const compiledMse = `MSE\n` + parts.join("\n");
         const fixedOcaMseDetails = `Orientation: Date - Month - Year - Day - Place - Suburb\n\nDelayed Recall: Face - Velvet - Church - Daisy - Red\n\nFrontal assessments:\n- Similarities - in what way are these alike?\nAn apple and banana [fruit]\nTable and a chair [furniture]\nTulip, a rose and a daisy [flowers]\n- Luria test (fist - knife - palm down - 3 examiner alone; 3 with patient; then get them to do it 6 times alone)-`;
 
-        const startRegex = /^MSE\b/m;
-        const endRegex = /^Physical examination:/m;
-
-        const startMatch = text.match(startRegex);
-        const endMatch = text.match(endRegex);
-
-        if (startMatch && endMatch && startMatch.index < endMatch.index) {
-            const beforeMse = text.substring(0, startMatch.index);
-            const afterMse = text.substring(endMatch.index);
+        const section = findOcaSection(text, OCA_SECTIONS.mse);
+        if (section) {
+            const beforeMse = text.substring(0, section.start);
+            const afterMse = text.substring(section.end);
             saveUndoSnapshot();
             ocaEditor.value = beforeMse + compiledMse + "\n\n" + fixedOcaMseDetails + "\n\n\n" + afterMse;
             updateWardRiskFormulationInOcaText(true);
@@ -5258,22 +5405,20 @@ ${section2Text || 'N/A'}
 # Speculative/Theoretical Hypotheses:
 ${section3Text || 'No theoretical frameworks selected.'}`;
 
-        const startRegex = /^Integrative Formulation:/m;
-        const endRegex = /^Diagnosis/m;
-
-        const startMatch = text.match(startRegex);
-        const endMatch = text.match(endRegex);
-
-        if (startMatch && endMatch && startMatch.index < endMatch.index) {
-            const beforeForm = text.substring(0, startMatch.index);
-            const afterForm = text.substring(endMatch.index);
+        const section = findOcaSection(text, OCA_SECTIONS.formulation);
+        if (section) {
+            const beforeForm = text.substring(0, section.start);
+            const afterForm = text.substring(section.end);
             saveUndoSnapshot();
             ocaEditor.value = beforeForm + compiledFormulation + "\n\n\n" + afterForm;
             updateWardRiskFormulationInOcaText(true);
         }
     }
 
-    // Ward Risk Formulation compiler (robust matches, no strict N.B. boundary)
+    // Ward Risk Formulation compiler (robust matches, no strict N.B. boundary).
+    // The text each line was last filled with: a line still holding it was
+    // never edited by hand, so it is refreshed when the MSE changes.
+    const lastWardRiskFill = {};
     function updateWardRiskFormulationInOcaText(skipUndo = false) {
         if (!ocaEditor) return;
         let text = ocaEditor.value;
@@ -5319,36 +5464,38 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         fields.forEach(field => {
             const info = getFieldInfo(field);
             if (info) {
-                values[field] = info.isEmpty ? null : info.val;
+                values[field] = (info.isEmpty || info.val === lastWardRiskFill[field]) ? null : info.val;
             } else {
                 values[field] = undefined; // Field not found in editor
             }
         });
 
-        // 1. Suicide Risk (SR)
+        // 1. Suicide Risk (SR) and 2. Deliberate Self-Harm (DSH) describe
+        // what was found, without a low/medium/high rating: NICE NG225 (2022)
+        // advises against risk tiers for suicide and self-harm. The suicide
+        // risk formulation (Reasoning tab) holds the reasoning.
         if (values["SR"] === null) {
             const si = siEl ? siEl.value : "Denied";
             const siDesc = (siDescEl && siDescEl.value.trim()) ? ` (${siDescEl.value.trim()})` : "";
             if (si === "Present with plan") {
-                values["SR"] = `Elevated risk - active suicidal ideation with plan${siDesc}.`;
+                values["SR"] = `Active suicidal ideation with plan${siDesc}. See suicide risk formulation.`;
             } else if (si === "Present with intent") {
-                values["SR"] = `Elevated risk - active suicidal ideation with intent${siDesc}.`;
+                values["SR"] = `Active suicidal ideation with intent${siDesc}. See suicide risk formulation.`;
             } else if (si === "Fleeting thoughts, no intent/plan") {
-                values["SR"] = `Low/Moderate risk - passive or fleeting suicidal thoughts, denies intent/plan${siDesc}.`;
+                values["SR"] = `Passive or fleeting suicidal thoughts, denies intent or plan${siDesc}. See suicide risk formulation.`;
             } else {
-                values["SR"] = "Low risk - denies suicidal ideation.";
+                values["SR"] = "Denies current suicidal ideation (denial alone doesn't mean low risk).";
             }
         }
 
-        // 2. Deliberate Self-Harm (DSH)
         if (values["DSH"] === null) {
             const shi = shiEl ? shiEl.value.trim() : "";
             if (shi && shi.toLowerCase() !== "denied" && shi.toLowerCase() !== "no" && shi.toLowerCase() !== "none") {
-                values["DSH"] = `Intermittent risk - self-harm ideation/behaviors noted: ${shi}.`;
+                values["DSH"] = `Self-harm thoughts or behaviour noted: ${shi}. See suicide risk formulation.`;
             } else if (shi) {
-                values["DSH"] = `Low risk - ${shi.toLowerCase().startsWith("deni") ? shi : "denies self-harm"}.`;
+                values["DSH"] = `${shi.toLowerCase().startsWith("deni") ? shi.charAt(0).toUpperCase() + shi.slice(1) : "Denies current self-harm"}.`;
             } else {
-                values["DSH"] = "Low risk - denies deliberate self-harm.";
+                values["DSH"] = "Denies current self-harm.";
             }
         }
 
@@ -5436,6 +5583,7 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
             const info = getFieldInfo(field);
             if (info && values[field] !== undefined) {
                 const finalVal = values[field] || "";
+                if (info.isEmpty || info.val === lastWardRiskFill[field]) lastWardRiskFill[field] = finalVal;
                 updatedRestText = updatedRestText.replace(info.fullLine, info.prefix + finalVal);
             }
         });
@@ -5579,6 +5727,10 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 ocaStatusText.textContent = "Not connected (Auto-save offline)";
 
                 if (ocaEditor) startOcaFromTemplate(ocaTemplateSelect ? ocaTemplateSelect.value : "oca");
+                // A new patient: the previous note can't be brought back with Undo.
+                ocaUndoStack = [];
+                showUndoState();
+                refreshSectionNotices();
 
                 // Reset HCR-20 checkboxes
                 ocaHcrInputIds.forEach(id => {
@@ -5640,6 +5792,9 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 if (siDescCont) siDescCont.style.display = "none";
                 const delDescCont = document.getElementById("oca-mse-delusion-desc-container");
                 if (delDescCont) delDescCont.style.display = "none";
+
+                // Clear the Reasoning tab (reasoning-ui.js)
+                document.dispatchEvent(new Event("oca-reset"));
 
                 // Prompt user to save/connect a new file
                 await connectNewFile();

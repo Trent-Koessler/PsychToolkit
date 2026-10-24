@@ -37,7 +37,7 @@
             display: none;
             align-items: center;
             justify-content: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: Arial, Helvetica, sans-serif;
         }
         [data-theme="dark"] .lock-screen {
             background-color: #0b0f19;
@@ -50,9 +50,6 @@
             display: none !important;
         }
     </style>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="description"
@@ -245,9 +242,10 @@
                     </div>
                     <div class="oca-header-right">
                         <span id="oca-session-timer" class="oca-session-timer" title="Session duration">⏱ 00:00</span>
+                        <button id="oca-copy-clean-btn" class="btn-secondary"
+                            title="Preview and copy the note without empty fields and unfilled prompts">📋 Copy clean note</button>
                         <button id="oca-undo-btn" class="btn-secondary"
-                            title="Undo last auto-insertion by MSE or Formulation builder" disabled>↩ Undo
-                            Insertion</button>
+                            title="Undo the last insertion by the MSE, Formulation or Reasoning builders" disabled>↩ Undo</button>
                         <button id="oca-reset-btn" class="btn-secondary reset-btn">🔄 Reset Session</button>
                     </div>
                 </div>
@@ -269,6 +267,7 @@
                             <button class="oca-tab-btn active" data-oca-tab="oca-mse-panel">MSE Live Builder</button>
                             <button class="oca-tab-btn" data-oca-tab="oca-formulation-panel">Formulation
                                 Builder</button>
+                            <button class="oca-tab-btn" data-oca-tab="oca-reasoning-panel">Reasoning</button>
                         </div>
 
                         <!-- MSE builder panel -->
@@ -277,6 +276,11 @@
                                 <h5>MSE Live Builder</h5>
                                 <p style="font-size:12px; color:var(--text-muted); margin-bottom:10px;">Select options
                                     to dynamically update the MSE section in your assessment note.</p>
+                                <div id="oca-mse-notice" class="oca-section-notice" hidden>
+                                    <p>Your note has no section from a line starting <strong>MSE</strong> to a line
+                                        starting <strong>Physical examination:</strong>, so the MSE can't be written in.</p>
+                                    <button id="oca-mse-add-btn" class="btn-secondary">Add MSE section at cursor</button>
+                                </div>
                             </div>
                             <div class="oca-drawer-scrollable" id="oca-mse-controls-container">
                                 <!-- 1. Appearance -->
@@ -716,6 +720,12 @@
                         <div id="oca-formulation-panel" class="oca-panel-content">
                             <div class="oca-panel-subheader" style="margin-bottom:10px;">
                                 <h5>Formulation Live Builder</h5>
+                                <div id="oca-formulation-notice" class="oca-section-notice" hidden>
+                                    <p>Your note has no section from a line starting <strong>Integrative
+                                        Formulation:</strong> to a line starting <strong>Diagnosis</strong>, so the
+                                        formulation can't be written in.</p>
+                                    <button id="oca-formulation-add-btn" class="btn-secondary">Add formulation section at cursor</button>
+                                </div>
                             </div>
                             <div class="oca-drawer-scrollable">
                                 <!-- Section 1: Presenting Problem -->
@@ -1057,6 +1067,15 @@
                                     </div>
                                 </details>
                             </div>
+                        </div>
+
+                        <!-- Clinical reasoning panel: built by reasoning-ui.js from reasoning-content.js -->
+                        <div id="oca-reasoning-panel" class="oca-panel-content">
+                            <div class="oca-panel-subheader rz-header">
+                                <h5>Clinical Reasoning</h5>
+                                <button id="oca-reasoning-width-btn" class="btn-secondary">⤡ Narrow panel</button>
+                            </div>
+                            <div class="oca-drawer-scrollable" id="oca-reasoning-body"></div>
                         </div>
                     </div>
                 </div>
@@ -3968,6 +3987,21 @@
 
     </div> <!-- End of #app-container -->
 
+    <!-- Clean note preview (Patient Review Workspace) -->
+    <div id="oca-clean-modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="oca-clean-title">
+        <div class="modal-content oca-clean-content">
+            <h3 id="oca-clean-title">Clean note</h3>
+            <p id="oca-clean-summary" class="oca-clean-summary"></p>
+            <label for="oca-clean-text" class="visually-hidden">Clean note text</label>
+            <textarea id="oca-clean-text" class="oca-clean-text" spellcheck="false"></textarea>
+            <div class="button-group oca-clean-buttons">
+                <button id="oca-clean-copy-btn" class="btn-primary">Copy</button>
+                <button id="oca-clean-close-btn" class="btn-secondary">Close</button>
+                <span id="oca-clean-status" class="oca-clean-status" aria-live="polite"></span>
+            </div>
+        </div>
+    </div>
+
     <!-- Medical Terms and Disclaimer Modal -->
     <div id="disclaimer-modal" class="modal">
         <div class="modal-content">
@@ -3998,6 +4032,21 @@
     <script src="mha-ui.js"></script>
     <script src="ect.js"></script>
     <script src="note-templates.js"></script>
+    <script src="note-clean.js"></script>
+    <script src="reasoning-content.js"></script>
+    <script src="reasoning-flow.js"></script>
+    <script src="reasoning-flow-kit.js"></script>
+    <script src="reasoning-flow-mood.js"></script>
+    <script src="reasoning-flow-anxiety.js"></script>
+    <script src="reasoning-flow-cognitive.js"></script>
+    <script src="reasoning-flow-substance.js"></script>
+    <script src="reasoning-flow-risk.js"></script>
+    <script src="reasoning-flow-sleep-eating.js"></script>
+    <script src="reasoning-flow-somatic.js"></script>
+    <script src="reasoning-flow-avoidance.js"></script>
+    <script src="reasoning-flow-sexual.js"></script>
+    <script src="reasoning-flow-neurodev.js"></script>
+    <script src="reasoning-ui.js"></script>
     <script src="script.js"></script>
 </body>
 
