@@ -1,6 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
     // Keep in sync with APP_VERSION in sw.js, which derives the cache name from it.
-    const APP_VERSION = "1.17.0";
+    const APP_VERSION = "1.18.0";
     document.querySelectorAll(".app-version").forEach(el => el.textContent = APP_VERSION);
     setupEquivalentsConverters();
 
@@ -257,6 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
 
         window.scrollTo({ top: 0, behavior: "auto" });
+        document.dispatchEvent(new CustomEvent("page-shown", { detail: pageId }));
         return true;
     }
 
@@ -4358,10 +4359,10 @@ Where I keep this plan (phone photo, Beyond Now app, paper copy):
                 const file = await fileHandle.getFile();
                 const contents = await file.text();
                 if (ocaEditor) {
-                    // Store undo snapshot before loading
-                    ocaUndoSnapshot = ocaEditor.value;
-                    ocaUndoBtn.disabled = false;
+                    // Undo can bring back the note from before loading.
+                    saveUndoSnapshot();
                     ocaEditor.value = contents;
+                    refreshSectionNotices();
                     saveOcaDraft();
                     // Re-use this handle for auto-saving too
                     ocaFileHandle = fileHandle;
@@ -4375,29 +4376,129 @@ Where I keep this plan (phone photo, Beyond Now app, paper copy):
         });
     }
 
-    // Undo Last Insertion
-    let ocaUndoSnapshot = null;
+    // Undo: the note as it was before each of the last 30 insertions (MSE,
+    // Formulation and Reasoning builders, templates). Each press steps back
+    // one insertion.
+    const OCA_SECTIONS = {
+        mse: {
+            start: /^MSE\b/m, end: /^Physical examination:/m, startLine: "MSE", endLine: "Physical examination:",
+            notice: "oca-mse-notice", button: "oca-mse-add-btn", update: () => updateMseInOcaText()
+        },
+        formulation: {
+            start: /^Integrative Formulation:/m, end: /^Diagnosis/m, startLine: "Integrative Formulation:", endLine: "Diagnosis",
+            notice: "oca-formulation-notice", button: "oca-formulation-add-btn", update: () => updateFormulationInOcaText()
+        }
+    };
+
+    const OCA_UNDO_LIMIT = 30;
+    let ocaUndoStack = [];
     const ocaUndoBtn = document.getElementById("oca-undo-btn");
 
+    function showUndoState() {
+        if (!ocaUndoBtn) return;
+        ocaUndoBtn.disabled = ocaUndoStack.length === 0;
+        ocaUndoBtn.textContent = ocaUndoStack.length > 1 ? `↩ Undo (${ocaUndoStack.length})` : "↩ Undo";
+    }
+
     function saveUndoSnapshot() {
-        if (ocaEditor) {
-            ocaUndoSnapshot = ocaEditor.value;
-            if (ocaUndoBtn) ocaUndoBtn.disabled = false;
-        }
+        if (!ocaEditor) return;
+        if (ocaUndoStack[ocaUndoStack.length - 1] === ocaEditor.value) return;
+        ocaUndoStack.push(ocaEditor.value);
+        if (ocaUndoStack.length > OCA_UNDO_LIMIT) ocaUndoStack.shift();
+        showUndoState();
     }
 
     if (ocaUndoBtn) {
         ocaUndoBtn.addEventListener("click", () => {
-            if (ocaUndoSnapshot !== null && ocaEditor) {
-                ocaEditor.value = ocaUndoSnapshot;
-                ocaUndoSnapshot = null;
-                ocaUndoBtn.disabled = true;
-                triggerAutoSave();
-            }
+            if (!ocaUndoStack.length || !ocaEditor) return;
+            // Skip steps that wouldn't change anything.
+            let previous = ocaUndoStack.pop();
+            while (previous === ocaEditor.value && ocaUndoStack.length) previous = ocaUndoStack.pop();
+            ocaEditor.value = previous;
+            showUndoState();
+            refreshSectionNotices();
+            triggerAutoSave();
+        });
+    }
+
+    // The MSE and Formulation builders write between two headings in the
+    // note. Without them they can't write anything, so the panel says so and
+    // offers to add the section at the cursor.
+    function findOcaSection(text, sec) {
+        const start = text.match(sec.start);
+        if (!start) return null;
+        const end = text.slice(start.index).match(sec.end);
+        return end ? { start: start.index, end: start.index + end.index } : null;
+    }
+
+    function refreshSectionNotices() {
+        if (!ocaEditor) return;
+        Object.keys(OCA_SECTIONS).forEach(key => {
+            const notice = document.getElementById(OCA_SECTIONS[key].notice);
+            if (notice) notice.hidden = !!findOcaSection(ocaEditor.value, OCA_SECTIONS[key]);
+        });
+    }
+
+    Object.keys(OCA_SECTIONS).forEach(key => {
+        const sec = OCA_SECTIONS[key];
+        const btn = document.getElementById(sec.button);
+        if (!btn || !ocaEditor) return;
+        btn.addEventListener("click", () => {
+            saveUndoSnapshot();
+            const text = ocaEditor.value;
+            const pos = typeof ocaEditor.selectionEnd === "number" ? ocaEditor.selectionEnd : text.length;
+            const before = text.slice(0, pos);
+            const after = text.slice(pos);
+            const lead = !before || before.endsWith("\n\n") ? "" : before.endsWith("\n") ? "\n" : "\n\n";
+            const trail = after && !after.startsWith("\n") ? "\n" : "";
+            ocaEditor.value = before + lead + sec.startLine + "\n\n" + sec.endLine + "\n" + trail + after;
+            sec.update();
+            refreshSectionNotices();
+            triggerAutoSave();
+        });
+    });
+
+    // Copy clean note: preview the note without empty fields and unfilled
+    // template prompts (note-clean.js), edit it if needed, then copy.
+    const cleanModal = document.getElementById("oca-clean-modal");
+    const cleanText = document.getElementById("oca-clean-text");
+    const cleanStatus = document.getElementById("oca-clean-status");
+    function closeCleanPreview() {
+        if (!cleanModal) return;
+        cleanModal.style.display = "none";
+        document.body.classList.remove("modal-open");
+        cleanText.value = "";
+        cleanStatus.textContent = "";
+    }
+    const copyCleanBtn = document.getElementById("oca-copy-clean-btn");
+    if (copyCleanBtn && cleanModal && ocaEditor && window.NOTE_CLEAN) {
+        copyCleanBtn.addEventListener("click", () => {
+            const chosen = ocaTemplateSelect ? templateStore.get(ocaTemplateSelect.value) : null;
+            const result = window.NOTE_CLEAN.cleanNote(ocaEditor.value, ocaBaseline || (chosen ? chosen.body : ""));
+            cleanText.value = result.text;
+            document.getElementById("oca-clean-summary").textContent =
+                `${result.removed} empty or unfilled line${result.removed === 1 ? "" : "s"} left out. ` +
+                "Check it and edit here if needed (your note isn't changed), then copy.";
+            cleanStatus.textContent = "";
+            cleanModal.style.display = "block";
+            document.body.classList.add("modal-open");
+            cleanText.focus();
+            cleanText.setSelectionRange(0, 0);
+            cleanText.scrollTop = 0;
+        });
+        document.getElementById("oca-clean-copy-btn").addEventListener("click", async () => {
+            const ok = await copyToClipboard(cleanText.value);
+            cleanStatus.textContent = ok ? "Copied." : "Couldn't copy automatically: select the text and copy it yourself.";
+        });
+        document.getElementById("oca-clean-close-btn").addEventListener("click", closeCleanPreview);
+        cleanModal.addEventListener("click", e => { if (e.target === cleanModal) closeCleanPreview(); });
+        document.addEventListener("keydown", e => {
+            if (e.key === "Escape" && cleanModal.style.display === "block") closeCleanPreview();
         });
     }
 
     if (ocaEditor) {
+        ocaEditor.addEventListener("input", refreshSectionNotices);
         ocaEditor.addEventListener("input", triggerAutoSave);
         // The Reasoning tab (reasoning-ui.js) fires this before it changes the
         // note, so Undo can take the insertion back.
@@ -4431,6 +4532,7 @@ Where I keep this plan (phone photo, Beyond Now app, paper copy):
             !confirm(`Replace the current note with "${t.name}"? You can use Undo to get the note back.`)) return;
         saveUndoSnapshot();
         startOcaFromTemplate(id);
+        refreshSectionNotices();
         triggerAutoSave();
     }
 
@@ -4502,15 +4604,16 @@ Where I keep this plan (phone photo, Beyond Now app, paper copy):
         });
     }
 
-    // Start timer when OCA page is navigated to
-    document.querySelectorAll(".big-button[data-page='oca-assessment-page']").forEach(btn => {
-        btn.addEventListener("click", () => startSessionTimer());
+    // Start the timer whenever the workspace is shown: home tiles, the side
+    // menu, Back/Forward or a link. Also if the page opened on it.
+    document.addEventListener("page-shown", e => {
+        if (e.detail === "oca-assessment-page") startSessionTimer();
     });
-    // Also start if already on the page on load
     const ocaPage = document.getElementById("oca-assessment-page");
     if (ocaPage && ocaPage.classList.contains("active-page")) {
         startSessionTimer();
     }
+    refreshSectionNotices();
 
     // 4. Live-updating MSE Generator Sidebar
     const ocaMseMotorChecks = ["oca-mse-motor-tremor", "oca-mse-motor-chorea", "oca-mse-motor-athetosis", "oca-mse-motor-dystonias", "oca-mse-motor-tics", "oca-mse-motor-catatonic"];
@@ -4703,15 +4806,10 @@ Where I keep this plan (phone photo, Beyond Now app, paper copy):
         const compiledMse = `MSE\n` + parts.join("\n");
         const fixedOcaMseDetails = `Orientation: Date - Month - Year - Day - Place - Suburb\n\nDelayed Recall: Face - Velvet - Church - Daisy - Red\n\nFrontal assessments:\n- Similarities - in what way are these alike?\nAn apple and banana [fruit]\nTable and a chair [furniture]\nTulip, a rose and a daisy [flowers]\n- Luria test (fist - knife - palm down - 3 examiner alone; 3 with patient; then get them to do it 6 times alone)-`;
 
-        const startRegex = /^MSE\b/m;
-        const endRegex = /^Physical examination:/m;
-
-        const startMatch = text.match(startRegex);
-        const endMatch = text.match(endRegex);
-
-        if (startMatch && endMatch && startMatch.index < endMatch.index) {
-            const beforeMse = text.substring(0, startMatch.index);
-            const afterMse = text.substring(endMatch.index);
+        const section = findOcaSection(text, OCA_SECTIONS.mse);
+        if (section) {
+            const beforeMse = text.substring(0, section.start);
+            const afterMse = text.substring(section.end);
             saveUndoSnapshot();
             ocaEditor.value = beforeMse + compiledMse + "\n\n" + fixedOcaMseDetails + "\n\n\n" + afterMse;
             updateWardRiskFormulationInOcaText(true);
@@ -5307,15 +5405,10 @@ ${section2Text || 'N/A'}
 # Speculative/Theoretical Hypotheses:
 ${section3Text || 'No theoretical frameworks selected.'}`;
 
-        const startRegex = /^Integrative Formulation:/m;
-        const endRegex = /^Diagnosis/m;
-
-        const startMatch = text.match(startRegex);
-        const endMatch = text.match(endRegex);
-
-        if (startMatch && endMatch && startMatch.index < endMatch.index) {
-            const beforeForm = text.substring(0, startMatch.index);
-            const afterForm = text.substring(endMatch.index);
+        const section = findOcaSection(text, OCA_SECTIONS.formulation);
+        if (section) {
+            const beforeForm = text.substring(0, section.start);
+            const afterForm = text.substring(section.end);
             saveUndoSnapshot();
             ocaEditor.value = beforeForm + compiledFormulation + "\n\n\n" + afterForm;
             updateWardRiskFormulationInOcaText(true);
@@ -5634,6 +5727,10 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
                 ocaStatusText.textContent = "Not connected (Auto-save offline)";
 
                 if (ocaEditor) startOcaFromTemplate(ocaTemplateSelect ? ocaTemplateSelect.value : "oca");
+                // A new patient: the previous note can't be brought back with Undo.
+                ocaUndoStack = [];
+                showUndoState();
+                refreshSectionNotices();
 
                 // Reset HCR-20 checkboxes
                 ocaHcrInputIds.forEach(id => {

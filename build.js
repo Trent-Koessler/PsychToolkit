@@ -20,6 +20,7 @@ const FILES = [
     "sw.js",
     "script.js",
     "note-templates.js",
+    "note-clean.js",
     "reasoning-content.js",
     "reasoning-flow.js",
     "reasoning-flow-kit.js",

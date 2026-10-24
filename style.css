@@ -4211,3 +4211,60 @@ button.btn-primary:hover,
     margin: 6px 0 0;
     padding-left: 20px;
 }
+
+/* Patient Review Workspace: a builder can't find its section in the note */
+.oca-section-notice {
+    margin: 0 0 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--warning-color);
+    border-left-width: 4px;
+    border-radius: var(--radius-sm);
+    background: color-mix(in srgb, var(--warning-color) 10%, transparent);
+    font-size: 12.5px;
+    line-height: 1.45;
+}
+
+.oca-section-notice p {
+    margin: 0 0 8px;
+}
+
+.oca-section-notice[hidden] {
+    display: none;
+}
+
+/* Clean note preview */
+.oca-clean-content {
+    max-width: 760px;
+    margin: 5% auto;
+}
+
+.oca-clean-summary {
+    margin: 8px 0 10px;
+    font-size: 13.5px;
+    color: var(--text-muted);
+}
+
+.oca-clean-text {
+    width: 100%;
+    min-height: 50vh;
+    box-sizing: border-box;
+    padding: 12px;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--text-color);
+    background: var(--bg-color);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    resize: vertical;
+}
+
+.oca-clean-buttons {
+    margin-top: 12px;
+    align-items: center;
+}
+
+.oca-clean-status {
+    font-size: 13px;
+    color: var(--text-muted);
+}

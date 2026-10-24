@@ -1314,6 +1314,87 @@ async function testAttentionScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+// "Copy clean note" rules (note-clean.js), on the real OCA template.
+function testCleanNoteRules() {
+    const { cleanNote } = require(path.join(ROOT, "note-clean.js"));
+    const src = fs.readFileSync(path.join(ROOT, "script.js"), "utf8");
+    const start = src.indexOf("oca: `") + 6;
+    const template = src.slice(start, src.indexOf("`", start));
+    const note = template
+        .replace("Situation:\n", "Situation:\nSelf-presented with low mood.\n")
+        .replace("Address - ", "Address - Penrith")
+        .replace("- Mood right now - ", "- Mood right now - 3/10")
+        .replace("\tSuicidal Ideation: (Current/past, intent, plan, access to means)", "\tSuicidal Ideation: (Current/past, intent, plan, access to means) Passive, no plan.")
+        .replace("SR - ", "SR - Passive suicidal thoughts.");
+    const { text, removed } = cleanNote(note, template);
+    expectIncludes("clean note: keeps the title", text, "Registrar Initial Review");
+    expectIncludes("clean note: keeps a heading with content", text, "Situation:\nSelf-presented with low mood.");
+    expectIncludes("clean note: keeps a heading separated by blank lines", text, "On review:\n\n- Mood right now - 3/10");
+    expectIncludes("clean note: trims the template prompt", text, "\tSuicidal Ideation: Passive, no plan.");
+    expectIncludes("clean note: keeps nested headings", text, "Risk Assessment\nRisk to Self:");
+    expectIncludes("clean note: keeps the sign-off", text, "Psychiatry Registrar");
+    expect("clean note: leaves out empty fields", /^Pets -/m.test(text) || /^Abs -/m.test(text), false);
+    expect("clean note: leaves out unfilled prompts", /Tobacco|Relapse prevention|Voice hoarseness/.test(text), false);
+    expect("clean note: leaves out empty sections", /Functional screen|Prognosis/.test(text), false);
+    expect("clean note: no double blank lines", /\n\n\n/.test(text), false);
+    expect("clean note: counts what it left out", removed > 100, true);
+    expect("clean note: an untouched note keeps only title and sign-off", cleanNote(template, template).text.split("\n\n").length, 2);
+    expect("clean note: without a template only empty fields go", cleanNote("Plan:\nAdmit\nLegal status: __\nPets -", "").text, "Plan:\nAdmit");
+}
+
+async function testNoteWorkspaceTools(browser, baseUrl) {
+    // Timer starts when the workspace is opened from the side menu.
+    let page = await newUnlockedPage(browser, baseUrl, "");
+    await page.evaluate(() => document.querySelector(".nav-drawer .nav-link[data-page='oca-assessment-page']").click());
+    await page.waitForTimeout(1300);
+    expect("workspace: timer starts from the side menu", await page.textContent("#oca-session-timer") !== "⏱ 00:00", true);
+    await page.context().close();
+
+    page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    const setMse = value => page.evaluate(v => {
+        const el = document.getElementById("oca-mse-mood");
+        el.value = v;
+        el.dispatchEvent(new Event("change", { bubbles: true }));
+        el.dispatchEvent(new Event("input", { bubbles: true }));
+    }, value);
+    const options = ["Anxious", "Irritable", "Low"];
+
+    // Multi-step undo.
+    await setMse(options[0]);
+    await setMse(options[1]);
+    const afterTwo = await page.inputValue("#oca-editor");
+    expectIncludes("workspace: undo counts steps", await page.textContent("#oca-undo-btn"), "Undo (");
+    await page.click("#oca-undo-btn");
+    const afterUndo = await page.inputValue("#oca-editor");
+    expect("workspace: undo steps back one insertion", afterUndo !== afterTwo && afterUndo.includes(options[0]), true);
+    await page.click("#oca-undo-btn");
+    expect("workspace: undo steps back again", (await page.inputValue("#oca-editor")).includes(options[0]), false);
+
+    // Missing MSE section: notice, then add at cursor.
+    expect("workspace: no notice while the MSE section exists", await page.isHidden("#oca-mse-notice"), true);
+    await page.evaluate(() => {
+        const ed = document.getElementById("oca-editor");
+        ed.value = "Situation:\nSeen on the ward.\n";
+        ed.dispatchEvent(new Event("input", { bubbles: true }));
+        ed.setSelectionRange(ed.value.length, ed.value.length);
+    });
+    expect("workspace: notice when the MSE section is missing", await page.isVisible("#oca-mse-notice"), true);
+    await page.click("#oca-mse-add-btn");
+    const added = await page.inputValue("#oca-editor");
+    expect("workspace: MSE section added at the cursor and filled", /^Situation:\nSeen on the ward\.\n\nMSE\nAppearance:/m.test(added) && /Physical examination:/.test(added), true);
+    expect("workspace: notice gone once added", await page.isHidden("#oca-mse-notice"), true);
+
+    // Copy clean note preview.
+    await page.click("#oca-copy-clean-btn");
+    expect("workspace: clean note preview opens", await page.isVisible("#oca-clean-modal"), true);
+    const preview = await page.inputValue("#oca-clean-text");
+    expect("workspace: preview keeps what was written", preview.startsWith("Situation:\nSeen on the ward."), true);
+    await page.click("#oca-clean-close-btn");
+    expect("workspace: preview closes and is cleared", [await page.isHidden("#oca-clean-modal"), await page.inputValue("#oca-clean-text")], [true, ""]);
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1420,6 +1501,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testAppShell(browser, baseUrl);
         await testMhaPathway(browser, baseUrl);
         await testNoteTemplates(browser, baseUrl);
+        testCleanNoteRules();
+        await testNoteWorkspaceTools(browser, baseUrl);
         await testTemplateFunction();
         testCheckItemsList();
         await testWardRiskLines(browser, baseUrl);
