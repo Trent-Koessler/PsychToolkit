@@ -12,7 +12,7 @@ const path = require("path");
 const { chromium } = require("playwright");
 
 const ROOT = path.join(__dirname, "..");
-const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png" };
+const TYPES = { ".html": "text/html", ".js": "text/javascript", ".css": "text/css", ".json": "application/json", ".svg": "image/svg+xml", ".png": "image/png", ".woff2": "font/woff2" };
 
 function startServer() {
     const server = http.createServer((req, res) => {
@@ -1395,6 +1395,24 @@ async function testNoteWorkspaceTools(browser, baseUrl) {
     await page.context().close();
 }
 
+// The site loads its font from itself and makes no requests elsewhere.
+async function testNoOutsideRequests(browser, baseUrl) {
+    const context = await browser.newContext();
+    const page = await context.newPage();
+    const outside = [];
+    page.on("request", req => {
+        const url = req.url();
+        if (!url.startsWith(baseUrl) && !url.startsWith("data:") && !url.startsWith("blob:")) outside.push(url);
+    });
+    await page.addInitScript(() => { sessionStorage.setItem("unlocked", "true"); localStorage.setItem("disclaimer_accepted", "1"); });
+    await page.goto(baseUrl + "/index.html#oca-assessment-page");
+    await page.evaluate(() => document.fonts.ready);
+    expect("privacy: no requests to other sites", outside, []);
+    expect("font: Outfit loaded from this site", await page.evaluate(() =>
+        [...document.fonts].some(f => f.family.replace(/['"]/g, "") === "Outfit" && f.status === "loaded")), true);
+    await context.close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1499,6 +1517,7 @@ async function testMhaPathway(browser, baseUrl) {
         await testWidmark(browser, baseUrl);
         await testEctHelper(browser, baseUrl);
         await testAppShell(browser, baseUrl);
+        await testNoOutsideRequests(browser, baseUrl);
         await testMhaPathway(browser, baseUrl);
         await testNoteTemplates(browser, baseUrl);
         testCleanNoteRules();
