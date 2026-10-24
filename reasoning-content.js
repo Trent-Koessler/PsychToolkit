@@ -2398,3 +2398,165 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         ]
     }
 });
+
+/* Sexual problems. ICD-11 places sexual dysfunctions in chapter 17
+ * (conditions related to sexual health), outside the mental disorders, and
+ * records causes as qualifiers rather than ruling the diagnosis out. */
+Object.assign(window.REASONING_CONTENT.differentials, {
+    sexual: {
+        name: "Sexual problems",
+        ruleOut: [
+            {
+                id: "medication",
+                name: "Medications",
+                clues: "SSRIs and SNRIs (delayed orgasm, low desire), antipsychotics (raised prolactin), antihypertensives, opioids (low testosterone), anti-androgens, finasteride.",
+                tests: "Medication review, including timing of onset; prolactin on prolactin-raising antipsychotics."
+            },
+            {
+                id: "substance",
+                name: "Substances",
+                clues: "Alcohol, opioids, cannabis, stimulants, anabolic steroids.",
+                tests: "Use history."
+            },
+            {
+                id: "medical",
+                name: "Medical conditions",
+                clues: "Diabetes, vascular disease (erectile problems can precede heart disease by years), neuropathy, low testosterone, high prolactin, thyroid disease, menopause, pelvic conditions (endometriosis, vulvodynia, infection), prostate surgery.",
+                tests: "Glucose or HbA1c, lipids, BP; morning testosterone, prolactin, TSH where indicated; GP, gynaecology or urology review."
+            },
+            {
+                id: "safety",
+                name: "Partner violence and sexual trauma (ask safely)",
+                clues: "Pain, fear or avoidance of sex can follow sexual assault or sit within a violent relationship.",
+                tests: "Ask alone, sensitively; follow local domestic violence procedures."
+            },
+            {
+                id: "mental",
+                name: "Depression, anxiety and PTSD",
+                clues: "Low desire and arousal are common in depression; avoidance and pain in PTSD.",
+                tests: "PHQ-9; trauma history when appropriate."
+            }
+        ],
+        differentials: [
+            {
+                id: "fsiad",
+                code: "ICD-11 HA00 / HA01.0",
+                name: "Female sexual interest/arousal disorder",
+                dsm: "Female sexual interest/arousal disorder (lifelong or acquired; generalised or situational)",
+                icd: "HA00 Hypoactive sexual desire dysfunction · HA01.0 Female sexual arousal dysfunction",
+                supports: "At least 3 of: low interest, few sexual thoughts, rarely initiating or unreceptive, little excitement or pleasure, little response to cues, little genital or other sensation; for about 6 months, with distress.",
+                keyQuestion: "Is she distressed by it, or is it a difference in desire from her partner?",
+                note: "ICD-11 keeps desire and arousal separate."
+            },
+            {
+                id: "fod",
+                code: "ICD-11 HA02",
+                name: "Female orgasmic disorder",
+                dsm: "Female orgasmic disorder (lifelong or acquired; generalised or situational; never experienced an orgasm)",
+                icd: "HA02 Orgasmic dysfunctions",
+                supports: "Marked delay in, infrequency or absence of orgasm, or much less intense orgasms, on almost all occasions for about 6 months, with distress.",
+                keyQuestion: "Is there adequate stimulation? Is an SSRI involved?"
+            },
+            {
+                id: "gppd",
+                code: "ICD-11 HA20",
+                name: "Genito-pelvic pain/penetration disorder",
+                dsm: "Genito-pelvic pain/penetration disorder",
+                icd: "HA20 Sexual pain-penetration disorder",
+                supports: "Persistent difficulty with vaginal penetration, pain during intercourse or attempts, fear of pain, or tightening of the pelvic floor muscles, for about 6 months, with distress.",
+                keyQuestion: "Has a gynaecological cause been examined for? Is there a history of sexual trauma?",
+                note: "Pelvic floor physiotherapy and CBT help; refer for gynaecological assessment.",
+                check: "Confirm the ICD-11 code HA20."
+            },
+            {
+                id: "hsdd",
+                code: "ICD-11 HA00",
+                name: "Male hypoactive sexual desire disorder",
+                dsm: "Male hypoactive sexual desire disorder",
+                icd: "HA00 Hypoactive sexual desire dysfunction",
+                supports: "Persistently low or absent sexual thoughts, fantasies and desire for about 6 months, with distress.",
+                keyQuestion: "Low testosterone, high prolactin, depression or medication? Is it distress, or a difference from his partner?",
+                note: "Someone who identifies as asexual is not diagnosed."
+            },
+            {
+                id: "ed",
+                code: "ICD-11 HA01.1",
+                name: "Erectile disorder",
+                dsm: "Erectile disorder (lifelong or acquired; generalised or situational)",
+                icd: "HA01.1 Male erectile dysfunction",
+                supports: "Difficulty getting or keeping an erection, or reduced rigidity, on almost all occasions for about 6 months, with distress.",
+                keyQuestion: "Are morning or masturbation erections preserved (points to psychological factors)? What is his cardiovascular risk?",
+                note: "Check cardiovascular risk: erectile problems can come years before heart disease."
+            },
+            {
+                id: "pe",
+                code: "ICD-11 HA03.0",
+                name: "Premature (early) ejaculation",
+                dsm: "Premature (early) ejaculation (mild 30 seconds to 1 minute, moderate 15 to 30 seconds, severe under 15 seconds)",
+                icd: "HA03.0 Male early ejaculation",
+                supports: "Ejaculation within about a minute of vaginal penetration and before wished, on almost all occasions for about 6 months, with distress.",
+                keyQuestion: "Lifelong or acquired? Acquired early ejaculation often has a cause (erectile problems, anxiety, prostatitis, thyroid)."
+            },
+            {
+                id: "de",
+                code: "ICD-11 HA03.1",
+                name: "Delayed ejaculation",
+                dsm: "Delayed ejaculation",
+                icd: "HA03.1 Male delayed ejaculation",
+                supports: "Marked delay in, or absence of, ejaculation without wishing it, on almost all occasions for about 6 months, with distress.",
+                keyQuestion: "Is an SSRI, antipsychotic or alcohol involved?"
+            },
+            {
+                id: "substance-induced",
+                name: "Substance/medication-induced sexual dysfunction",
+                dsm: "Substance/medication-induced sexual dysfunction",
+                icd: "The dysfunction, with the qualifier 'associated with use of a psychoactive substance or medication' (HA40.2)",
+                supports: "Began with a new medication, a dose increase or substance use, and settles when it stops.",
+                keyQuestion: "Can the dose be reduced, or the drug switched (e.g. bupropion, mirtazapine or vortioxetine for an SSRI; aripiprazole for a prolactin-raising antipsychotic)?",
+                check: "Confirm the ICD-11 aetiological qualifier codes (HA40)."
+            },
+            {
+                id: "medical",
+                name: "Due to a medical condition",
+                dsm: "No mental disorder when a medical condition fully explains it",
+                icd: "The dysfunction, with the qualifier 'associated with a medical condition' (HA40.0)",
+                supports: "Fully explained by diabetes, vascular disease, neuropathy, a hormonal or pelvic condition.",
+                keyQuestion: "Does it fully explain the problem, or do psychological factors contribute too (then diagnose the dysfunction)?",
+                note: "DSM-5-TR rules the diagnosis out; ICD-11 diagnoses the dysfunction and records the cause."
+            },
+            {
+                id: "mental-disorder",
+                name: "Part of another mental disorder",
+                dsm: "The other mental disorder only (e.g. major depressive disorder, PTSD)",
+                icd: "The dysfunction may still be recorded with the qualifier 'associated with psychological or behavioural factors' (HA40.1)",
+                supports: "Occurs only during the other disorder.",
+                keyQuestion: "Did it begin before, or persist after, the other disorder? If so, diagnose both."
+            },
+            {
+                id: "relationship",
+                name: "Relationship, safety or knowledge factors",
+                dsm: "No mental disorder: relationship distress with spouse or intimate partner; partner violence; sex counselling",
+                icd: "Relationship factors or lack of knowledge qualifiers (HA40.4, HA40.3)",
+                supports: "Better explained by severe relationship distress, partner violence, or inadequate stimulation or knowledge.",
+                keyQuestion: "Does the problem occur with other partners or alone?"
+            },
+            {
+                id: "other-sexual",
+                code: "ICD-11 HA0Y",
+                name: "Other specified sexual dysfunction",
+                dsm: "Other specified sexual dysfunction",
+                icd: "HA0Y Other specified sexual dysfunctions",
+                supports: "Distressing, but under 6 months or on fewer occasions than needed for a specific diagnosis.",
+                keyQuestion: "Is there a recent stressor (adjustment disorder)?"
+            },
+            {
+                id: "none",
+                name: "No disorder",
+                dsm: "",
+                icd: "",
+                supports: "A difference in desire or function that doesn't distress the person, including asexual identity.",
+                keyQuestion: "Is the person distressed, or is the concern someone else's?"
+            }
+        ]
+    }
+});

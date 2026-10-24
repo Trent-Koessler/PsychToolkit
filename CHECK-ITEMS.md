@@ -6,7 +6,7 @@ Each one shows as a "Check:" note in the app until it is confirmed.
 When an item is confirmed (or corrected), remove its `check` line in `reasoning-content.js` and run `npm run checks` to update this list.
 When the list is empty and the content has been reviewed, set `reviewed: true` in `reasoning-content.js` to remove the draft banner.
 
-**49 items to check.** Draft banner: on.
+**51 items to check.** Draft banner: on.
 
 ## Suicide risk formulation
 
@@ -98,3 +98,8 @@ When the list is empty and the content has been reviewed, set `reviewed: true` i
 ## Psychomotor slowing
 
 - [ ] **Other specified depressive disorder or unspecified catatonia:** Confirm the ICD-11 code 6A7Y.
+
+## Sexual problems
+
+- [ ] **Genito-pelvic pain/penetration disorder:** Confirm the ICD-11 code HA20.
+- [ ] **Substance/medication-induced sexual dysfunction:** Confirm the ICD-11 aetiological qualifier codes (HA40).

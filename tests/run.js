@@ -1190,6 +1190,59 @@ function testCheckItemsList() {
     expect("CHECK-ITEMS.md is up to date (run npm run checks)", current === render(), true);
 }
 
+function testSexualRules() {
+    const F = require(path.join(ROOT, "reasoning-flow-sexual.js")).sexual;
+    const A = require(path.join(ROOT, "reasoning-flow-avoidance.js")).avoidance;
+    const b = { distress: "yes", substance: "no", medicalSex: "no", mentalSex: "no", context: "no", occasions: "yes", months6: "yes", onset: "acquired", scope: "generalised" };
+
+    let r = F.evaluate({ ...b, response: "male", problemM: ["ed", "hsdd"] });
+    expect("sexual flow: co-occurring dysfunctions", [r.suggestion.label, r.additional], ["Erectile disorder, acquired, generalised (ICD-11 HA01.1)", ["hsdd"]]);
+    r = F.evaluate({ ...b, response: "male", problemM: ["pe"], latency: "15", onset: "lifelong" });
+    expectIncludes("sexual flow: early ejaculation severity", r.suggestion.label, "Premature (early) ejaculation, severe, lifelong");
+    r = F.evaluate({ ...b, response: "male", problemM: ["pe"], latency: "longer" });
+    expect("sexual flow: latency over a minute", r.suggestion.cardId, "other-sexual");
+    r = F.evaluate({ ...b, response: "female", problemF: ["fsiad", "gppd"], fsiadCount: "yes", mentalSex: "outside" });
+    expect("sexual flow: with depression outside it, both", [r.suggestion.cardId, r.additional], ["fsiad", ["mental-disorder", "gppd"]]);
+    r = F.evaluate({ distress: "yes", response: "female", problemF: ["fod"], substance: "yes", subTiming: "during" });
+    expect("sexual flow: SSRI", r.suggestion.cardId, "substance-induced");
+    r = F.evaluate({ distress: "yes", response: "male", problemM: ["ed"], substance: "no", medicalSex: "entirely" });
+    expect("sexual flow: medical cause, ICD-11 differs", [r.suggestion.cardId, r.also.some(n => n.startsWith("ICD-11 differs"))], ["medical", true]);
+    r = F.evaluate({ ...b, response: "male", problemM: ["hsdd"], mentalSex: "only" });
+    expect("sexual flow: only within depression", r.suggestion.cardId, "mental-disorder");
+    r = F.evaluate({ ...b, response: "female", problemF: ["gppd"], context: "violence" });
+    expect("sexual flow: partner violence urgent", [r.suggestion.cardId, !!r.urgent], ["relationship", true]);
+    r = F.evaluate({ ...b, response: "male", problemM: ["ed"], months6: "no", stressor: "yes" });
+    expectIncludes("sexual flow: adjustment", r.suggestion.label, "Adjustment disorder");
+    r = F.evaluate({ distress: "no" });
+    expect("sexual flow: no distress", r.suggestion.cardId, "none");
+    r = A.evaluate({ avoided: ["intimacy"], threat: "no", impair: "yes" });
+    expect("avoidance flow: intimacy hands over", [r.switchTo, r.carry], ["sexual", { distress: "yes" }]);
+}
+
+async function testSexualScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "sexual");
+    await answer("distress", "Yes");
+    await page.click('#oca-reasoning-body fieldset[data-q="response"] label.rz-chip:text-is("Male sexual response")');
+    await answer("problemM", "Trouble getting or keeping");
+    await answer("substance", "No");
+    await answer("medicalSex", "It contributes");
+    await answer("mentalSex", "No other mental disorder");
+    await answer("context", "None of these");
+    await answer("occasions", "Yes");
+    await answer("months6", "Yes");
+    await answer("onset", "Acquired");
+    await answer("scope", "Situational");
+    expectIncludes("sexual screen: suggestion", await page.textContent(".rz-result-title"), "Erectile disorder, acquired, situational");
+    await page.click("text=Apply to the cards below");
+    expect("sexual screen: card leading", await page.inputValue('select[aria-label="Erectile disorder status"]'), "Leading");
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1316,6 +1369,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testSomaticScreen(browser, baseUrl);
         testAvoidanceSlowingRules();
         await testAvoidanceScreen(browser, baseUrl);
+        testSexualRules();
+        await testSexualScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

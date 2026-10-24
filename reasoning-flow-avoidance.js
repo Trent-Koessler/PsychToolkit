@@ -40,7 +40,7 @@
         separation: { card: "anxiety", focus: "separation", label: "Separation anxiety disorder (ICD-11 6B05)" },
         health: { card: "anxiety", focus: "health", label: "Illness anxiety disorder (ICD-11 6B23 Hypochondriasis)" },
         appearance: { card: "anxiety", focus: "appearance", label: "Body dysmorphic disorder (ICD-11 6B21)" },
-        intimacy: { card: "sexual", label: "Sexual dysfunction (ICD-11 chapter 17)" },
+        intimacy: { card: "sexual", label: "Sexual dysfunction (ICD-11 chapter 17)", flow: "sexual" },
         stressor: { card: "adjustment", label: "Adjustment disorder (ICD-11 6B43)" }
     };
     const ORDER = Object.keys(DRIVERS);
@@ -255,10 +255,12 @@
 
         if (first.flow) {
             r.switchTo = first.flow;
-            const name = { anxiety: "Anxiety", psychosis: "Psychosis", depressed: "Depressed mood", eating: "Eating or weight change" }[first.flow];
+            const name = { anxiety: "Anxiety", psychosis: "Psychosis", depressed: "Depressed mood", eating: "Eating or weight change", sexual: "Sexual problems" }[first.flow];
             r.also.push(`Confirm with the ${name} questions${first.flow === "anxiety" && anxietyFocus.length ? "; what they fear is passed on" : ""}.`);
             if (first.flow === "anxiety") {
                 r.carry = { focus: [...new Set(anxietyFocus)], impair: "yes" };
+            } else if (first.flow === "sexual") {
+                r.carry = { distress: "yes" };
             }
         }
         if (results.some(f => f.card === "avpd") && results.some(f => f.label === DRIVERS.social.label)) {
