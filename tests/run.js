@@ -1395,7 +1395,7 @@ async function testNoteWorkspaceTools(browser, baseUrl) {
     await page.context().close();
 }
 
-// The site loads its font from itself and makes no requests elsewhere.
+// The site uses Arial and makes no requests to other sites.
 async function testNoOutsideRequests(browser, baseUrl) {
     const context = await browser.newContext();
     const page = await context.newPage();
@@ -1408,8 +1408,9 @@ async function testNoOutsideRequests(browser, baseUrl) {
     await page.goto(baseUrl + "/index.html#oca-assessment-page");
     await page.evaluate(() => document.fonts.ready);
     expect("privacy: no requests to other sites", outside, []);
-    expect("font: Outfit loaded from this site", await page.evaluate(() =>
-        [...document.fonts].some(f => f.family.replace(/['"]/g, "") === "Outfit" && f.status === "loaded")), true);
+    expect("font: Arial throughout, including buttons", await page.evaluate(() =>
+        [document.body, document.querySelector(".home-tile, .big-button"), document.querySelector("button")]
+            .map(el => getComputedStyle(el).fontFamily.split(",")[0].replace(/['"]/g, "").trim())), ["Arial", "Arial", "Arial"]);
     await context.close();
 }
 

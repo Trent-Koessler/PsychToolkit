@@ -41,7 +41,7 @@ const FILES = [
     "ect.js",
     "_headers"
 ];
-const FOLDERS = ["icons", "vendor", "fonts"];
+const FOLDERS = ["icons", "vendor"];
 
 fs.rmSync(OUT, { recursive: true, force: true });
 fs.mkdirSync(OUT);

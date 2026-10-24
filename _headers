@@ -9,7 +9,3 @@
 # picked up straight away.
 /sw.js
   Cache-Control: no-cache
-
-# Font files never change under the same name, so browsers can keep them.
-/fonts/*
-  Cache-Control: public, max-age=31536000, immutable
