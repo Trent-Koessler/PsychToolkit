@@ -174,7 +174,10 @@
     // only where the target flow asks that question with those options.
     function carryAnswers(from, toProblem, extra) {
         const to = flowFor(toProblem);
-        const carried = toProblem === "psychosis" ? { explained: "none" } : { explained: "clinical" };
+        const carried = {};
+        const step0 = to && to.questions.find(question => question.id === "explained");
+        const start = toProblem === "psychosis" ? "none" : "clinical";
+        if (step0 && step0.options.some(o => o.value === start)) carried.explained = start;
         SHARED_ANSWERS.forEach(id => {
             const q = to && to.questions.find(question => question.id === id);
             if (q && from[id] !== undefined && q.options.some(o => o.value === from[id])) carried[id] = from[id];
@@ -274,6 +277,7 @@
                     } else {
                         dx.flow[q.id] = opt.value;
                     }
+                    if (dx.carried) dx.carried = dx.carried.filter(id => id !== q.id);
                     inputs.forEach(i => i.parentNode.classList.toggle("on", i.checked));
                     refresh();
                 });
@@ -312,7 +316,10 @@
                 changed = false;
                 rows.forEach(({ q, inputs }) => {
                     const visible = !q.showIf || q.showIf(dx.flow);
-                    if (!visible && dx.flow[q.id] !== undefined) {
+                    // Answers passed on from another flow wait for their
+                    // question to appear rather than being cleared.
+                    const passedOn = (dx.carried || []).includes(q.id);
+                    if (!visible && dx.flow[q.id] !== undefined && !passedOn) {
                         delete dx.flow[q.id];
                         inputs.forEach(i => { i.checked = false; i.parentNode.classList.remove("on"); });
                         changed = true;
@@ -413,7 +420,8 @@
                 if (cards) cards.scrollIntoView({ block: "start" });
             }, target => {
                 const carry = (flowResult() || {}).carry;
-                dx = { problem: target, ruleOut: {}, items: {}, flow: carryAnswers(dx.flow, target, carry) };
+                const flowAnswers = carryAnswers(dx.flow, target, carry);
+                dx = { problem: target, ruleOut: {}, items: {}, flow: flowAnswers, carried: Object.keys(carry || {}).filter(id => id in flowAnswers) };
                 renderDifferential(section);
             }));
         }

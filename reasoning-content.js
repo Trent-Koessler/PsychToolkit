@@ -2560,3 +2560,423 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         ]
     }
 });
+
+/* Neurodevelopmental and childhood presentations: distractibility (adults
+ * too), behaviour problems, school difficulties and speech disturbance.
+ * Codes marked "check" were found on ICD-11 coding sites but not on the WHO
+ * browser itself. */
+(function () {
+    const card = {
+        adhd: {
+            id: "adhd",
+            code: "ICD-11 6A05",
+            name: "Attention-deficit/hyperactivity disorder (ADHD)",
+            dsm: "ADHD (combined, predominantly inattentive, or predominantly hyperactive/impulsive presentation)",
+            icd: "6A05.2 Combined · 6A05.0 Predominantly inattentive · 6A05.1 Predominantly hyperactive-impulsive",
+            supports: "6 or more inattention or hyperactivity-impulsivity symptoms (5 from age 17) for 6 months, several before age 12, in 2 or more settings, with clear impairment.",
+            keyQuestion: "What do school reports, a parent or a partner say? Retrospective self-report alone is weak.",
+            note: "Rating scales (ASRS, DIVA-5, Conners) support but don't make the diagnosis (AADPA 2022). With substance use, treat that first; start stimulants once use is stopped or stable."
+        },
+        autism: {
+            id: "autism",
+            code: "ICD-11 6A02",
+            name: "Autism spectrum disorder",
+            dsm: "Autism spectrum disorder (with or without intellectual or language impairment)",
+            icd: "6A02 Autism spectrum disorder",
+            supports: "Persistent difficulties in social communication and interaction, with restricted, repetitive behaviours, interests or sensory differences, from early development.",
+            keyQuestion: "Developmental history from a parent: early social communication, play and repetitive behaviours?"
+        },
+        pragmatic: {
+            id: "pragmatic",
+            code: "ICD-11 6A01.22",
+            name: "Social (pragmatic) communication disorder",
+            dsm: "Social (pragmatic) communication disorder",
+            icd: "6A01.22 Developmental language disorder with impairment of mainly pragmatic language",
+            supports: "Difficulty with the social use of language, without restricted or repetitive behaviours.",
+            keyQuestion: "Are there restricted or repetitive behaviours (then autism)?",
+            check: "Confirm the ICD-11 code 6A01.22."
+        },
+        idd: {
+            id: "idd",
+            code: "ICD-11 6A00",
+            name: "Intellectual developmental disorder",
+            dsm: "Intellectual developmental disorder (mild, moderate, severe or profound, by adaptive functioning)",
+            icd: "6A00 Disorders of intellectual development",
+            supports: "Deficits in intellectual and adaptive functioning (conceptual, social, practical) beginning in the developmental period.",
+            keyQuestion: "What do standardised intellectual and adaptive testing show?"
+        },
+        mood: {
+            id: "mood",
+            name: "Mood disorder",
+            dsm: "Bipolar disorder (manic or hypomanic episodes) or a depressive disorder",
+            icd: "6A60–6A6Z Bipolar disorders · 6A70–6A7Z Depressive disorders",
+            supports: "Episodes of elevated or irritable mood with increased energy, or depressed or irritable mood, that mark a change from usual.",
+            keyQuestion: "Is it episodic, with a clear change from the person's usual self?"
+        },
+        psychosis: {
+            id: "psychosis",
+            name: "Psychotic disorder",
+            dsm: "Schizophrenia spectrum or other psychotic disorder",
+            icd: "6A20–6A2Z Schizophrenia or other primary psychotic disorders",
+            supports: "With delusions, hallucinations or disorganised speech or behaviour.",
+            keyQuestion: "Are there delusions or hallucinations?"
+        },
+        trauma: {
+            id: "trauma",
+            name: "Trauma or stressor-related disorder",
+            dsm: "PTSD · Acute stress disorder · Adjustment disorder",
+            icd: "6B40 PTSD · QE84 Acute stress reaction · 6B43 Adjustment disorder",
+            supports: "Began after a traumatic event or stressor.",
+            keyQuestion: "Did it start after a trauma or stressor, and is there re-experiencing, avoidance or arousal?"
+        },
+        anxiety: {
+            id: "anxiety",
+            name: "Anxiety disorder",
+            dsm: "Generalised anxiety disorder · Separation anxiety disorder · Social anxiety disorder",
+            icd: "6B00 Generalised anxiety disorder · 6B05 Separation anxiety disorder · 6B04 Social anxiety disorder",
+            supports: "Concentration or school problems driven by worry or fear.",
+            keyQuestion: "Is it worry or fear that gets in the way?"
+        },
+        none: {
+            id: "none",
+            name: "No mental disorder",
+            dsm: "",
+            icd: "",
+            supports: "Within the normal range for age, development and culture, or explained by the environment.",
+            keyQuestion: "Is it outside the normal range, and is it causing significant impairment?"
+        }
+    };
+    const substance = {
+        id: "substance",
+        name: "Substances and medications",
+        clues: "Stimulants (use and withdrawal), cannabis, alcohol, sedating medications (antihistamines, antiepileptics, antipsychotics).",
+        tests: "Use history; UDS; reassess after a period of abstinence where possible."
+    };
+    const delirium = {
+        id: "delirium",
+        name: "Delirium",
+        clues: "Acute, fluctuating attention and awareness.",
+        tests: "4AT or CAM; find the cause."
+    };
+    const neuro = {
+        id: "neuro",
+        name: "Medical conditions",
+        clues: "Hearing or vision problems, thyroid disease, iron deficiency, sleep apnoea, absence seizures, head injury, foetal alcohol spectrum disorder.",
+        tests: "Hearing and vision check; FBC, ferritin, TSH; sleep history; EEG or imaging if indicated."
+    };
+    const safety = {
+        id: "safety",
+        name: "Safety at home and school (check for it)",
+        clues: "Abuse, neglect, family violence and bullying can all present as behaviour or school problems.",
+        tests: "Speak with the young person alone; collateral from school; follow mandatory reporting obligations."
+    };
+
+    Object.assign(window.REASONING_CONTENT.differentials, {
+        attention: {
+            name: "Distractibility or poor attention",
+            ruleOut: [
+                substance,
+                delirium,
+                neuro,
+                {
+                    id: "sleep",
+                    name: "Poor or short sleep",
+                    clues: "Sleep deprivation, shift work and sleep apnoea all impair attention and mimic ADHD.",
+                    tests: "Sleep history; STOP-BANG; fix sleep and reassess."
+                },
+                {
+                    id: "collateral",
+                    name: "Childhood history (check for it)",
+                    clues: "ADHD needs several symptoms before age 12. Symptoms that began in adulthood point to something else.",
+                    tests: "School reports; a parent, sibling or partner; DIVA-5."
+                }
+            ],
+            differentials: [
+                card.adhd,
+                card.mood,
+                card.psychosis,
+                card.trauma,
+                card.anxiety,
+                card.autism,
+                {
+                    id: "sleep",
+                    name: "Sleep problem",
+                    dsm: "Insomnia, sleep apnoea, circadian rhythm or insufficient sleep",
+                    icd: "Chapter 7 sleep-wake disorders",
+                    supports: "Inattention that tracks poor or short sleep.",
+                    keyQuestion: "Does attention improve when sleep improves?"
+                },
+                {
+                    id: "substance-induced",
+                    name: "Substance or medication effect",
+                    dsm: "Substance intoxication or withdrawal; adverse effect of medication",
+                    icd: "",
+                    supports: "Inattention with intoxication, withdrawal or a medication.",
+                    keyQuestion: "Does it persist after a period of abstinence?"
+                },
+                {
+                    id: "medical",
+                    name: "Due to a medical condition",
+                    dsm: "Other specified mental disorder due to another medical condition",
+                    icd: "6E6Y Other specified secondary mental or behavioural syndrome",
+                    supports: "Explained by head injury, thyroid disease, seizures or another condition.",
+                    keyQuestion: "Did it start after a head injury or illness?",
+                    check: "Confirm the ICD-11 code 6E6Y."
+                },
+                {
+                    id: "other-adhd",
+                    code: "ICD-11 6A05.Y",
+                    name: "Other specified ADHD",
+                    dsm: "Other specified attention-deficit/hyperactivity disorder",
+                    icd: "6A05.Y Other specified ADHD",
+                    supports: "Impairing ADHD symptoms below the full criteria.",
+                    keyQuestion: "Which criterion is not met?"
+                },
+                card.none
+            ]
+        },
+
+        behaviour: {
+            name: "Behaviour problems (child or adolescent)",
+            ruleOut: [
+                safety,
+                substance,
+                neuro,
+                delirium
+            ],
+            differentials: [
+                {
+                    id: "dmdd",
+                    name: "Disruptive mood dysregulation disorder",
+                    dsm: "Disruptive mood dysregulation disorder (diagnosed from age 6 to 18, onset before 10)",
+                    icd: "6C90.0 Oppositional defiant disorder with chronic irritability-anger (ICD-11 has no DMDD category)",
+                    supports: "Severe temper outbursts 3 or more times a week, with irritable or angry mood most of the day between them, for 12 months, in 2 or more settings.",
+                    keyQuestion: "Are there distinct manic or hypomanic episodes? If so, consider bipolar disorder instead.",
+                    note: "If criteria for both DMDD and ODD are met, only DMDD is diagnosed."
+                },
+                card.adhd,
+                {
+                    id: "odd",
+                    code: "ICD-11 6C90",
+                    name: "Oppositional defiant disorder",
+                    dsm: "Oppositional defiant disorder (mild, moderate or severe by number of settings)",
+                    icd: "6C90 Oppositional defiant disorder (with or without chronic irritability-anger)",
+                    supports: "4 or more symptoms of angry or irritable mood, arguing and defiance, or vindictiveness, for 6 months, beyond what's typical for age and culture.",
+                    keyQuestion: "Is it beyond what is typical for the child's age, development and culture?",
+                    note: "Parent management training is first-line."
+                },
+                {
+                    id: "cd",
+                    code: "ICD-11 6C91",
+                    name: "Conduct disorder",
+                    dsm: "Conduct disorder (childhood-onset, adolescent-onset or unspecified onset; with limited prosocial emotions)",
+                    icd: "6C91 Conduct-dissocial disorder (6C91.0 childhood onset · 6C91.1 adolescent onset)",
+                    supports: "Repeated violation of others' rights or major rules (aggression to people or animals, destroying property, deceit or theft, serious rule-breaking), 3 or more in 12 months.",
+                    keyQuestion: "Onset before age 10? Limited prosocial emotions (callous-unemotional traits)?",
+                    note: "The strongest predictor of adult antisocial personality disorder.",
+                    check: "Confirm the ICD-11 code 6C91.1."
+                },
+                card.idd,
+                card.autism,
+                {
+                    id: "stereotypic",
+                    code: "ICD-11 6A06",
+                    name: "Stereotypic movement disorder",
+                    dsm: "Stereotypic movement disorder (with or without self-injurious behaviour)",
+                    icd: "6A06 Stereotyped movement disorder",
+                    supports: "Repetitive, driven, purposeless movements (rocking, hand-flapping, head-banging) without autism.",
+                    keyQuestion: "Is there self-injury? Are there autistic features?",
+                    check: "Confirm the ICD-11 code 6A06."
+                },
+                {
+                    id: "impulse",
+                    name: "Pyromania or kleptomania",
+                    dsm: "Pyromania · Kleptomania",
+                    icd: "6C70 Pyromania · 6C71 Kleptomania",
+                    supports: "Fire-setting or stealing driven by rising tension and followed by pleasure or relief, not for gain, anger or as part of conduct disorder.",
+                    keyQuestion: "Is it better explained by conduct disorder, mania or intoxication?",
+                    check: "Confirm the ICD-11 codes 6C70 and 6C71."
+                },
+                card.mood,
+                card.psychosis,
+                card.trauma,
+                {
+                    id: "substance-induced",
+                    name: "Substance use",
+                    dsm: "Substance use disorder, intoxication or withdrawal",
+                    icd: "6C40–6C4Z Disorders due to substance use",
+                    supports: "Behaviour driven by intoxication, withdrawal, or getting drugs.",
+                    keyQuestion: "Does the behaviour happen only around substance use?"
+                },
+                {
+                    id: "medical",
+                    name: "Due to a medical condition",
+                    dsm: "Personality change due to another medical condition; delirium; neurocognitive disorder with behavioural disturbance",
+                    icd: "6E68 Secondary personality change · 6D70 Delirium",
+                    supports: "A change from the young person's usual self after head injury, epilepsy or another condition.",
+                    keyQuestion: "Is it a change from their usual personality, with a medical cause?"
+                },
+                {
+                    id: "other-disruptive",
+                    code: "ICD-11 6C9Y",
+                    name: "Other specified disruptive or conduct disorder",
+                    dsm: "Other specified disruptive, impulse-control and conduct disorder · Child or adolescent antisocial behaviour (not a mental disorder)",
+                    icd: "6C9Y Other specified disruptive behaviour or dissocial disorders",
+                    supports: "Clinically significant, but not meeting full criteria; or antisocial acts for gain or revenge without a disorder.",
+                    keyQuestion: "Is there an internal dysfunction, or is it for gain or revenge?",
+                    check: "Confirm the ICD-11 code 6C9Y."
+                },
+                card.none
+            ]
+        },
+
+        school: {
+            name: "School difficulties (child or adolescent)",
+            ruleOut: [
+                {
+                    id: "sensory",
+                    name: "Hearing and vision",
+                    clues: "Uncorrected hearing or vision problems look like inattention or learning problems.",
+                    tests: "Hearing and vision testing."
+                },
+                safety,
+                neuro,
+                substance,
+                {
+                    id: "environment",
+                    name: "School and environment (check for it)",
+                    clues: "Missed schooling, frequent moves, teaching in a second language, poor teaching or poor work habits.",
+                    tests: "School reports and attendance; teacher collateral."
+                }
+            ],
+            differentials: [
+                card.idd,
+                card.autism,
+                card.pragmatic,
+                {
+                    id: "sld",
+                    code: "ICD-11 6A03",
+                    name: "Specific learning disorder",
+                    dsm: "Specific learning disorder (with impairment in reading, written expression or mathematics; mild, moderate or severe)",
+                    icd: "6A03 Developmental learning disorder (6A03.0 reading · 6A03.1 written expression · 6A03.2 mathematics)",
+                    supports: "Academic skills well below age for 6 months or more, despite targeted help, not explained by intellectual disability, sensory problems or poor teaching.",
+                    keyQuestion: "What do standardised achievement tests show, and has targeted intervention been tried?",
+                    check: "Confirm the ICD-11 sub-codes 6A03.0–6A03.2."
+                },
+                {
+                    id: "language",
+                    code: "ICD-11 6A01.2",
+                    name: "Language disorder",
+                    dsm: "Language disorder",
+                    icd: "6A01.2 Developmental language disorder",
+                    supports: "Persistent difficulty understanding or producing language, well below age.",
+                    keyQuestion: "Speech pathology assessment: receptive, expressive or both?"
+                },
+                {
+                    id: "mutism",
+                    code: "ICD-11 6B06",
+                    name: "Selective mutism",
+                    dsm: "Selective mutism",
+                    icd: "6B06 Selective mutism",
+                    supports: "Consistently not speaking at school for at least a month (not just the first month), while speaking normally at home.",
+                    keyQuestion: "Is it explained by not knowing the language, or a communication disorder?",
+                    check: "Confirm the ICD-11 code 6B06."
+                },
+                card.adhd,
+                {
+                    id: "disruptive",
+                    name: "Disruptive behaviour disorder",
+                    dsm: "Disruptive mood dysregulation disorder · Conduct disorder · Oppositional defiant disorder",
+                    icd: "6C90 Oppositional defiant disorder · 6C91 Conduct-dissocial disorder",
+                    supports: "School problems driven by outbursts, defiance or rule-breaking.",
+                    keyQuestion: "Work it through with the Behaviour problems questions."
+                },
+                {
+                    id: "separation",
+                    code: "ICD-11 6B05",
+                    name: "Separation anxiety disorder",
+                    dsm: "Separation anxiety disorder",
+                    icd: "6B05 Separation anxiety disorder",
+                    supports: "School refusal from fear of separation from attachment figures, beyond what's typical for age.",
+                    keyQuestion: "Is the fear about separation, or about school itself (bullying, social anxiety)?"
+                },
+                card.anxiety,
+                card.mood,
+                card.psychosis,
+                {
+                    id: "substance-use",
+                    name: "Substance use",
+                    dsm: "Substance use disorder",
+                    icd: "6C40–6C4Z Disorders due to substance use",
+                    supports: "School decline with substance use, especially in adolescents.",
+                    keyQuestion: "Ask the young person alone about substance use."
+                },
+                card.trauma,
+                card.none
+            ]
+        },
+
+        speech: {
+            name: "Speech disturbance",
+            ruleOut: [
+                substance,
+                delirium,
+                {
+                    id: "neuro",
+                    name: "Neurological causes",
+                    clues: "Stroke or another focal lesion (aphasia, dysarthria), dementia (especially frontotemporal), head injury, Parkinson's disease, hearing loss.",
+                    tests: "Neurological examination; cognitive screen; imaging if new focal signs."
+                }
+            ],
+            differentials: [
+                card.mood,
+                card.psychosis,
+                {
+                    id: "catatonia",
+                    name: "Catatonia",
+                    dsm: "Catatonia (echolalia, mutism)",
+                    icd: "6A40 Catatonia associated with another mental disorder",
+                    supports: "Echolalia, mutism or verbigeration with other catatonic signs.",
+                    keyQuestion: "Are there 3 or more catatonic signs?"
+                },
+                {
+                    id: "developmental",
+                    name: "Developmental speech or language disorder",
+                    dsm: "Language disorder · Speech sound disorder · Childhood-onset fluency disorder (stuttering)",
+                    icd: "6A01.2 Developmental language disorder · 6A01.0 Speech sound disorder · 6A01.1 Speech fluency disorder",
+                    supports: "Speech or language problems since early development.",
+                    keyQuestion: "Present since early childhood? Speech pathology assessment."
+                },
+                card.autism,
+                card.pragmatic,
+                {
+                    id: "tics",
+                    code: "ICD-11 8A05.0",
+                    name: "Tic disorder",
+                    dsm: "Tourette's disorder (motor and vocal tics for over a year) · Persistent motor or vocal tic disorder · Provisional tic disorder",
+                    icd: "8A05.0 Primary tics or tic disorders (cross-listed in the mental disorders chapter)",
+                    supports: "Sudden, rapid, repeated, non-rhythmic sounds or words, beginning before 18.",
+                    keyQuestion: "Motor tics too? For more than a year?",
+                    check: "Confirm the ICD-11 codes 8A05.0 (primary tics or tic disorders) and 8A05.00 (Tourette syndrome)."
+                },
+                {
+                    id: "medical",
+                    name: "Neurological or medical cause",
+                    dsm: "Aphasia or dysarthria (not a mental disorder); delirium; neurocognitive disorder",
+                    icd: "Chapter 8 (nervous system); 6D70 Delirium",
+                    supports: "Explained by stroke, dementia, delirium or another condition.",
+                    keyQuestion: "New focal signs? Cognitive decline?"
+                },
+                {
+                    id: "substance-induced",
+                    name: "Substance or medication effect",
+                    dsm: "Substance intoxication or withdrawal; adverse effect of medication",
+                    icd: "",
+                    supports: "Slurred, slowed or pressured speech with intoxication or a medication.",
+                    keyQuestion: "Does it settle as the substance wears off?"
+                },
+                card.none
+            ]
+        }
+    });
+})();

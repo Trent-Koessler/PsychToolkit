@@ -1243,6 +1243,77 @@ async function testSexualScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+function testNeurodevelopmentalRules() {
+    const F = require(path.join(ROOT, "reasoning-flow-neurodev.js"));
+    const g = { feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no" };
+    const at = { explained: "clinical", ...g, mania: "no", depression: "no", psychotic: "no", trauma: "no", worry: "no", sleepPoor: "no", age17: "yes", settings: "yes", impairment: "yes", autismFeatures: "no" };
+
+    let r = F.attention.evaluate({ ...at, inattention: "6", hyperactivity: "5", before12: "yes" });
+    expect("attention flow: adult combined ADHD", r.suggestion.label, "ADHD, combined presentation (ICD-11 6A05.2)");
+    r = F.attention.evaluate({ ...at, inattention: "5", hyperactivity: "few", before12: "self" });
+    expect("attention flow: self-report only is provisional", [r.suggestion.cardId, r.suggestion.provisional], ["adhd", true]);
+    r = F.attention.evaluate({ ...at, age17: "no", inattention: "5", hyperactivity: "few", before12: "yes" });
+    expect("attention flow: children need 6", r.suggestion.cardId, "other-adhd");
+    r = F.attention.evaluate({ ...at, inattention: "6", hyperactivity: "6", before12: "no" });
+    expect("attention flow: adult onset is not ADHD", r.excluded.includes("adhd"), true);
+    r = F.attention.evaluate({ explained: "clinical", ...g, mania: "yes" });
+    expect("attention flow: mania", r.switchTo, "elevated");
+    r = F.attention.evaluate({ explained: "clinical", ...g, mania: "no", depression: "no", psychotic: "no", trauma: "no", worry: "yes" });
+    expect("attention flow: worry hands over", [r.switchTo, r.carry], ["anxiety", { focus: ["worry"] }]);
+    r = F.attention.evaluate({ ...at, substance: "yes", subTiming: "early", inattention: "6", hyperactivity: "6", before12: "yes" });
+    expect("attention flow: too early after stimulants", [r.suggestion.cardId, r.alternatives.includes("adhd")], ["substance-induced", true]);
+    r = F.attention.evaluate({ ...at, substance: "yes", subTiming: "before", inattention: "6", hyperactivity: "few", before12: "yes" });
+    expect("attention flow: treat substance use first", r.also.some(n => n.includes("treat that first")), true);
+
+    const bh = { explained: "clinical", substance: "no", delirium: "no", cognitive: "no", medical: "no", mania: "no", depression: "no", psychotic: "no", outbursts: "no", adhdSx: "no", oppositional: "no", conduct: "no", intellectual: "no", stereotyped: "no", impulse: "no", stressor: "no" };
+    r = F.behaviour.evaluate({ ...bh, adhdSx: "yes", oppositional: "yes", conduct: "yes", conductOnset: "child", prosocial: "yes" });
+    expect("behaviour flow: ADHD, ODD and CD together", [r.suggestion.cardId, r.additional, r.switchTo], ["adhd", ["odd", "cd"], "attention"]);
+    expectIncludes("behaviour flow: CD specifiers", r.also[0], "Conduct disorder, with limited prosocial emotions, childhood-onset type");
+    r = F.behaviour.evaluate({ ...bh, outbursts: "yes", oppositional: "yes" });
+    expect("behaviour flow: DMDD over ODD", [r.suggestion.cardId, r.additional.includes("odd")], ["dmdd", false]);
+    r = F.behaviour.evaluate({ ...bh, mania: "yes" });
+    expect("behaviour flow: mania excludes DMDD", [r.switchTo, r.excluded.includes("dmdd")], ["elevated", true]);
+    r = F.behaviour.evaluate({ ...bh, residual: "gain" });
+    expectIncludes("behaviour flow: antisocial behaviour", r.suggestion.label, "not a mental disorder");
+    r = F.behaviour.evaluate({ ...bh, stressor: "stressor" });
+    expectIncludes("behaviour flow: adjustment alone", r.suggestion.label, "Adjustment disorder");
+
+    const sc = { explained: "clinical", intellectual: "no", social: "no", learning: ["none"], language: "no", mutism: "no", adhdSx: "no", disruptive: "no", substanceUse: "no", separation: "no", otherDisorder: "no", stressor: "no" };
+    r = F.school.evaluate({ ...sc, learning: ["reading", "maths"], adhdSx: "yes" });
+    expect("school flow: learning disorder with ADHD", [r.suggestion.cardId, r.additional, r.switchTo], ["sld", ["adhd"], "attention"]);
+    r = F.school.evaluate({ ...sc, separation: "yes" });
+    expect("school flow: separation anxiety", [r.switchTo, r.carry.focus], ["anxiety", ["separation"]]);
+    r = F.school.evaluate({ explained: "environmental" });
+    expect("school flow: environmental", r.suggestion.cardId, "none");
+
+    const sp = { explained: "clinical", substance: "no", delirium: "no", cognitive: "no", medical: "no" };
+    r = F.speech.evaluate({ ...sp, speechType: "pressured" });
+    expect("speech flow: pressured speech", r.switchTo, "elevated");
+    r = F.speech.evaluate({ ...sp, speechType: "tics", motorTics: "tourette" });
+    expectIncludes("speech flow: Tourette", r.suggestion.label, "Tourette");
+    r = F.speech.evaluate({ ...sp, medical: "yes" });
+    expectIncludes("speech flow: aphasia", r.suggestion.label, "Aphasia");
+}
+
+async function testAttentionScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "behaviour");
+    await answer("explained", "Behaviour outside the normal range");
+    for (const q of ["substance", "delirium", "cognitive", "medical", "mania", "depression", "psychotic", "outbursts", "oppositional", "conduct", "intellectual", "stereotyped", "impulse", "stressor"]) await answer(q, "No");
+    await answer("adhdSx", "Yes");
+    expectIncludes("behaviour screen: suggestion", await page.textContent(".rz-result-title"), "ADHD");
+    await page.click("text=Open the Distractibility or poor attention questions");
+    expect("behaviour screen: switched", await page.inputValue("#rz-problem"), "attention");
+    for (const q of ["feigned", "substance", "delirium", "cognitive", "medical", "mania", "depression", "psychotic", "trauma", "worry"]) await answer(q, "No");
+    expect("behaviour screen: childhood onset carried", await page.isChecked('#oca-reasoning-body fieldset[data-q="before12"] input[value="yes"]'), true);
+    expect("behaviour screen: settings carried", await page.isChecked('#oca-reasoning-body fieldset[data-q="settings"] input[value="yes"]'), true);
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1371,6 +1442,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testAvoidanceScreen(browser, baseUrl);
         testSexualRules();
         await testSexualScreen(browser, baseUrl);
+        testNeurodevelopmentalRules();
+        await testAttentionScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();

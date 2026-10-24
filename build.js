@@ -32,6 +32,7 @@ const FILES = [
     "reasoning-flow-somatic.js",
     "reasoning-flow-avoidance.js",
     "reasoning-flow-sexual.js",
+    "reasoning-flow-neurodev.js",
     "reasoning-ui.js",
     "mha-data.js",
     "mha.js",

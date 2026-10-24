@@ -6,7 +6,7 @@ Each one shows as a "Check:" note in the app until it is confirmed.
 When an item is confirmed (or corrected), remove its `check` line in `reasoning-content.js` and run `npm run checks` to update this list.
 When the list is empty and the content has been reviewed, set `reviewed: true` in `reasoning-content.js` to remove the draft banner.
 
-**51 items to check.** Draft banner: on.
+**61 items to check.** Draft banner: on.
 
 ## Suicide risk formulation
 
@@ -103,3 +103,25 @@ When the list is empty and the content has been reviewed, set `reviewed: true` i
 
 - [ ] **Genito-pelvic pain/penetration disorder:** Confirm the ICD-11 code HA20.
 - [ ] **Substance/medication-induced sexual dysfunction:** Confirm the ICD-11 aetiological qualifier codes (HA40).
+
+## Distractibility or poor attention
+
+- [ ] **Due to a medical condition:** Confirm the ICD-11 code 6E6Y.
+
+## Behaviour problems (child or adolescent)
+
+- [ ] **Conduct disorder:** Confirm the ICD-11 code 6C91.1.
+- [ ] **Stereotypic movement disorder:** Confirm the ICD-11 code 6A06.
+- [ ] **Pyromania or kleptomania:** Confirm the ICD-11 codes 6C70 and 6C71.
+- [ ] **Other specified disruptive or conduct disorder:** Confirm the ICD-11 code 6C9Y.
+
+## School difficulties (child or adolescent)
+
+- [ ] **Social (pragmatic) communication disorder:** Confirm the ICD-11 code 6A01.22.
+- [ ] **Specific learning disorder:** Confirm the ICD-11 sub-codes 6A03.0–6A03.2.
+- [ ] **Selective mutism:** Confirm the ICD-11 code 6B06.
+
+## Speech disturbance
+
+- [ ] **Social (pragmatic) communication disorder:** Confirm the ICD-11 code 6A01.22.
+- [ ] **Tic disorder:** Confirm the ICD-11 codes 8A05.0 (primary tics or tic disorders) and 8A05.00 (Tourette syndrome).
