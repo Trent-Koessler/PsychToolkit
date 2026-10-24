@@ -494,7 +494,7 @@
                     ? "Insomnia for 3 months or more, but on fewer than 3 nights a week."
                     : "Insomnia for under 3 months, with daytime impact.");
                 r.suggestion = h.suggest("short-insomnia", a.duration === "3plus"
-                    ? "Other specified insomnia disorder, restricted to fewer nights (ICD-11 7A00 asks for several times a week: check)"
+                    ? "Other specified insomnia disorder, restricted to fewer nights (ICD-11: short-term insomnia 7A01 or chronic insomnia 7A00)"
                     : "Short-term insomnia (ICD-11 7A01; DSM-5-TR other specified insomnia disorder, brief)");
                 h.alt("insomnia");
                 if (a.duration !== "3plus") r.also.push("Often follows a stressor and settles. Treat early with CBT-I principles to stop it becoming chronic.");

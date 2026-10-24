@@ -4,7 +4,8 @@
   "description": "Automated checks for PsychToolkit, and the build step that prepares the site for Cloudflare Pages (npm run build).",
   "scripts": {
     "build": "node build.js",
-    "test": "node tests/run.js"
+    "test": "node tests/run.js",
+    "checks": "node tools/check-items.js"
   },
   "devDependencies": {
     "playwright": "1.56.1"

@@ -1600,7 +1600,8 @@ Object.assign(window.REASONING_CONTENT.differentials, {
                     dsm: "Other specified insomnia disorder (brief insomnia disorder, or restricted to fewer nights)",
                     icd: "7A01 Short-term insomnia",
                     supports: "Insomnia lasting under 3 months, often after a stressor, or below the frequency threshold.",
-                    keyQuestion: "Is there a stressor, and is the sleep worry starting to keep the problem going?"
+                    keyQuestion: "Is there a stressor, and is the sleep worry starting to keep the problem going?",
+                    check: "Confirm how ICD-11 codes insomnia for 3 months or more on fewer than 3 nights a week (7A00 asks for 'several times a week')."
                 },
                 {
                     id: "breathing",

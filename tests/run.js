@@ -1153,6 +1153,43 @@ async function testAvoidanceScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+// The ward risk lines describe findings, not low/medium/high (NICE NG225).
+async function testWardRiskLines(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.evaluate(() => {
+        const set = (id, value) => {
+            const input = document.getElementById(id);
+            input.value = value;
+            input.dispatchEvent(new Event("input", { bubbles: true }));
+            input.dispatchEvent(new Event("change", { bubbles: true }));
+        };
+        set("oca-mse-shi", "cutting ideas");
+        set("oca-mse-si", "Present with plan");
+    });
+    const text = await page.inputValue("#oca-editor");
+    expectIncludes("ward risk: SR describes the finding", text, "SR - Active suicidal ideation with plan");
+    expectIncludes("ward risk: DSH describes the finding", text, "DSH - Self-harm thoughts or behaviour noted: cutting ideas.");
+    expect("ward risk: no tier on SR or DSH", /^(SR|DSH) - .*(Low|Moderate|Elevated|Intermittent) risk/m.test(text), false);
+    // A line typed by hand is kept when the MSE changes.
+    await page.evaluate(() => {
+        const editor = document.getElementById("oca-editor");
+        editor.value = editor.value.replace(/^SR - .*$/m, "SR - my own wording");
+        const si = document.getElementById("oca-mse-si");
+        si.value = "Denied";
+        si.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    expectIncludes("ward risk: hand-typed line kept", await page.inputValue("#oca-editor"), "SR - my own wording");
+    await page.context().close();
+}
+
+// CHECK-ITEMS.md lists every unconfirmed point; it must match the content.
+function testCheckItemsList() {
+    const { render, OUT } = require(path.join(ROOT, "tools", "check-items.js"));
+    const current = fs.existsSync(OUT) ? fs.readFileSync(OUT, "utf8") : "";
+    expect("CHECK-ITEMS.md is up to date (run npm run checks)", current === render(), true);
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1260,6 +1297,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testMhaPathway(browser, baseUrl);
         await testNoteTemplates(browser, baseUrl);
         await testTemplateFunction();
+        testCheckItemsList();
+        await testWardRiskLines(browser, baseUrl);
         await testReasoning(browser, baseUrl);
         testPsychosisFlowRules();
         await testPsychosisFlowScreen(browser, baseUrl);

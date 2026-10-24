@@ -5322,7 +5322,10 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         }
     }
 
-    // Ward Risk Formulation compiler (robust matches, no strict N.B. boundary)
+    // Ward Risk Formulation compiler (robust matches, no strict N.B. boundary).
+    // The text each line was last filled with: a line still holding it was
+    // never edited by hand, so it is refreshed when the MSE changes.
+    const lastWardRiskFill = {};
     function updateWardRiskFormulationInOcaText(skipUndo = false) {
         if (!ocaEditor) return;
         let text = ocaEditor.value;
@@ -5368,36 +5371,38 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
         fields.forEach(field => {
             const info = getFieldInfo(field);
             if (info) {
-                values[field] = info.isEmpty ? null : info.val;
+                values[field] = (info.isEmpty || info.val === lastWardRiskFill[field]) ? null : info.val;
             } else {
                 values[field] = undefined; // Field not found in editor
             }
         });
 
-        // 1. Suicide Risk (SR)
+        // 1. Suicide Risk (SR) and 2. Deliberate Self-Harm (DSH) describe
+        // what was found, without a low/medium/high rating: NICE NG225 (2022)
+        // advises against risk tiers for suicide and self-harm. The suicide
+        // risk formulation (Reasoning tab) holds the reasoning.
         if (values["SR"] === null) {
             const si = siEl ? siEl.value : "Denied";
             const siDesc = (siDescEl && siDescEl.value.trim()) ? ` (${siDescEl.value.trim()})` : "";
             if (si === "Present with plan") {
-                values["SR"] = `Elevated risk - active suicidal ideation with plan${siDesc}.`;
+                values["SR"] = `Active suicidal ideation with plan${siDesc}. See suicide risk formulation.`;
             } else if (si === "Present with intent") {
-                values["SR"] = `Elevated risk - active suicidal ideation with intent${siDesc}.`;
+                values["SR"] = `Active suicidal ideation with intent${siDesc}. See suicide risk formulation.`;
             } else if (si === "Fleeting thoughts, no intent/plan") {
-                values["SR"] = `Low/Moderate risk - passive or fleeting suicidal thoughts, denies intent/plan${siDesc}.`;
+                values["SR"] = `Passive or fleeting suicidal thoughts, denies intent or plan${siDesc}. See suicide risk formulation.`;
             } else {
-                values["SR"] = "Low risk - denies suicidal ideation.";
+                values["SR"] = "Denies current suicidal ideation (denial alone doesn't mean low risk).";
             }
         }
 
-        // 2. Deliberate Self-Harm (DSH)
         if (values["DSH"] === null) {
             const shi = shiEl ? shiEl.value.trim() : "";
             if (shi && shi.toLowerCase() !== "denied" && shi.toLowerCase() !== "no" && shi.toLowerCase() !== "none") {
-                values["DSH"] = `Intermittent risk - self-harm ideation/behaviors noted: ${shi}.`;
+                values["DSH"] = `Self-harm thoughts or behaviour noted: ${shi}. See suicide risk formulation.`;
             } else if (shi) {
-                values["DSH"] = `Low risk - ${shi.toLowerCase().startsWith("deni") ? shi : "denies self-harm"}.`;
+                values["DSH"] = `${shi.toLowerCase().startsWith("deni") ? shi.charAt(0).toUpperCase() + shi.slice(1) : "Denies current self-harm"}.`;
             } else {
-                values["DSH"] = "Low risk - denies deliberate self-harm.";
+                values["DSH"] = "Denies current self-harm.";
             }
         }
 
@@ -5485,6 +5490,7 @@ ${section3Text || 'No theoretical frameworks selected.'}`;
             const info = getFieldInfo(field);
             if (info && values[field] !== undefined) {
                 const finalVal = values[field] || "";
+                if (info.isEmpty || info.val === lastWardRiskFill[field]) lastWardRiskFill[field] = finalVal;
                 updatedRestText = updatedRestText.replace(info.fullLine, info.prefix + finalVal);
             }
         });
