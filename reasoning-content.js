@@ -1501,3 +1501,399 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         }
     });
 })();
+
+/* Sleep problems and eating or weight change. ICD-11 places the sleep-wake
+ * disorders in their own chapter (7), outside the mental disorders. Codes
+ * marked "check" were found on ICD-11 coding sites but not on the WHO
+ * browser itself. */
+(function () {
+    const feigning = {
+        id: "feigning",
+        code: "ICD-11 QC30 / 6D50",
+        name: "Feigned symptoms (malingering or factitious disorder)",
+        dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+        icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+        supports: "Reported symptoms that don't match observation or sleep diaries, or an external incentive (hypnotics, stimulants, leave from work).",
+        keyQuestion: "Do the reported symptoms match what is observed, by others or on a sleep diary?"
+    };
+
+    Object.assign(window.REASONING_CONTENT.differentials, {
+        sleep: {
+            name: "Sleep problems (insomnia or sleepiness)",
+            ruleOut: [
+                {
+                    id: "driving",
+                    name: "Drowsy driving (check for it)",
+                    clues: "Falling asleep at the wheel or at work with machinery, or near-misses. Excessive sleepiness is a fitness-to-drive issue.",
+                    tests: "Epworth Sleepiness Scale; advise not to drive until assessed (Austroads, Assessing Fitness to Drive)."
+                },
+                {
+                    id: "substance",
+                    name: "Substances",
+                    clues: "Caffeine, alcohol (sleep worsens later in the night), nicotine, stimulants; withdrawal from alcohol, sedatives or cannabis.",
+                    tests: "Use history including caffeine and energy drinks; UDS if indicated."
+                },
+                {
+                    id: "medication",
+                    name: "Medications",
+                    clues: "Insomnia: SSRIs, SNRIs, bupropion, steroids, beta-blockers, stimulants, levodopa. Sleepiness: sedating antipsychotics, antidepressants, antihistamines, opioids, gabapentinoids. Antidepressants can trigger restless legs and REM sleep behaviour disorder.",
+                    tests: "Medication review, including timing of doses."
+                },
+                {
+                    id: "osa",
+                    name: "Sleep apnoea",
+                    clues: "Snoring, witnessed pauses in breathing, choking awakenings, morning headache, daytime sleepiness, obesity, on opioids or clozapine. Often co-occurs with insomnia.",
+                    tests: "STOP-BANG; sleep study (home or lab)."
+                },
+                {
+                    id: "rls",
+                    name: "Restless legs",
+                    clues: "An urge to move the legs, worse at rest and in the evening, relieved by moving. Linked to iron deficiency, pregnancy, kidney disease and antidepressants.",
+                    tests: "Iron studies (ferritin and transferrin saturation), UEC."
+                },
+                {
+                    id: "neuro",
+                    name: "Medical conditions",
+                    clues: "Pain, nocturia, heart failure, COPD or asthma, reflux, hyperthyroidism, menopause; for sleepiness also hypothyroidism, head injury, Parkinson's disease.",
+                    tests: "Examination; FBC, TSH, UEC, glucose as indicated."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "A reversed or broken sleep-wake cycle with fluctuating attention is often the first sign.",
+                    tests: "4AT or CAM."
+                },
+                {
+                    id: "seizure",
+                    name: "Nocturnal seizures",
+                    clues: "Brief stereotyped episodes at any time of night, sometimes several a night, with tongue biting, incontinence or injury.",
+                    tests: "Video of episodes; EEG and neurology review."
+                },
+                {
+                    id: "mania",
+                    name: "Reduced need for sleep (check for it)",
+                    clues: "Sleeping much less without feeling tired, with high energy: a sign of mania or hypomania, not insomnia. Ask family.",
+                    tests: "Collateral history; mood charting."
+                },
+                {
+                    id: "suicide",
+                    name: "Suicide risk (ask about it)",
+                    clues: "Insomnia and nightmares are independent risk factors for suicidal thinking and behaviour.",
+                    tests: "Ask directly; see the suicide risk formulation."
+                }
+            ],
+            differentials: [
+                {
+                    id: "insomnia",
+                    code: "ICD-11 7A00",
+                    name: "Insomnia disorder",
+                    dsm: "Insomnia disorder (persistent, episodic or recurrent; with a mental disorder, medical condition or another sleep disorder)",
+                    icd: "7A00 Chronic insomnia",
+                    supports: "Trouble getting to sleep, staying asleep or waking too early, at least 3 nights a week for 3 months, despite enough opportunity, with daytime impact.",
+                    keyQuestion: "Does the insomnia need attention in its own right, beyond any condition it occurs with?",
+                    note: "CBT-I is first-line treatment, including when insomnia occurs with depression or another condition."
+                },
+                {
+                    id: "short-insomnia",
+                    code: "ICD-11 7A01",
+                    name: "Short-term insomnia",
+                    dsm: "Other specified insomnia disorder (brief insomnia disorder, or restricted to fewer nights)",
+                    icd: "7A01 Short-term insomnia",
+                    supports: "Insomnia lasting under 3 months, often after a stressor, or below the frequency threshold.",
+                    keyQuestion: "Is there a stressor, and is the sleep worry starting to keep the problem going?"
+                },
+                {
+                    id: "breathing",
+                    code: "ICD-11 7A41",
+                    name: "Obstructive sleep apnoea",
+                    dsm: "Obstructive sleep apnoea hypopnoea (central sleep apnoea and sleep-related hypoventilation are separate)",
+                    icd: "7A41 Obstructive sleep apnoea · 7A40 Central sleep apnoeas",
+                    supports: "Snoring, witnessed apnoeas, unrefreshing sleep, daytime sleepiness.",
+                    keyQuestion: "What does the sleep study show? DSM-5-TR needs 5 or more apnoeas or hypopnoeas an hour with symptoms, or 15 or more regardless."
+                },
+                {
+                    id: "rls",
+                    code: "ICD-11 7A80",
+                    name: "Restless legs syndrome",
+                    dsm: "Restless legs syndrome",
+                    icd: "7A80 Restless legs syndrome",
+                    supports: "An urge to move the legs, worse at rest and in the evening, relieved by movement, at least 3 times a week for 3 months.",
+                    keyQuestion: "Is it explained by akathisia, cramps, positional discomfort or neuropathy instead?",
+                    note: "AASM (2024): give iron when ferritin is 75 µg/L or below or transferrin saturation under 20%; avoid dopamine agonists long term (augmentation)."
+                },
+                {
+                    id: "circadian",
+                    code: "ICD-11 7A60–7A6Z",
+                    name: "Circadian rhythm sleep-wake disorder",
+                    dsm: "Circadian rhythm sleep-wake disorder (delayed or advanced sleep phase, irregular, non-24-hour, or shift work type)",
+                    icd: "7A60 Delayed · 7A61 Advanced · 7A62 Irregular · 7A63 Non-24-hour · 7A64 Shift work type · 7A65 Jet lag type",
+                    supports: "Sleep is normal in length and quality at the preferred times, but those times clash with what is needed.",
+                    keyQuestion: "What happens on free days or holidays, when they can sleep when they like? A sleep diary over 2 weeks helps.",
+                    note: "DSM-5-TR has no jet lag type; ICD-11 does."
+                },
+                {
+                    id: "narcolepsy",
+                    code: "ICD-11 7A20",
+                    name: "Narcolepsy",
+                    dsm: "Narcolepsy (with or without cataplexy or hypocretin deficiency)",
+                    icd: "7A20.0 Narcolepsy type 1 · 7A20.1 Narcolepsy type 2",
+                    supports: "Irresistible sleep attacks at least 3 times a week for 3 months, with cataplexy, low CSF hypocretin, or typical sleep study findings.",
+                    keyQuestion: "Is there cataplexy (sudden weakness with laughter or strong emotion)? A sleep study with MSLT confirms it.",
+                    note: "Sleep-onset hallucinations can be mistaken for psychosis."
+                },
+                {
+                    id: "hypersomnolence",
+                    code: "ICD-11 7A21",
+                    name: "Hypersomnolence disorder",
+                    dsm: "Hypersomnolence disorder",
+                    icd: "7A21 Idiopathic hypersomnia (closest category)",
+                    supports: "Excessive sleepiness despite 7 hours or more of sleep, with daytime lapses, long unrefreshing sleep, or trouble waking fully; at least 3 times a week for 3 months.",
+                    keyQuestion: "Has a sleep study excluded sleep apnoea and narcolepsy?",
+                    check: "Confirm how ICD-11 maps DSM-5-TR hypersomnolence disorder (7A21 is the closest match, not an exact one)."
+                },
+                {
+                    id: "insufficient",
+                    code: "ICD-11 7A26",
+                    name: "Insufficient sleep",
+                    dsm: "Not a DSM-5-TR disorder (excluded from hypersomnolence disorder)",
+                    icd: "7A26 Insufficient sleep syndrome",
+                    supports: "Persistently sleeping less than they need (work, caring, screens), with sleepiness that goes when they catch up.",
+                    keyQuestion: "Does the sleepiness resolve with longer sleep on free days?"
+                },
+                {
+                    id: "nrem",
+                    code: "ICD-11 7B00",
+                    name: "Sleepwalking or sleep terrors",
+                    dsm: "Non-rapid eye movement sleep arousal disorder (sleepwalking or sleep terror type)",
+                    icd: "7B00 Disorders of arousal from non-REM sleep (7B00.0 confusional arousals · 7B00.1 sleepwalking · 7B00.2 sleep terrors · 7B00.3 sleep-related eating)",
+                    supports: "Episodes in the first third of the night, hard to wake, little or no memory of them.",
+                    keyQuestion: "Are there triggers: sleep loss, alcohol, z-drugs, sleep apnoea?",
+                    check: "Confirm the ICD-11 sub-codes 7B00.0–7B00.3."
+                },
+                {
+                    id: "rbd",
+                    code: "ICD-11 7B01.0",
+                    name: "REM sleep behaviour disorder",
+                    dsm: "Rapid eye movement sleep behaviour disorder",
+                    icd: "7B01.0 REM sleep behaviour disorder",
+                    supports: "Acting out dreams (shouting, punching, kicking), usually later in the night, waking alert and recalling the dream.",
+                    keyQuestion: "Confirmed on a sleep study? Is there an antidepressant trigger?",
+                    note: "Most people with it later develop Parkinson's disease, Lewy body dementia or multiple system atrophy: discuss and follow up."
+                },
+                {
+                    id: "nightmare",
+                    code: "ICD-11 7B01.2",
+                    name: "Nightmare disorder",
+                    dsm: "Nightmare disorder",
+                    icd: "7B01.2 Nightmare disorder",
+                    supports: "Repeated vivid, frightening dreams, waking fully alert and recalling them, with distress or impairment.",
+                    keyQuestion: "Are the nightmares part of PTSD? If so, diagnose nightmare disorder too only if they need treatment in their own right."
+                },
+                {
+                    id: "paralysis",
+                    code: "ICD-11 7B01.1",
+                    name: "Recurrent isolated sleep paralysis",
+                    dsm: "Other specified sleep-wake disorder (DSM-5-TR has no separate category)",
+                    icd: "7B01.1 Recurrent isolated sleep paralysis",
+                    supports: "Being unable to move for seconds to minutes on falling asleep or waking, often with fear or hallucinations.",
+                    keyQuestion: "Is there daytime sleepiness or cataplexy suggesting narcolepsy?"
+                },
+                {
+                    id: "mental",
+                    name: "Part of another mental disorder",
+                    dsm: "The sleep problem as a symptom of depression, mania, an anxiety disorder, PTSD or psychosis",
+                    icd: "7A25 Hypersomnia associated with a mental disorder (sleepiness)",
+                    supports: "The sleep problem started and changes with the mental disorder, and doesn't need attention on its own.",
+                    keyQuestion: "If the mental disorder were treated, would the sleep problem still need treatment?"
+                },
+                {
+                    id: "substance-induced",
+                    code: "ICD-11 7A24 (sleepiness)",
+                    name: "Substance/medication-induced sleep disorder",
+                    dsm: "Substance/medication-induced sleep disorder (insomnia, daytime sleepiness, parasomnia or mixed type)",
+                    icd: "7A24 Hypersomnia due to a medication or substance · otherwise record the substance effect",
+                    supports: "The sleep problem began with use, withdrawal or a new medication.",
+                    keyQuestion: "Does it settle when the substance or medication is stopped or changed?"
+                },
+                {
+                    id: "medical",
+                    code: "ICD-11 7A23 (sleepiness)",
+                    name: "Sleep problem due to a medical condition",
+                    dsm: "Insomnia disorder with medical comorbidity, or hypersomnolence related to a medical condition",
+                    icd: "7A23 Hypersomnia due to a medical condition",
+                    supports: "Sleep disrupted by pain, breathlessness, nocturia or another condition, improving as it is treated.",
+                    keyQuestion: "Does the sleep problem outlast treatment of the condition? If so, treat it in its own right."
+                },
+                {
+                    id: "none",
+                    name: "No sleep-wake disorder",
+                    dsm: "",
+                    icd: "",
+                    supports: "A short sleeper without daytime impact, occasional poor nights, or fatigue rather than sleepiness.",
+                    keyQuestion: "Is this tiredness (low energy) rather than sleepiness (falling asleep)? Fatigue points to depression, anaemia, thyroid disease or medication."
+                },
+                feigning
+            ]
+        },
+
+        eating: {
+            name: "Eating or weight change",
+            ruleOut: [
+                {
+                    id: "instability",
+                    name: "Medical instability (check first)",
+                    clues: "Adults: heart rate under 40 or a rise over 20 on standing; BP under 90/60 or a postural drop over 20; temperature under 35.5 °C; low potassium, phosphate or glucose; QTc over 460 ms or arrhythmia; BMI under 14 or rapid weight loss. Young people have stricter thresholds (e.g. heart rate under 50).",
+                    tests: "Lying and standing HR and BP, temperature, ECG, UEC, magnesium, phosphate, glucose, LFT, FBC (RANZCP 2014, archived; NSW paediatric admission guideline)."
+                },
+                {
+                    id: "refeeding",
+                    name: "Refeeding syndrome risk",
+                    clues: "Very low intake for days, low BMI, rapid weight loss, alcohol misuse, low electrolytes before feeding.",
+                    tests: "Phosphate, potassium and magnesium daily for the first 1–2 weeks; thiamine before and during refeeding."
+                },
+                {
+                    id: "substance",
+                    name: "Substances",
+                    clues: "Stimulants (amphetamines, cocaine) reduce appetite; alcohol replaces food; cannabis increases appetite.",
+                    tests: "Use history; UDS if indicated."
+                },
+                {
+                    id: "medication",
+                    name: "Medications",
+                    clues: "Weight gain: olanzapine, clozapine, quetiapine, mirtazapine, lithium, valproate, steroids. Weight loss: topiramate, stimulants, GLP-1 agonists, metformin. Laxative, diuretic or insulin misuse.",
+                    tests: "Medication review, including over-the-counter and online purchases."
+                },
+                {
+                    id: "neuro",
+                    name: "Medical causes",
+                    clues: "Weight loss: hyperthyroidism, diabetes, coeliac or inflammatory bowel disease, cancer, Addison's disease, HIV, TB. Weight gain: hypothyroidism, Cushing's syndrome, PCOS, hypothalamic lesions. Vomiting: GI obstruction, raised intracranial pressure.",
+                    tests: "FBC, UEC, LFT, TSH, glucose or HbA1c, coeliac serology, CRP; further tests by history."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "Poor intake with fluctuating attention and awareness.",
+                    tests: "4AT or CAM."
+                },
+                {
+                    id: "suicide",
+                    name: "Suicide risk (ask about it)",
+                    clues: "Anorexia nervosa has the highest mortality of any mental disorder; about half of deaths are suicide. Risk is also raised in bulimia.",
+                    tests: "Ask directly; see the suicide risk formulation."
+                }
+            ],
+            differentials: [
+                {
+                    id: "an",
+                    code: "ICD-11 6B80",
+                    name: "Anorexia nervosa",
+                    dsm: "Anorexia nervosa (restricting or binge-eating/purging type; mild BMI ≥ 17, moderate 16–16.99, severe 15–15.99, extreme < 15)",
+                    icd: "6B80.0 With significantly low body weight · 6B80.1 With dangerously low body weight (BMI < 14) · 6B80.2 In recovery with normal body weight",
+                    supports: "Restriction leading to significantly low weight, fear of weight gain or behaviour that prevents it, and weight or shape driving self-worth.",
+                    keyQuestion: "What do collateral history and the weight trajectory show? Denial of seriousness is part of the illness.",
+                    note: "Medical stabilisation and nutrition come first; family-based treatment for young people, CBT-E, MANTRA or SSCM for adults.",
+                    check: "Confirm the ICD-11 BMI cut-off of 14 for 'dangerously low' and the restricting / binge-purge pattern sub-codes."
+                },
+                {
+                    id: "bn",
+                    code: "ICD-11 6B81",
+                    name: "Bulimia nervosa",
+                    dsm: "Bulimia nervosa (mild 1–3, moderate 4–7, severe 8–13, extreme 14+ compensatory episodes a week)",
+                    icd: "6B81 Bulimia nervosa",
+                    supports: "Binges with loss of control and regular compensatory behaviour, at least weekly for 3 months (ICD-11: 1 month), with weight or shape driving self-worth, not at low weight.",
+                    keyQuestion: "Is weight low? If so, it is anorexia nervosa, binge-purge type.",
+                    note: "Check potassium if vomiting or using laxatives or diuretics."
+                },
+                {
+                    id: "bed",
+                    code: "ICD-11 6B82",
+                    name: "Binge-eating disorder",
+                    dsm: "Binge-eating disorder (mild 1–3, moderate 4–7, severe 8–13, extreme 14+ binges a week)",
+                    icd: "6B82 Binge eating disorder",
+                    supports: "Binges with loss of control and marked distress, at least weekly for 3 months, without regular compensatory behaviour.",
+                    keyQuestion: "Is there regular compensatory behaviour (vomiting, laxatives, fasting, excessive exercise)? If so, consider bulimia.",
+                    note: "ICD-11 doesn't require a large amount of food: loss of control is the key feature.",
+                    check: "Confirm the ICD-11 duration for binge eating disorder (several months)."
+                },
+                {
+                    id: "osfed",
+                    code: "ICD-11 6B8Y",
+                    name: "Other specified feeding or eating disorder",
+                    dsm: "Other specified feeding or eating disorder (atypical anorexia nervosa; bulimia or binge-eating of low frequency or limited duration; purging disorder; night eating syndrome)",
+                    icd: "6B8Y Other specified feeding or eating disorders",
+                    supports: "A clinically significant eating disorder that doesn't meet full criteria for another.",
+                    keyQuestion: "Which pattern fits best? Record it by name.",
+                    note: "Atypical anorexia nervosa can be just as medically unstable as low-weight anorexia: check vital signs and electrolytes."
+                },
+                {
+                    id: "arfid",
+                    code: "ICD-11 6B83",
+                    name: "Avoidant/restrictive food intake disorder (ARFID)",
+                    dsm: "Avoidant/restrictive food intake disorder",
+                    icd: "6B83 Avoidant-restrictive food intake disorder",
+                    supports: "Avoiding or limiting food because of low interest, sensory features or fear of choking or vomiting, with weight loss, nutritional deficiency, supplement dependence or marked interference with life; no weight or shape concern.",
+                    keyQuestion: "Is weight or shape concern really absent? Is it better explained by a medical condition, lack of food or cultural practice?"
+                },
+                {
+                    id: "pica",
+                    code: "ICD-11 6B84",
+                    name: "Pica",
+                    dsm: "Pica",
+                    icd: "6B84 Pica",
+                    supports: "Eating non-food substances for a month or more, inappropriate for developmental level and not a cultural practice.",
+                    keyQuestion: "What is being eaten? Check iron studies, lead and pregnancy; consider bowel obstruction and poisoning risk."
+                },
+                {
+                    id: "rumination",
+                    code: "ICD-11 6B85",
+                    name: "Rumination disorder",
+                    dsm: "Rumination disorder",
+                    icd: "6B85 Rumination-regurgitation disorder",
+                    supports: "Repeatedly bringing food back up, re-chewing, re-swallowing or spitting it out, for a month or more, without nausea or a GI cause.",
+                    keyQuestion: "Has a gastrointestinal cause (reflux, gastroparesis, pyloric stenosis) been excluded?"
+                },
+                {
+                    id: "mood",
+                    name: "Depressive or bipolar disorder",
+                    dsm: "Major depressive disorder (appetite change; with atypical features if increased appetite and sleep); manic or hypomanic episode",
+                    icd: "6A70–6A7Z Depressive disorders · 6A60–6A6Z Bipolar disorders",
+                    supports: "Appetite or weight change that began and fluctuates with a mood episode, without weight or shape concern.",
+                    keyQuestion: "Did the appetite change start with the mood change, and does food carry any weight or shape meaning?"
+                },
+                {
+                    id: "psychosis",
+                    name: "Psychotic disorder",
+                    dsm: "Schizophrenia spectrum disorder, delusional disorder, or psychotic depression",
+                    icd: "6A20–6A2Z Schizophrenia or other primary psychotic disorders",
+                    supports: "Food refused because of delusions (poisoning, contamination, a bodily delusion).",
+                    keyQuestion: "Is the belief about food delusional, rather than about weight or shape?"
+                },
+                {
+                    id: "substance-induced",
+                    name: "Substance or medication effect",
+                    dsm: "Record the substance or medication effect (e.g. stimulant use disorder; antipsychotic-induced weight gain)",
+                    icd: "",
+                    supports: "Appetite or weight change that began with a substance or medication.",
+                    keyQuestion: "Does it change when the substance or medication is stopped or changed?"
+                },
+                {
+                    id: "medical",
+                    name: "Medical cause",
+                    dsm: "Record the medical condition",
+                    icd: "",
+                    supports: "Weight or appetite change explained by a medical condition, without weight or shape concern.",
+                    keyQuestion: "Has unexplained weight loss been fully investigated?"
+                },
+                {
+                    id: "none",
+                    name: "No feeding or eating disorder",
+                    dsm: "",
+                    icd: "",
+                    supports: "Picky eating or weight change without significant medical or psychosocial consequences.",
+                    keyQuestion: "Is there a significant health or psychosocial impact?"
+                },
+                feigning
+            ]
+        }
+    });
+})();

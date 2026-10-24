@@ -880,6 +880,119 @@ async function testSubstanceScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+function testSleepEatingRules() {
+    const F = require(path.join(ROOT, "reasoning-flow-sleep-eating.js"));
+    const g = { feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no" };
+    const ins = { ...g, complaint: "insomnia", drowsy: "no", opportunity: "yes", osa: "no", rls: "no", circadian: "no", mania: "no" };
+    const sl = { ...g, complaint: "sleepiness", drowsy: "no", shortSleep: "no", osa: "no", circadian: "no" };
+    const S = a => F.sleep.evaluate(a);
+    const E = a => F.eating.evaluate(a);
+    const shown = (flow, a) => F[flow].questions.filter(q => !q.showIf || q.showIf(a)).map(q => q.id);
+
+    let r = S({ ...ins, mental: "none", freq: "yes", duration: "3plus", impair: "yes" });
+    expect("sleep flow: chronic insomnia", [r.suggestion.cardId, r.excluded.includes("short-insomnia")], ["insomnia", true]);
+    r = S({ ...ins, mental: "depression", predominant: "yes", freq: "yes", duration: "3plus", impair: "yes" });
+    expect("sleep flow: insomnia with depression, both diagnosed", [r.suggestion.cardId, r.additional], ["insomnia", ["mental"]]);
+    r = S({ ...ins, mental: "depression", predominant: "no" });
+    expect("sleep flow: insomnia only a symptom", [r.suggestion.cardId, r.switchTo], ["mental", "depressed"]);
+    r = S({ ...ins, mental: "none", freq: "yes", duration: "1to3", impair: "yes" });
+    expect("sleep flow: short-term insomnia", r.suggestion.cardId, "short-insomnia");
+    r = S({ ...ins, mania: "yes" });
+    expect("sleep flow: reduced need for sleep", [r.suggestion.cardId, r.switchTo], ["mental", "elevated"]);
+    r = S({ ...ins, rls: "yes" });
+    expect("sleep flow: restless legs", r.suggestion.cardId, "rls");
+    r = S({ ...g, complaint: "insomnia", opportunity: "no" });
+    expect("sleep flow: no opportunity", r.suggestion.cardId, "none");
+    r = S({ ...ins, circadian: "late" });
+    expectIncludes("sleep flow: delayed phase", r.suggestion.label, "7A60");
+    r = S({ ...ins, substance: "yes", subTiming: "early", mental: "none", freq: "yes", duration: "3plus", impair: "yes" });
+    expect("sleep flow: too early to tell", [r.suggestion.cardId, r.suggestion.provisional, r.alternatives.includes("insomnia")], ["substance-induced", true, true]);
+    r = S({ ...sl, drowsy: "yes", osa: "yes" });
+    expect("sleep flow: apnoea, drowsy driving urgent", [r.suggestion.cardId, /fitness to drive/i.test(r.urgent)], ["breathing", true]);
+    r = S({ ...sl, cataplexy: "cataplexy" });
+    expect("sleep flow: narcolepsy", r.suggestion.cardId, "narcolepsy");
+    r = S({ ...sl, cataplexy: "no", mental: "none", hyperSx: "yes", freq: "yes", duration: "3plus", impair: "yes" });
+    expect("sleep flow: hypersomnolence", r.suggestion.cardId, "hypersomnolence");
+    r = S({ ...sl, cataplexy: "no", mental: "none", hyperSx: "no" });
+    expectIncludes("sleep flow: fatigue not sleepiness", r.suggestion.label, "fatigue");
+    r = S({ ...g, complaint: "sleepiness", shortSleep: "yes" });
+    expect("sleep flow: insufficient sleep", r.suggestion.cardId, "insufficient");
+    r = S({ ...g, complaint: "episodes", injury: "yes", episode: "rbd", impair: "yes" });
+    expect("sleep flow: RBD with injury risk", [r.suggestion.cardId, !!r.urgent], ["rbd", true]);
+    r = S({ ...g, complaint: "episodes", episode: "nightmares", trauma: "yes" });
+    expect("sleep flow: trauma nightmares", r.switchTo, "anxiety");
+    r = S({ ...g, complaint: "episodes", episode: "seizure" });
+    expect("sleep flow: nocturnal seizures", r.ruleOut.seizure, "Investigating");
+    expect("sleep flow: steps wait their turn", shown("sleep", { ...g, complaint: "insomnia", opportunity: "yes" }).includes("mental"), false);
+
+    const e = { ...g, unstable: ["none"] };
+    r = E({ ...e, problem: "restrict", unstable: ["hr"], psychosisFood: "no", lowWeight: "yes", bmi: "under14", fear: "yes", image: "yes", bingePurge: "no" });
+    expect("eating flow: AN, extreme, unstable", [r.suggestion.label, /refeeding/i.test(r.urgent)],
+        ["Anorexia nervosa, restricting type, extreme (ICD-11 6B80.1 dangerously low body weight)", true]);
+    r = E({ ...e, problem: "binge", lowWeight: "yes", bmi: "16", fear: "yes", image: "yes" });
+    expectIncludes("eating flow: binges at low weight are AN", r.suggestion.label, "binge-eating/purging type, moderate");
+    r = E({ ...e, problem: "restrict", psychosisFood: "no", lowWeight: "no", fear: "yes", image: "yes" });
+    expectIncludes("eating flow: atypical AN", r.suggestion.label, "Atypical anorexia nervosa");
+    r = E({ ...e, problem: "restrict", psychosisFood: "no", lowWeight: "yes", bmi: "17", fear: "no", image: "no" });
+    expect("eating flow: low weight without concern", [r.suggestion.cardId, r.alternatives.includes("medical")], ["arfid", false]);
+    r = E({ ...e, problem: "binge", lowWeight: "no", compensate: "yes", shapeWeight: "yes", weekly: "4to7", months: "3plus" });
+    expect("eating flow: bulimia", r.suggestion.label, "Bulimia nervosa, moderate (4–7 a week) (ICD-11 6B81)");
+    r = E({ ...e, problem: "binge", lowWeight: "no", compensate: "yes", shapeWeight: "yes", weekly: "1to3", months: "1to3" });
+    expect("eating flow: bulimia under 3 months", [r.suggestion.cardId, r.also.some(n => n.includes("meets ICD-11"))], ["osfed", true]);
+    r = E({ ...e, problem: "binge", lowWeight: "no", compensate: "no", bedFeatures: "yes", weekly: "8to13", months: "3plus" });
+    expectIncludes("eating flow: binge-eating disorder", r.suggestion.label, "Binge-eating disorder, severe");
+    r = E({ ...e, problem: "purge", lowWeight: "no", shapeWeight: "yes" });
+    expectIncludes("eating flow: purging disorder", r.suggestion.label, "Purging disorder");
+    r = E({ ...e, problem: "avoid", psychosisFood: "no", avoidImpact: "yes", avoidShape: "no" });
+    expect("eating flow: ARFID", r.suggestion.cardId, "arfid");
+    r = E({ problem: "nonfood", picaCriteria: "yes" });
+    expect("eating flow: pica", r.suggestion.cardId, "pica");
+    r = E({ problem: "regurg", rumCriteria: "yes" });
+    expect("eating flow: rumination", r.suggestion.cardId, "rumination");
+    r = E({ ...e, problem: "loss", psychosisFood: "yes" });
+    expect("eating flow: food delusions", r.switchTo, "psychosis");
+    r = E({ ...e, problem: "loss", psychosisFood: "no", mood: "depression" });
+    expect("eating flow: appetite loss in depression", r.switchTo, "depressed");
+    r = E({ ...g, problem: "gain", mood: "no", nightEating: "yes" });
+    expectIncludes("eating flow: night eating", r.suggestion.label, "Night eating syndrome");
+    r = E({ ...g, problem: "gain", substance: "yes", subTiming: "during" });
+    expect("eating flow: medication weight gain", r.suggestion.cardId, "substance-induced");
+}
+
+async function testSleepEatingScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "sleep");
+    await answer("complaint", "Trouble getting to sleep");
+    for (const q of ["drowsy", "feigned", "substance", "delirium", "cognitive", "medical"]) await answer(q, "No");
+    await answer("opportunity", "Yes");
+    for (const q of ["osa", "rls", "circadian", "mania"]) await answer(q, "No");
+    await answer("mental", "Depression");
+    await answer("predominant", "Yes");
+    await answer("freq", "Yes");
+    await answer("duration", "3 months or more");
+    await answer("impair", "Yes");
+    expectIncludes("sleep screen: suggestion", await page.textContent(".rz-result-title"), "Insomnia disorder, persistent");
+    await page.click("text=Apply to the cards below");
+    expect("sleep screen: insomnia leading", await page.inputValue('select[aria-label="Insomnia disorder status"]'), "Leading");
+    expect("sleep screen: depression also leading", await page.inputValue('select[aria-label="Part of another mental disorder status"]'), "Leading");
+
+    await page.selectOption("#rz-problem", "eating");
+    await answer("problem", "Restricting food");
+    await answer("unstable", "Heart rate under 40");
+    for (const q of ["feigned", "substance", "delirium", "cognitive", "medical", "psychosisFood"]) await answer(q, "No");
+    await answer("lowWeight", "Yes");
+    await answer("bmi", "Under 14");
+    for (const q of ["fear", "image"]) await answer(q, "Yes");
+    await answer("bingePurge", "No");
+    expectIncludes("eating screen: suggestion", await page.textContent(".rz-result-title"), "Anorexia nervosa, restricting type, extreme");
+    expectIncludes("eating screen: instability urgent", await page.textContent(".rz-acute"), "medical instability");
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -998,6 +1111,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testCognitiveScreen(browser, baseUrl);
         testSubstanceRiskRules();
         await testSubstanceScreen(browser, baseUrl);
+        testSleepEatingRules();
+        await testSleepEatingScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();
