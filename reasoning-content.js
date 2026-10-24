@@ -2188,3 +2188,212 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         }
     });
 })();
+
+/* Avoidance, and psychomotor slowing. Avoidance has no substance or medical
+ * steps: it is a reaction to a fear or a loss of drive, not a direct effect
+ * on the brain. Most of its answers hand over to another presentation. */
+Object.assign(window.REASONING_CONTENT.differentials, {
+    avoidance: {
+        name: "Avoidance",
+        ruleOut: [
+            {
+                id: "driver",
+                name: "What drives it (check for it)",
+                clues: "Ask what they fear would happen. The feared outcome, not the situation avoided, decides the diagnosis: panic in a crowd (agoraphobia), judgement (social anxiety), contamination (OCD), a plot (psychosis), or no fear at all, just no energy (depression).",
+                tests: "Ask 'What would happen if you went?'; collateral history."
+            },
+            {
+                id: "medical",
+                name: "Medical conditions that draw attention",
+                clues: "Tremor, stuttering, disfigurement, obesity or incontinence can make avoidance understandable. It is a disorder only when the fear is unrelated to the condition or clearly excessive.",
+                tests: "History and examination."
+            },
+            {
+                id: "safety",
+                name: "Real threat (check for it)",
+                clues: "Avoiding a violent partner, a bully or an unsafe place is not a disorder.",
+                tests: "Ask about safety at home and in the community."
+            }
+        ],
+        differentials: [
+            {
+                id: "anxiety",
+                name: "An anxiety, obsessive-compulsive or trauma-related disorder",
+                dsm: "Agoraphobia · Social anxiety disorder · Specific phobia · Separation anxiety disorder · OCD · PTSD or acute stress disorder · Illness anxiety disorder · Body dysmorphic disorder",
+                icd: "6B02 · 6B04 · 6B03 · 6B05 · 6B20 · 6B40 · 6B23 · 6B21",
+                supports: "Avoidance driven by a specific fear: of panic where escape is hard, of judgement, of an object, of separation, of triggering obsessions, of trauma reminders, of illness.",
+                keyQuestion: "What do they fear would happen? Work it through with the Anxiety questions."
+            },
+            {
+                id: "avpd",
+                name: "Avoidant personality disorder",
+                dsm: "Avoidant personality disorder",
+                icd: "6D10 Personality disorder (trait domains: negative affectivity, detachment); ICD-11 has no avoidant type",
+                supports: "A pervasive pattern since early adulthood of social inhibition, feeling inadequate and sensitivity to criticism, across most of life.",
+                keyQuestion: "Has it been present since adolescence or early adulthood, across most situations?",
+                note: "Often co-occurs with social anxiety disorder: both can be diagnosed."
+            },
+            {
+                id: "depression",
+                name: "Depression or negative symptoms",
+                dsm: "Major depressive disorder · Negative symptoms of schizophrenia",
+                icd: "6A70–6A71 Depressive episode or disorder · 6A20 Schizophrenia",
+                supports: "Avoidance from lack of energy, interest or motivation, without fear.",
+                keyQuestion: "If they had the energy, would they want to go?"
+            },
+            {
+                id: "psychosis",
+                name: "Delusional fear",
+                dsm: "Schizophrenia spectrum disorder or delusional disorder",
+                icd: "6A20–6A2Z Schizophrenia or other primary psychotic disorders",
+                supports: "Avoidance driven by a delusional threat (a plot, being poisoned or watched).",
+                keyQuestion: "Is the feared threat a fixed false belief?"
+            },
+            {
+                id: "eating",
+                name: "Eating disorder or ARFID",
+                dsm: "Anorexia nervosa · Avoidant/restrictive food intake disorder",
+                icd: "6B80 Anorexia nervosa · 6B83 ARFID",
+                supports: "Avoiding foods, with weight loss: with fear of weight gain (anorexia) or without it (ARFID).",
+                keyQuestion: "Is there fear of weight gain or a disturbed body image?"
+            },
+            {
+                id: "sexual",
+                name: "Sexual dysfunction",
+                dsm: "Sexual dysfunctions (e.g. erectile disorder, genito-pelvic pain/penetration disorder)",
+                icd: "Chapter 17, conditions related to sexual health (HA00–HA8Z)",
+                supports: "Avoiding intimacy because of worry about sexual performance or pain.",
+                keyQuestion: "Is there a sexual dysfunction, and a medical or medication cause for it?"
+            },
+            {
+                id: "adjustment",
+                code: "ICD-11 6B43",
+                name: "Adjustment disorder",
+                dsm: "Adjustment disorder",
+                icd: "6B43 Adjustment disorder",
+                supports: "Avoidance in response to a recent identifiable stressor, not meeting criteria for another disorder.",
+                keyQuestion: "Did it start within 3 months of the stressor?"
+            },
+            {
+                id: "other-anxiety",
+                code: "ICD-11 6B0Y",
+                name: "Other specified anxiety disorder",
+                dsm: "Other specified anxiety disorder",
+                icd: "6B0Y Other specified anxiety or fear-related disorder",
+                supports: "Clinically significant avoidance that doesn't fit another disorder.",
+                keyQuestion: "Which disorder does it come closest to?"
+            },
+            {
+                id: "none",
+                name: "No mental disorder",
+                dsm: "",
+                icd: "",
+                supports: "Avoidance in proportion to a real threat or a medical condition, or without distress or impairment.",
+                keyQuestion: "Is it causing distress or getting in the way of life?"
+            }
+        ]
+    },
+
+    slowing: {
+        name: "Psychomotor slowing",
+        ruleOut: [
+            {
+                id: "nms",
+                name: "Neuroleptic malignant syndrome",
+                clues: "Rigidity, fever, autonomic instability and confusion, usually days after starting or increasing an antipsychotic. Raised CK. A medical emergency.",
+                tests: "Temperature, pulse, BP, CK, UEC, FBC; stop the antipsychotic; urgent medical review."
+            },
+            {
+                id: "parkinsonism",
+                name: "Medication-induced parkinsonism",
+                clues: "Rigidity, tremor, shuffling gait and reduced facial expression after starting or increasing an antipsychotic, metoclopramide or another dopamine blocker. Often mistaken for depression or negative symptoms.",
+                tests: "Examine tone, gait and tremor; medication review."
+            },
+            {
+                id: "substance",
+                name: "Substances and medications",
+                clues: "Opioids, benzodiazepines, alcohol and other sedatives; inhalants; stimulant withdrawal ('crash'); sedating antipsychotics, antidepressants and antiepileptics.",
+                tests: "Use history; UDS; medication review."
+            },
+            {
+                id: "delirium",
+                name: "Hypoactive delirium",
+                clues: "Quiet, slowed and drowsy with fluctuating attention. Often mistaken for depression, especially in older adults.",
+                tests: "4AT or CAM; find the cause."
+            },
+            {
+                id: "neuro",
+                name: "Medical and neurological causes",
+                clues: "Hypothyroidism, Parkinson's disease, stroke, subdural haematoma, normal pressure hydrocephalus, hypoglycaemia, hepatic or uraemic encephalopathy, hypercalcaemia.",
+                tests: "Neurological examination; TSH, UEC, calcium, glucose, LFT; CT or MRI brain if new neurological signs."
+            },
+            {
+                id: "intake",
+                name: "Food and fluid intake (check for it)",
+                clues: "Severe slowing can mean poor intake, dehydration, pressure injury and VTE risk.",
+                tests: "Fluid balance, weight, UEC; VTE risk assessment."
+            }
+        ],
+        differentials: [
+            {
+                id: "depression",
+                name: "Depressive episode",
+                dsm: "Major depressive disorder, bipolar depression or schizoaffective disorder (with melancholic features if marked)",
+                icd: "6A70–6A71 Depressive episode or disorder · 6A60–6A61 Bipolar disorder · 6A21 Schizoaffective disorder",
+                supports: "Slowing with low mood or loss of interest for 2 weeks or more.",
+                keyQuestion: "Is there low mood or loss of interest? Marked slowing points to melancholic features.",
+                note: "Severe retardation with poor intake: consider ECT."
+            },
+            {
+                id: "catatonia",
+                name: "Catatonia",
+                dsm: "Catatonia associated with another mental disorder, or due to another medical condition",
+                icd: "6A40 Catatonia associated with another mental disorder · 6A41 Catatonia induced by substances or medications · 6E69 Secondary catatonia syndrome",
+                supports: "Slowing with mutism, posturing, waxy flexibility, negativism or staring.",
+                keyQuestion: "Are there 3 or more catatonic signs? A lorazepam challenge can help."
+            },
+            {
+                id: "psychosis",
+                name: "Psychotic disorder",
+                dsm: "Schizophrenia (negative symptoms or catatonic features) or another psychotic disorder",
+                icd: "6A20 Schizophrenia",
+                supports: "Slowing with delusions or hallucinations, or as part of negative symptoms.",
+                keyQuestion: "Is it negative symptoms, depression, or medication-induced parkinsonism? All three look alike."
+            },
+            {
+                id: "medication",
+                name: "Medication-induced movement disorder",
+                dsm: "Medication-induced parkinsonism · Neuroleptic malignant syndrome (medication-induced movement disorders)",
+                icd: "Chapter 8 (diseases of the nervous system)",
+                supports: "Slowing with rigidity or tremor after a dopamine blocker; NMS adds fever, autonomic instability and confusion.",
+                keyQuestion: "Did it start after a dopamine blocker was started or increased?"
+            },
+            {
+                id: "substance-induced",
+                name: "Substance or medication effect",
+                dsm: "Substance intoxication or withdrawal; substance/medication-induced depressive disorder",
+                icd: "",
+                supports: "Slowing with intoxication (opioids, sedatives, inhalants) or stimulant withdrawal.",
+                keyQuestion: "Does it clear as the substance wears off or withdrawal ends?"
+            },
+            {
+                id: "medical",
+                code: "ICD-11 6E62",
+                name: "Due to a medical condition",
+                dsm: "Depressive disorder due to another medical condition, or a symptom of the medical condition (no mental disorder)",
+                icd: "6E62 Secondary mood syndrome",
+                supports: "Slowing explained by hypothyroidism, Parkinson's disease, stroke or another condition.",
+                keyQuestion: "Are there depressive symptoms too, or only physical slowing?"
+            },
+            {
+                id: "other",
+                name: "Other specified depressive disorder or unspecified catatonia",
+                dsm: "Other specified depressive disorder · Unspecified catatonia",
+                icd: "6A7Y Other specified depressive disorders · 6A4Z Catatonia, unspecified",
+                supports: "Clinically significant slowing not explained above.",
+                keyQuestion: "Keep looking for a cause: medical work-up and collateral history.",
+                check: "Confirm the ICD-11 code 6A7Y."
+            }
+        ]
+    }
+});

@@ -170,7 +170,9 @@
     // Answers that mean the same in every flow, carried over when one flow
     // hands the case to another (e.g. mood with psychosis outside episodes).
     const SHARED_ANSWERS = ["feigned", "substance", "subTiming", "delirium", "cognitive", "medical"];
-    function carryAnswers(from, toProblem) {
+    // extra holds answers a flow names for the next one (result.carry), kept
+    // only where the target flow asks that question with those options.
+    function carryAnswers(from, toProblem, extra) {
         const to = flowFor(toProblem);
         const carried = toProblem === "psychosis" ? { explained: "none" } : { explained: "clinical" };
         SHARED_ANSWERS.forEach(id => {
@@ -182,6 +184,11 @@
         const named = from.substance && !["yes", "no", "unsure"].includes(from.substance);
         const target = to && to.questions.find(question => question.id === "substance");
         if (named && target && target.options.some(o => o.value === "yes")) carried.substance = "yes";
+        Object.keys(extra || {}).forEach(id => {
+            const q = to && to.questions.find(question => question.id === id);
+            const values = [].concat(extra[id]);
+            if (q && values.every(v => q.options.some(o => o.value === v))) carried[id] = extra[id];
+        });
         return carried;
     }
 
@@ -329,7 +336,7 @@
             } else {
                 result.appendChild(el("div", "rz-result-title rz-result-empty", "Answer the questions to see a suggestion."));
             }
-            if (r.pending.length) result.appendChild(el("div", "rz-hint", "Still to answer: " + r.pending.join(" ")));
+            if (r.pending.length) result.appendChild(el("div", "rz-hint", "Still to answer: " + [...new Set(r.pending)].join(" ")));
             if (r.also.length) {
                 const list = el("ul", "rz-also");
                 r.also.forEach(note => list.appendChild(el("li", null, note)));
@@ -405,7 +412,8 @@
                 const cards = section.querySelector(".rz-step-cards");
                 if (cards) cards.scrollIntoView({ block: "start" });
             }, target => {
-                dx = { problem: target, ruleOut: {}, items: {}, flow: carryAnswers(dx.flow, target) };
+                const carry = (flowResult() || {}).carry;
+                dx = { problem: target, ruleOut: {}, items: {}, flow: carryAnswers(dx.flow, target, carry) };
                 renderDifferential(section);
             }));
         }

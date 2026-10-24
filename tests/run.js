@@ -1085,6 +1085,74 @@ async function testSomaticScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+function testAvoidanceSlowingRules() {
+    const F = require(path.join(ROOT, "reasoning-flow-avoidance.js"));
+    const A = a => F.avoidance.evaluate(a);
+    const S = a => F.slowing.evaluate(a);
+    const v = { threat: "no", impair: "yes" };
+
+    let r = A({ ...v, avoided: ["agoraphobia", "social"], socialMedical: "none", pervasive: "yes" });
+    expect("avoidance flow: hands fears to Anxiety", [r.suggestion.cardId, r.switchTo, r.carry.focus, r.additional],
+        ["anxiety", "anxiety", ["agoraphobia", "social"], ["avpd"]]);
+    r = A({ ...v, avoided: ["social", "delusion"], socialMedical: "none", pervasive: "no" });
+    expect("avoidance flow: delusions come first", [r.suggestion.cardId, r.switchTo], ["psychosis", "psychosis"]);
+    r = A({ ...v, avoided: ["energy"], energyContext: "depression" });
+    expect("avoidance flow: loss of drive", r.switchTo, "depressed");
+    r = A({ ...v, avoided: ["food"], foodWeight: "no" });
+    expect("avoidance flow: food without weight concern", [r.switchTo, r.carry], ["eating", { problem: "avoid" }]);
+    r = A({ ...v, avoided: ["stressor"], stressorRecent: "yes" });
+    expect("avoidance flow: adjustment alone", r.suggestion.cardId, "adjustment");
+    r = A({ ...v, avoided: ["stressor", "specific"], stressorRecent: "yes" });
+    expect("avoidance flow: adjustment dropped for a phobia", [r.suggestion.label, r.excluded.includes("adjustment")], ["Specific phobia (ICD-11 6B03)", true]);
+    r = A({ ...v, avoided: ["social"], socialMedical: "proportionate" });
+    expect("avoidance flow: proportionate to a medical condition", r.suggestion.cardId, "none");
+    r = A({ avoided: ["social"], threat: "yes" });
+    expect("avoidance flow: real threat", [r.suggestion.cardId, r.ruleOut.safety], ["none", "Possible"]);
+
+    const s = { explained: "clinical", nms: "no", parkinsonism: "no", feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no" };
+    r = S({ explained: "clinical", nms: "yes" });
+    expect("slowing flow: NMS urgent", [r.suggestion.cardId, /urgent medical review/.test(r.urgent)], ["medication", true]);
+    r = S({ explained: "clinical", nms: "no", parkinsonism: "yes" });
+    expectIncludes("slowing flow: parkinsonism", r.suggestion.label, "Medication-induced parkinsonism");
+    r = S({ ...s, nms: "unsure", catatonic: "no", depressed: "yes" });
+    expect("slowing flow: NMS unsure still continues", [!!r.urgent, r.suggestion.cardId,
+        F.slowing.questions.filter(q => !q.showIf || q.showIf({ ...s, nms: "unsure" })).some(q => q.id === "catatonic")], [true, "depression", true]);
+    r = S({ ...s, delirium: "yes" });
+    expectIncludes("slowing flow: hypoactive delirium", r.suggestion.label, "Hypoactive delirium");
+    r = S({ ...s, catatonic: "yes" });
+    expect("slowing flow: catatonia", r.switchTo, "catatonia");
+    r = S({ ...s, catatonic: "no", depressed: "yes" });
+    expect("slowing flow: depression", r.switchTo, "depressed");
+    r = S({ ...s, catatonic: "no", depressed: "no", psychotic: "negative" });
+    expect("slowing flow: negative symptoms", r.switchTo, "psychosis");
+    r = S({ ...s, catatonic: "no", depressed: "no", psychotic: "no" });
+    expect("slowing flow: residual", [r.suggestion.cardId, r.alternatives.includes("medical")], ["other", false]);
+    r = S({ ...s, substance: "yes", subTiming: "early", catatonic: "no", depressed: "yes" });
+    expect("slowing flow: too early to tell", [r.suggestion.cardId, r.switchTo], ["substance-induced", null]);
+}
+
+async function testAvoidanceScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "avoidance");
+    await answer("avoided", "Places where escape");
+    await answer("avoided", "Social or performance");
+    await answer("threat", "No");
+    await answer("impair", "Yes");
+    await answer("socialMedical", "No");
+    await answer("pervasive", "No");
+    expectIncludes("avoidance screen: suggestion", await page.textContent(".rz-result-title"), "Agoraphobia");
+    await page.click("text=Open the Anxiety questions");
+    expect("avoidance screen: switched", await page.inputValue("#rz-problem"), "anxiety");
+    const checked = v => page.isChecked(`#oca-reasoning-body fieldset[data-q="focus"] input[value="${v}"]`);
+    expect("avoidance screen: fears carried over", [await checked("agoraphobia"), await checked("social"), await checked("panic")], [true, true, false]);
+    expect("avoidance screen: impairment carried over", await page.isChecked('#oca-reasoning-body fieldset[data-q="impair"] input[value="yes"]'), true);
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1207,6 +1275,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testSleepEatingScreen(browser, baseUrl);
         testSomaticDissociativeRules();
         await testSomaticScreen(browser, baseUrl);
+        testAvoidanceSlowingRules();
+        await testAvoidanceScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();
