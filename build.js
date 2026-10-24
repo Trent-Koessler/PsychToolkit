@@ -29,6 +29,7 @@ const FILES = [
     "reasoning-flow-substance.js",
     "reasoning-flow-risk.js",
     "reasoning-flow-sleep-eating.js",
+    "reasoning-flow-somatic.js",
     "reasoning-ui.js",
     "mha-data.js",
     "mha.js",

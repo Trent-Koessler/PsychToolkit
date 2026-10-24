@@ -1897,3 +1897,294 @@ Object.assign(window.REASONING_CONTENT.differentials, {
         }
     });
 })();
+
+/* Physical symptoms or health worry, and depersonalisation or
+ * derealisation. Codes marked "check" were found on ICD-11 coding sites but
+ * not on the WHO browser itself. */
+(function () {
+    const feigning = {
+        id: "feigning",
+        code: "ICD-11 QC30 / 6D50",
+        name: "Feigned symptoms (malingering or factitious disorder)",
+        dsm: "Malingering (a condition for clinical attention, not a mental disorder) · Factitious disorder imposed on self",
+        icd: "QC30 Malingering · 6D50 Factitious disorder imposed on self",
+        supports: "Symptoms deliberately produced or exaggerated: findings that change when unobserved, tampering, a history that doesn't add up, or an external incentive (compensation, drugs, legal).",
+        keyQuestion: "Is there evidence of deliberate production, rather than symptoms that are involuntary but unexplained?"
+    };
+
+    Object.assign(window.REASONING_CONTENT.differentials, {
+        somatic: {
+            name: "Physical symptoms or health worry",
+            ruleOut: [
+                {
+                    id: "medical",
+                    name: "Medical conditions",
+                    clues: "Functional and medical illness often co-exist. Red flags: weight loss, fever, night sweats, bleeding, new symptoms after 50, objective neurological signs. Normal tests alone don't make a functional diagnosis.",
+                    tests: "Proportionate investigation guided by the history; agree a stop-point with the GP."
+                },
+                {
+                    id: "substance",
+                    name: "Substances and medications",
+                    clues: "Withdrawal (opioids, benzodiazepines, alcohol), side effects, opioid-induced hyperalgesia, medication overuse headache.",
+                    tests: "Medication and substance review, including over-the-counter and online purchases."
+                },
+                {
+                    id: "iatrogenic",
+                    name: "Iatrogenic harm (check for it)",
+                    clues: "Opioids, benzodiazepines, repeated procedures and unnecessary surgery; conflicting messages between clinicians.",
+                    tests: "List all investigations, procedures and prescribers; one coordinating clinician."
+                },
+                {
+                    id: "comorbid",
+                    name: "Depression, anxiety and PTSD",
+                    clues: "Common alongside somatic and functional disorders, and treatable on their own merits.",
+                    tests: "PHQ-9, GAD-7, trauma history when appropriate (asking too early can feel accusatory)."
+                },
+                {
+                    id: "suicide",
+                    name: "Suicide risk (ask about it)",
+                    clues: "Raised in somatic symptom disorder, chronic pain and body dysmorphic disorder, and often missed because the presentation is framed as physical.",
+                    tests: "Ask directly; see the suicide risk formulation."
+                }
+            ],
+            differentials: [
+                {
+                    id: "ssd",
+                    code: "ICD-11 6C20",
+                    name: "Somatic symptom disorder",
+                    dsm: "Somatic symptom disorder (mild, moderate or severe; with predominant pain; persistent)",
+                    icd: "6C20 Bodily distress disorder (6C20.0 mild · 6C20.1 moderate · 6C20.2 severe)",
+                    supports: "Distressing physical symptoms with excessive thoughts, worry or time spent on them, for 6 months or more. The symptoms may or may not be medically explained.",
+                    keyQuestion: "Is the response to the symptoms out of proportion, whatever their cause?",
+                    note: "Explain clearly, set planned rather than crisis-driven reviews, and reduce iatrogenic load. CBT has the best evidence."
+                },
+                {
+                    id: "iad",
+                    code: "ICD-11 6B23",
+                    name: "Illness anxiety disorder",
+                    dsm: "Illness anxiety disorder (care-seeking or care-avoidant type)",
+                    icd: "6B23 Hypochondriasis (grouped with the obsessive-compulsive related disorders)",
+                    supports: "Preoccupation with having or getting a serious illness for 6 months or more, with few or mild symptoms, high health anxiety, and checking or avoidance.",
+                    keyQuestion: "Are physical symptoms absent or mild? If they are prominent, consider somatic symptom disorder instead."
+                },
+                {
+                    id: "fnd",
+                    code: "ICD-11 6B60",
+                    name: "Functional neurological disorder",
+                    dsm: "Functional neurological symptom disorder (conversion disorder), by symptom type; acute or persistent; with or without a psychological stressor",
+                    icd: "6B60 Dissociative neurological symptom disorder (e.g. 6B60.4 with non-epileptic seizures · 6B60.8 with movement disturbance)",
+                    supports: "Weakness, abnormal movements, seizures or sensory loss with positive signs of incompatibility with neurological disease (Hoover's sign, tremor entrainment, video-EEG).",
+                    keyQuestion: "What positive signs were found? It is a diagnosis on positive signs, not of exclusion, and no stressor is needed.",
+                    note: "Explain it as a problem of nervous system functioning, not damage. Physiotherapy and CBT have the best evidence (Lehn et al. 2025, Australian consensus)."
+                },
+                {
+                    id: "bdd",
+                    code: "ICD-11 6B21",
+                    name: "Body dysmorphic disorder",
+                    dsm: "Body dysmorphic disorder (with muscle dysmorphia; good or fair, poor, or absent insight)",
+                    icd: "6B21 Body dysmorphic disorder",
+                    supports: "Preoccupation with flaws in appearance that others don't see or see as slight, with repetitive checking, grooming, comparing or reassurance-seeking.",
+                    keyQuestion: "Is the concern only about weight or shape with restricted eating? If so, consider an eating disorder.",
+                    note: "Even with absent insight it stays BDD (specifier), not delusional disorder. Cosmetic procedures rarely help."
+                },
+                {
+                    id: "pfac",
+                    code: "ICD-11 6E40",
+                    name: "Psychological factors affecting a medical condition",
+                    dsm: "Psychological factors affecting other medical conditions",
+                    icd: "6E40 Psychological or behavioural factors affecting disorders or diseases classified elsewhere",
+                    supports: "A diagnosed medical condition made worse by psychological or behavioural factors: stress-triggered flares, non-adherence, denial of symptoms.",
+                    keyQuestion: "Are the factors part of another mental disorder? If so, diagnose that instead.",
+                    check: "Confirm the ICD-11 code 6E40."
+                },
+                {
+                    id: "osrd",
+                    name: "Other specified somatic symptom and related disorder",
+                    dsm: "Other specified somatic symptom and related disorder (brief somatic symptom or illness anxiety disorder; pseudocyesis)",
+                    icd: "6C2Y Other specified disorders of bodily distress or bodily experience",
+                    supports: "Clinically significant, but under 6 months or below full criteria.",
+                    keyQuestion: "Is it an understandable reaction to a medical condition (no disorder), or an adjustment disorder?",
+                    check: "Confirm the ICD-11 code 6C2Y."
+                },
+                {
+                    id: "mood-anxiety",
+                    name: "Part of panic, depression or generalised anxiety",
+                    dsm: "Panic disorder · Major depressive disorder · Generalised anxiety disorder",
+                    icd: "6B01 Panic disorder · 6A70–6A71 Depressive episode or disorder · 6B00 Generalised anxiety disorder",
+                    supports: "Physical symptoms or health worry only during panic attacks, depressive episodes or generalised worry.",
+                    keyQuestion: "Do the symptoms occur outside those episodes?"
+                },
+                {
+                    id: "delusional",
+                    code: "ICD-11 6A24",
+                    name: "Delusional disorder, somatic type",
+                    dsm: "Delusional disorder, somatic type (or psychotic depression)",
+                    icd: "6A24 Delusional disorder",
+                    supports: "Fixed false beliefs about the body (infestation, a bodily smell, an organ not working), unshaken by evidence.",
+                    keyQuestion: "Is the belief fixed despite clear evidence? For appearance beliefs, BDD with absent insight is usually the better fit."
+                },
+                {
+                    id: "substance-induced",
+                    name: "Substance or medication effect",
+                    dsm: "Substance intoxication or withdrawal; adverse effect of medication",
+                    icd: "",
+                    supports: "Symptoms that began with use, withdrawal or a new medication.",
+                    keyQuestion: "Do the symptoms settle when the substance or medication is stopped or changed?"
+                },
+                {
+                    id: "medical",
+                    name: "Medical condition, proportionate response",
+                    dsm: "No mental disorder (record the medical condition)",
+                    icd: "",
+                    supports: "Symptoms explained by a medical condition, with worry and behaviour in proportion to it.",
+                    keyQuestion: "Has the medical work-up been proportionate, and are red flags addressed?"
+                },
+                {
+                    id: "none",
+                    name: "No mental disorder",
+                    dsm: "",
+                    icd: "",
+                    supports: "Physical symptoms without excessive thoughts, feelings or behaviours about them.",
+                    keyQuestion: "Is the distress in proportion to the symptoms?"
+                },
+                feigning
+            ]
+        },
+
+        depersonalisation: {
+            name: "Depersonalisation or derealisation",
+            ruleOut: [
+                {
+                    id: "substance",
+                    name: "Substances",
+                    clues: "Cannabis (a common trigger of lasting depersonalisation), hallucinogens, ketamine, MDMA; alcohol or benzodiazepine withdrawal.",
+                    tests: "Use history and timeline; UDS."
+                },
+                {
+                    id: "medication",
+                    name: "Medications",
+                    clues: "Starting or stopping antidepressants, anticholinergics, sedatives.",
+                    tests: "Medication review."
+                },
+                {
+                    id: "neuro",
+                    name: "Neurological causes",
+                    clues: "Temporal lobe epilepsy (brief stereotyped episodes, déjà vu, automatisms), migraine, vestibular disorders, head injury. Late onset or neurological signs raise suspicion.",
+                    tests: "Neurological examination; EEG if episodic; MRI if indicated."
+                },
+                {
+                    id: "delirium",
+                    name: "Delirium",
+                    clues: "Fluctuating attention and awareness.",
+                    tests: "4AT or CAM."
+                },
+                {
+                    id: "trauma",
+                    name: "Trauma (ask about it sensitively)",
+                    clues: "Dissociation often follows trauma, including childhood trauma.",
+                    tests: "Trauma history when the person is ready; PCL-5 if PTSD suspected."
+                }
+            ],
+            differentials: [
+                {
+                    id: "dpdr",
+                    code: "ICD-11 6B66",
+                    name: "Depersonalisation-derealisation disorder",
+                    dsm: "Depersonalization/derealization disorder",
+                    icd: "6B66 Depersonalization-derealization disorder",
+                    supports: "Persistent or recurrent feelings of detachment from one's self or surroundings, knowing they aren't real, with distress or impairment.",
+                    keyQuestion: "Is reality testing intact, and is it independent of substances, medical causes and other mental disorders?",
+                    note: "Explain it, teach grounding, and treat co-occurring anxiety and depression. No medication has good evidence."
+                },
+                {
+                    id: "ptsd",
+                    code: "ICD-11 6B40",
+                    name: "PTSD with dissociative symptoms, or acute stress",
+                    dsm: "Posttraumatic stress disorder, with dissociative symptoms · Acute stress disorder",
+                    icd: "6B40 Post-traumatic stress disorder · QE84 Acute stress reaction",
+                    supports: "Depersonalisation or derealisation alongside intrusions, avoidance, negative mood and arousal after trauma.",
+                    keyQuestion: "Has it lasted more than a month since the trauma?"
+                },
+                {
+                    id: "amnesia",
+                    code: "ICD-11 6B61",
+                    name: "Dissociative amnesia",
+                    dsm: "Dissociative amnesia (with or without dissociative fugue)",
+                    icd: "6B61 Dissociative amnesia",
+                    supports: "Inability to recall important personal information, usually of a traumatic or stressful nature, beyond ordinary forgetting.",
+                    keyQuestion: "Has a neurological cause (seizures, head injury, transient global amnesia, alcohol) been excluded?",
+                    check: "Confirm the ICD-11 code 6B61."
+                },
+                {
+                    id: "did",
+                    code: "ICD-11 6B64",
+                    name: "Dissociative identity disorder",
+                    dsm: "Dissociative identity disorder",
+                    icd: "6B64 Dissociative identity disorder · 6B65 Partial dissociative identity disorder",
+                    supports: "Two or more distinct identity states with marked discontinuity in sense of self and agency, and recurrent gaps in memory.",
+                    keyQuestion: "Are voices experienced as parts of the self, rather than as outside psychotic hallucinations?",
+                    check: "Confirm the ICD-11 codes 6B64 and 6B65."
+                },
+                {
+                    id: "psychosis",
+                    name: "Psychotic disorder",
+                    dsm: "Schizophrenia spectrum disorder, or psychotic depression (e.g. nihilistic delusions)",
+                    icd: "6A20–6A2Z Schizophrenia or other primary psychotic disorders",
+                    supports: "The person believes the change is real: they are actually dead, the world has been replaced.",
+                    keyQuestion: "Is it 'as if' (intact reality testing) or a fixed belief?"
+                },
+                {
+                    id: "panic-mood",
+                    name: "Part of panic attacks or depression",
+                    dsm: "Panic disorder or panic attacks · Major depressive disorder",
+                    icd: "6B01 Panic disorder · 6A70–6A71 Depressive episode or disorder",
+                    supports: "Depersonalisation only during panic attacks or depressive episodes.",
+                    keyQuestion: "Does it happen outside those episodes?"
+                },
+                {
+                    id: "personality",
+                    name: "Borderline or schizotypal personality",
+                    dsm: "Borderline personality disorder (transient, stress-related dissociation) · Schizotypal personality disorder",
+                    icd: "6D10 Personality disorder, with borderline pattern (6D11.5) · 6A22 Schizotypal disorder",
+                    supports: "Brief dissociation under stress, within a long-standing pattern.",
+                    keyQuestion: "Is the dissociation only brief and stress-related, within a long-standing pattern?"
+                },
+                {
+                    id: "fnd",
+                    code: "ICD-11 6B60",
+                    name: "Functional neurological disorder",
+                    dsm: "Functional neurological symptom disorder",
+                    icd: "6B60 Dissociative neurological symptom disorder",
+                    supports: "Weakness, abnormal movements, seizures or sensory loss incompatible with neurological disease.",
+                    keyQuestion: "Are there positive signs on examination?"
+                },
+                {
+                    id: "substance-induced",
+                    name: "Substance intoxication, withdrawal or medication effect",
+                    dsm: "Substance intoxication or withdrawal; adverse effect of medication (DSM-5-TR has no substance-induced dissociative disorder)",
+                    icd: "",
+                    supports: "Depersonalisation only during intoxication, withdrawal or a medication's effect.",
+                    keyQuestion: "Does it persist well beyond the substance? If so, consider depersonalisation-derealisation disorder."
+                },
+                {
+                    id: "medical",
+                    code: "ICD-11 6E65",
+                    name: "Dissociation due to a medical condition",
+                    dsm: "Other specified mental disorder due to another medical condition",
+                    icd: "6E65 Secondary dissociative syndrome",
+                    supports: "Temporal lobe epilepsy, migraine, vestibular disease or head injury explains the episodes.",
+                    keyQuestion: "Are the episodes brief and stereotyped, with déjà vu or automatisms (think epilepsy)?"
+                },
+                {
+                    id: "none",
+                    name: "No mental disorder",
+                    dsm: "",
+                    icd: "",
+                    supports: "Brief episodes without distress or impairment, with fatigue, sleep loss, stress or intoxication: common in the general population.",
+                    keyQuestion: "Is it persistent or recurrent, and does it cause distress or impairment?"
+                },
+                feigning
+            ]
+        }
+    });
+})();

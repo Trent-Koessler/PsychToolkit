@@ -2,7 +2,7 @@
 // release evicts the previous cache. This app ships clinical content (doses,
 // thresholds, monitoring advice), so a stale cached copy is a safety problem —
 // see the fetch strategy below.
-const APP_VERSION = "1.13.0";
+const APP_VERSION = "1.14.0";
 const CACHE_NAME = `psychtoolkit-cache-v${APP_VERSION}`;
 
 // The app shell. Kept in sync with the assets index.html actually references.
@@ -25,6 +25,7 @@ const ASSETS = [
   "./reasoning-flow-substance.js",
   "./reasoning-flow-risk.js",
   "./reasoning-flow-sleep-eating.js",
+  "./reasoning-flow-somatic.js",
   "./reasoning-ui.js",
   "./vendor/chart.umd.js",
   "./manifest.json",

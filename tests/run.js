@@ -993,6 +993,98 @@ async function testSleepEatingScreen(browser, baseUrl) {
     await page.context().close();
 }
 
+function testSomaticDissociativeRules() {
+    const F = require(path.join(ROOT, "reasoning-flow-somatic.js"));
+    const S = a => F.somatic.evaluate(a);
+    const D = a => F.depersonalisation.evaluate(a);
+    const s = { feigned: "no", substance: "no", medicalDx: "no", delusional: "no", panicOnly: "no", moodOnly: "no" };
+
+    let r = S({ ...s, focus: "symptoms", sxB: "two", pain: "yes", months6: "yes" });
+    expect("somatic flow: SSD moderate with pain", r.suggestion.label, "Somatic symptom disorder, moderate, with predominant pain (ICD-11 6C20.1 Bodily distress disorder, moderate)");
+    r = S({ ...s, focus: "symptoms", medicalDx: "excessive", sxB: "one", months6: "yes" });
+    expect("somatic flow: SSD alongside a medical condition", r.suggestion.cardId, "ssd");
+    r = S({ ...s, focus: "symptoms", medicalDx: "investigating", sxB: "severe", months6: "yes" });
+    expect("somatic flow: provisional while investigating", [r.suggestion.provisional, r.alternatives.includes("medical")], [true, true]);
+    r = S({ ...s, focus: "symptoms", sxB: "one", months6: "no" });
+    expect("somatic flow: brief SSD", r.suggestion.cardId, "osrd");
+    r = S({ focus: "symptoms", feigned: "no", substance: "no", medicalDx: "explains" });
+    expect("somatic flow: proportionate response", r.suggestion.cardId, "medical");
+    r = S({ focus: "symptoms", feigned: "external" });
+    expect("somatic flow: malingering first", r.suggestion.cardId, "feigning");
+    r = S({ ...s, focus: "illness", delusional: "yes" });
+    expect("somatic flow: somatic delusions", r.switchTo, "psychosis");
+    r = S({ ...s, focus: "illness", moodOnly: "gad" });
+    expect("somatic flow: within GAD", r.switchTo, "anxiety");
+    r = S({ ...s, focus: "illness", illnessSx: "yes", illnessBehaviour: "avoidant", months6: "yes" });
+    expectIncludes("somatic flow: illness anxiety", r.suggestion.label, "Illness anxiety disorder, care-avoidant type");
+    r = S({ ...s, focus: "neuro", positiveSigns: "yes", fndType: "seizures" });
+    expectIncludes("somatic flow: functional seizures", r.suggestion.label, "6B60.4");
+    r = S({ ...s, focus: "neuro", positiveSigns: "unclear" });
+    expect("somatic flow: FND needs positive signs", [r.suggestion.cardId, r.suggestion.provisional], ["fnd", true]);
+    r = S({ focus: "appearance", delusional: "yes", weightOnly: "no", repetitive: "yes", insight: "absent", muscle: "no" });
+    expect("somatic flow: BDD with absent insight, not delusional disorder", [r.suggestion.cardId, r.excluded.includes("delusional")], ["bdd", true]);
+    r = S({ focus: "appearance", delusional: "no", weightOnly: "yes" });
+    expect("somatic flow: weight or shape only", r.switchTo, "eating");
+    r = S({ focus: "condition", pfacOther: "no", pfacEffect: "yes" });
+    expect("somatic flow: psychological factors", r.suggestion.cardId, "pfac");
+
+    const d = { explained: "clinical", feigned: "no", substance: "no", delirium: "no", cognitive: "no", medical: "no", reality: "yes", only: "no", trauma: "no", amnesia: "no", functional: "no", personality: "no" };
+    r = D({ ...d, dpType: "both" });
+    expect("dissociation flow: DPDR", r.suggestion.cardId, "dpdr");
+    r = D({ ...d, substance: "yes", subTiming: "persisted", dpType: "dp" });
+    expect("dissociation flow: persists after cannabis", r.suggestion.cardId, "dpdr");
+    r = D({ ...d, substance: "yes", subTiming: "during" });
+    expect("dissociation flow: during intoxication", r.suggestion.cardId, "substance-induced");
+    r = D({ ...d, medical: "flags", dpType: "dr" });
+    expect("dissociation flow: provisional while red flags open", [r.suggestion.cardId, r.suggestion.provisional], ["dpdr", true]);
+    r = D({ ...d, medical: "yes" });
+    expectIncludes("dissociation flow: medical cause", r.suggestion.label, "6E65");
+    r = D({ ...d, reality: "no" });
+    expect("dissociation flow: reality testing lost", r.switchTo, "psychosis");
+    r = D({ ...d, only: "panic" });
+    expect("dissociation flow: only in panic", r.switchTo, "anxiety");
+    r = D({ ...d, trauma: "long" });
+    expect("dissociation flow: PTSD", r.suggestion.cardId, "ptsd");
+    r = D({ ...d, amnesia: "yes", identity: "fugue" });
+    expectIncludes("dissociation flow: fugue", r.suggestion.label, "with dissociative fugue");
+    r = D({ ...d, personality: "bpd" });
+    expect("dissociation flow: BPD", r.suggestion.cardId, "personality");
+    r = D({ explained: "transient" });
+    expect("dissociation flow: transient", r.suggestion.cardId, "none");
+}
+
+async function testSomaticScreen(browser, baseUrl) {
+    const page = await newUnlockedPage(browser, baseUrl, "#oca-assessment-page");
+    page.on("dialog", d => d.accept());
+    await page.click('[data-oca-tab="oca-reasoning-panel"]');
+    const answer = (q, label) => page.click(`#oca-reasoning-body fieldset[data-q="${q}"] label.rz-chip` +
+        (label.length <= 6 ? `:text-is("${label}")` : `:has-text("${label}")`));
+    await page.selectOption("#rz-problem", "somatic");
+    await answer("focus", "Distressing physical symptoms");
+    for (const q of ["feigned", "substance"]) await answer(q, "No");
+    await answer("medicalDx", "Yes, but the worry");
+    for (const q of ["delusional", "panicOnly", "moodOnly"]) await answer(q, "No");
+    await answer("sxB", "Two or more, with several");
+    await answer("pain", "Yes");
+    await answer("months6", "Yes");
+    expectIncludes("somatic screen: suggestion", await page.textContent(".rz-result-title"), "Somatic symptom disorder, severe, with predominant pain");
+    await page.click("text=Apply to the cards below");
+    expect("somatic screen: SSD leading", await page.inputValue('select[aria-label="Somatic symptom disorder status"]'), "Leading");
+    expect("somatic screen: medical rule-out possible", await page.inputValue('select[aria-label="Medical conditions (rule-out) status"]'), "Possible");
+
+    await page.selectOption("#rz-problem", "depersonalisation");
+    await answer("explained", "Persistent or recurrent");
+    for (const q of ["feigned", "delirium", "cognitive", "medical"]) await answer(q, "No");
+    await answer("substance", "Yes");
+    await answer("subTiming", "Has lasted about a month");
+    await answer("reality", "Yes");
+    await answer("only", "No, it happens outside");
+    for (const q of ["trauma", "amnesia", "functional", "personality"]) await answer(q, "No");
+    await answer("dpType", "Both");
+    expectIncludes("dissociation screen: suggestion", await page.textContent(".rz-result-title"), "Depersonalisation-derealisation disorder");
+    await page.context().close();
+}
+
 // The Cloudflare Pages function that stores synced templates.
 async function testTemplateFunction() {
     const src = fs.readFileSync(path.join(ROOT, "functions/api/templates.js"), "utf8");
@@ -1113,6 +1205,8 @@ async function testMhaPathway(browser, baseUrl) {
         await testSubstanceScreen(browser, baseUrl);
         testSleepEatingRules();
         await testSleepEatingScreen(browser, baseUrl);
+        testSomaticDissociativeRules();
+        await testSomaticScreen(browser, baseUrl);
     } finally {
         await browser.close();
         server.close();
